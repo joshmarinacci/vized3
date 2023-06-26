@@ -1,25 +1,26 @@
 import React from 'react';
-import logo from './logo.svg';
+import {HBox, VBox} from "josh_react_util"
 import './App.css';
+import {TreeView} from "./TreeView";
+import {PageView} from "./PageView";
+import {PropSheet} from "./PropSheet";
+import {GlobalState} from "./models/model";
 
 function App() {
+    const state = new GlobalState()
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+      <VBox>
+        <HBox>
+          <button>new</button>
+          <button>save</button>
+          <button>export</button>
+        </HBox>
+        <div className={'main-view'}>
+          <TreeView document={state.getCurrentDocument()}/>
+          <PageView page={state.getCurrentPage()}/>
+          <PropSheet selected={state.getSelectedObject()}/>
+        </div>
+      </VBox>
   );
 }
 
