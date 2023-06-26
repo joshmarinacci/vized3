@@ -13,18 +13,21 @@
   background-color: magenta;
 }
 
-.prop-editor {
-  font-size: 11pt;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
+.prop-sheet {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
   align-items: center;
-  margin: 1rem;
+  align-self: start;
+  gap: 10px;
+  padding: 0.5rem;
 }
-.prop-editor label {
-  white-space: nowrap;
-  margin-right: 0.5rem;
+.prop-sheet label {
+  grid-column-start: 1;
+  align-self: end;
+  text-align: end;
 }
-.prop-editor input {
-  min-width: 50px;
+.prop-sheet input {
+  grid-column-start: 2;
+  align-self: center;
+  min-width: 30px;
 }

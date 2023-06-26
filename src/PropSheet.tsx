@@ -47,31 +47,31 @@ class StringPropSchema implements PropSchema {
 
 function NumberEditor(props: { schema: PropSchema }) {
     const value = props.schema.get(props.schema.name)
-    return <div className={'prop-editor'}>
+    return <>
         <label>{props.schema.name}</label>
         <input type={"number"} value={value} onChange={(e)=>{
             let num = parseInt(e.target.value)
             props.schema.set(props.schema.name,num)
         }}/>
-    </div>
+    </>
 }
 
 
 function StringEditor(props: { schema: PropSchema }) {
     const value = props.schema.get(props.schema.name)
-    return <div className={'prop-editor'}>
+    return <>
         <label>{props.schema.name}</label>
         <input type={"text"} value={value} onChange={(e)=>{
             props.schema.set(props.schema.name,e.target.value)
         }}/>
-    </div>
+    </>
 }
 
 function PropEditor(props: { schema: PropSchema }) {
     const { schema } = props
     if(schema.base === 'number') return <NumberEditor schema={schema}/>
     if(schema.base === 'string') return <StringEditor schema={schema}/>
-    return <div className={'prop-editor'}>unknown property type {schema.name}</div>
+    return <label>unknown property type {schema.name}</label>
 }
 
 export function PropSheet(props:{selected:any}) {
