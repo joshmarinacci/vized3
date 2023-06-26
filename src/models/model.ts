@@ -1,4 +1,4 @@
-import {Bounds, genId} from "josh_js_util"
+import {Bounds, genId, Point, toRadians} from "josh_js_util"
 // - [ ] Start with persistence. Save and load an arbitrary data graph. How to restore inherited classes? Has tests.
 //     - [ ] Give doc a unit
 
@@ -70,10 +70,15 @@ export interface VPage {
 
 export interface VShape {
     uuid:VUUID
+    name:string,
     drawSelf(ctx:CanvasRenderingContext2D):void
 }
 export interface VSquare extends VShape {
     bounds:Bounds
+}
+export interface VCircle extends VShape {
+    center:Point
+    radius:number
 }
 
 class RealDocument implements VDocument {
@@ -96,19 +101,23 @@ class RealPage extends Observable implements VPage {
         this.children = []
     }
 
-    addChild(square: RealSquare) {
-        this.children.push(square)
-        square.addEventListener('changed', (p) => {
-            console.log("page child changed")
+    addChild(square: VShape) {
+        this.children.push(square);
+        let ob = square as unknown as Observable
+        ob.addEventListener('changed', (p) => {
             this.fire('changed',p)
         })
     }
 }
 
-class RealSquare extends Observable implements VSquare {
+export interface RealShape {
+    getProperty(name:string):any
+    setProperty(name:string, value:any):void
+}
+export class RealSquare extends Observable implements VSquare, RealShape {
     bounds: Bounds;
     uuid: string;
-    private name: string;
+    name: string;
     constructor(bounds:Bounds) {
         super()
         this.uuid = genId('square')
@@ -145,13 +154,59 @@ class RealSquare extends Observable implements VSquare {
     }
 }
 
+export class RealCircle extends Observable implements VShape, RealShape {
+    uuid: VUUID
+    name: string
+    center: Point;
+    radius: number;
+    constructor(center:Point) {
+        super()
+        this.uuid = genId('square')
+        this.name = 'unnamed'
+        this.center = center
+        this.radius = 20
+    }
+
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = 'blue'
+        ctx.beginPath()
+        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
+        ctx.fill()
+    }
+    getProperty(name:string) {
+        if(name === 'x') return this.center.x
+        if(name === 'y') return this.center.y
+        if(name === 'radius') return this.radius
+        if(name === 'name') return this.name
+    }
+    setProperty(name:string, value:any) {
+        if(name === 'x') {
+            this.center = new Point(value,this.center.y)
+            this.fire('changed',{})
+        }
+        if(name === 'y') {
+            this.center = new Point(this.center.x,value)
+            this.fire('changed',{})
+        }
+        if(name === 'radius') {
+            this.radius = value
+            this.fire('changed',{})
+        }
+        if(name === 'name') {
+            this.name = value
+            this.fire('changed',{})
+        }
+    }
+}
+
 export class GlobalState {
     _doc:VDocument
-    private current_page: VPage;
+    private current_page: RealPage;
     constructor() {
         this._doc = new RealDocument()
         let page = new RealPage()
         page.addChild(new RealSquare(new Bounds(20,20,50,50)))
+        page.addChild(new RealCircle(new Point(100,200)))
         this.current_page = page
         this._doc.pages.push(page)
     }
@@ -165,6 +220,6 @@ export class GlobalState {
     }
 
     getSelectedObject():any {
-        return this.current_page.children[0]
+        return this.current_page.children[1]
     }
 }

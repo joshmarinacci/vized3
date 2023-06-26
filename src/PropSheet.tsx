@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Observable} from "./models/model";
+import {Observable, RealCircle, RealShape, RealSquare} from "./models/model";
 
 interface PropSchema {
     name:string,
@@ -11,9 +11,9 @@ interface PropSchema {
 class NumberPropSchema implements  PropSchema {
     base: "number";
     name: string;
-    private target: any;
+    private target: RealShape;
 
-    constructor(name:string, target:any) {
+    constructor(name:string, target:RealShape) {
         this.base = "number"
         this.name = name
         this.target = target
@@ -56,7 +56,6 @@ function NumberEditor(props: { schema: PropSchema }) {
     </>
 }
 
-
 function StringEditor(props: { schema: PropSchema }) {
     const value = props.schema.get(props.schema.name)
     return <>
@@ -76,7 +75,6 @@ function PropEditor(props: { schema: PropSchema }) {
 
 export function PropSheet(props:{selected:any}) {
     const {selected} = props
-    console.log("selected is",selected)
     const [count, setCount] = useState(0)
     useEffect(() => {
         if(selected) {
@@ -88,11 +86,20 @@ export function PropSheet(props:{selected:any}) {
             }
         }
     })
-    const schemas:PropSchema[] = [
-        new NumberPropSchema('x',selected),
-        new NumberPropSchema('y',selected),
-        new StringPropSchema('name',selected),
-    ]
+
+    const schemas:PropSchema[] = []
+    if(selected instanceof RealSquare) {
+        schemas.push(new NumberPropSchema('x',selected))
+        schemas.push(new NumberPropSchema('y',selected))
+        schemas.push(new StringPropSchema('name',selected))
+    }
+    if(selected instanceof RealCircle) {
+        schemas.push(new NumberPropSchema('x',selected))
+        schemas.push(new NumberPropSchema('y',selected))
+        schemas.push(new NumberPropSchema('radius',selected))
+        schemas.push(new StringPropSchema('name',selected))
+    }
+
     return <div className={'prop-sheet panel'}>{schemas.map((schema) => {
         return <PropEditor key={schema.name} schema={schema}/>
     })}</div>

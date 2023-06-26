@@ -25,7 +25,6 @@ export function PageView(props:{page:any}) {
         if(props.page) {
             let ob = props.page as Observable
             const hand = () => {
-                console.log("it changed")
                 setCount(count+1)
             }
             ob.addEventListener('changed',hand)
