@@ -16,9 +16,9 @@ function App() {
           <button>export</button>
         </HBox>
         <div className={'main-view'}>
-          <TreeView document={state.getCurrentDocument()}/>
-          <PageView page={state.getCurrentPage()}/>
-          <PropSheet selected={state.getSelectedObject()}/>
+          <TreeView document={state.getCurrentDocument()} state={state}/>
+          <PageView page={state.getCurrentPage()} state={state}/>
+          <PropSheet state={state}/>
         </div>
       </VBox>
   );

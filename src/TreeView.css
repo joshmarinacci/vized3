@@ -1,0 +1,12 @@
+.tree-view {
+    border: 1px solid green;
+    background-color: var(--panel-background);
+}
+.tree-view .tree-item {
+    margin-left: 1rem;
+    padding: 0.55rem 0.5rem;
+}
+
+.tree-view .tree-item label {
+    padding-left: 1rem;
+}

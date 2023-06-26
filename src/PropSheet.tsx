@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {Observable, RealCircle, RealShape, RealSquare} from "./models/model";
+import {GlobalState, Observable, RealCircle, RealShape, RealSquare} from "./models/model";
+import {useObservableChange} from "./PageView";
 
 interface PropSchema {
     name:string,
@@ -73,20 +74,10 @@ function PropEditor(props: { schema: PropSchema }) {
     return <label>unknown property type {schema.name}</label>
 }
 
-export function PropSheet(props:{selected:any}) {
-    const {selected} = props
-    const [count, setCount] = useState(0)
-    useEffect(() => {
-        if(selected) {
-            let ob = selected as Observable
-            const hand = () => setCount(count + 1)
-            ob.addEventListener('changed',hand)
-            return () => {
-                ob.removeEventListener('changed',hand)
-            }
-        }
-    })
-
+export function PropSheet(props:{state:GlobalState}) {
+    const selected = props.state.getSelectedObject()
+    useObservableChange(selected,'changed')
+    useObservableChange(props.state,'selection')
     const schemas:PropSchema[] = []
     if(selected instanceof RealSquare) {
         schemas.push(new NumberPropSchema('x',selected))

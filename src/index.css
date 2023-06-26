@@ -5,6 +5,12 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --panel-background: #efeeee;
+  --button-background-normal: #b4b3b3;
+  --button-background-hover: #35ffff;
+  --button-background-active: #a2ffff;
+  --button-background-selected: #14f8d3;
 }
 
 code {

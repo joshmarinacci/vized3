@@ -31,3 +31,20 @@
   align-self: center;
   min-width: 30px;
 }
+
+
+
+.selectable {
+  background-color: var(--button-background-normal);
+}
+.selectable.selected {
+  background-color: var(--button-background-selected);
+}
+
+.selectable:hover, .selectable.selected:hover {
+  background-color: var(--button-background-hover);
+}
+.selectable:active, .selectable.selected:active {
+  background-color: var(--button-background-active);
+}
+

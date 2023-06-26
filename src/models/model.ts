@@ -199,16 +199,19 @@ export class RealCircle extends Observable implements VShape, RealShape {
     }
 }
 
-export class GlobalState {
+export class GlobalState extends Observable {
     _doc:VDocument
     private current_page: RealPage;
+    private selected_object: any;
     constructor() {
+        super()
         this._doc = new RealDocument()
         let page = new RealPage()
         page.addChild(new RealSquare(new Bounds(20,20,50,50)))
         page.addChild(new RealCircle(new Point(100,200)))
         this.current_page = page
         this._doc.pages.push(page)
+        this.selected_object = null
     }
 
     getCurrentDocument():VDocument {
@@ -220,6 +223,10 @@ export class GlobalState {
     }
 
     getSelectedObject():any {
-        return this.current_page.children[1]
+        return this.selected_object
+    }
+    setSelectedObject(obj:any) {
+        this.selected_object = obj
+        this.fire('selection',{})
     }
 }

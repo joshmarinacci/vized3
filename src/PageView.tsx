@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import {Size} from "josh_js_util";
 import {HBox} from "josh_react_util";
-import {Observable, VPage} from "./models/model"
+import {GlobalState, Observable, VPage} from "./models/model"
 
 function drawCanvasState(canvas: HTMLCanvasElement, page:VPage) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -12,8 +12,20 @@ function drawCanvasState(canvas: HTMLCanvasElement, page:VPage) {
     })
 }
 
-export function PageView(props:{page:any}) {
+export function useObservableChange(ob:Observable, eventType:string) {
     const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count+1)
+        }
+        if(ob) ob.addEventListener(eventType,hand)
+        return () => {
+            if(ob) ob.removeEventListener(eventType,hand)
+        }
+
+    },[ob,count])
+}
+export function PageView(props:{page:any, state:GlobalState}) {
     const [size, setSize] = useState(() => new Size(300, 300));
     const canvasRef = useRef<HTMLCanvasElement>();
     useEffect(() => {
@@ -21,19 +33,8 @@ export function PageView(props:{page:any}) {
             drawCanvasState(canvasRef.current, props.page as VPage)
         }
     })
-    useEffect(() => {
-        if(props.page) {
-            let ob = props.page as Observable
-            const hand = () => {
-                setCount(count+1)
-            }
-            ob.addEventListener('changed',hand)
-            return () => {
-                ob.removeEventListener('changed',hand)
-            }
-        }
-    })
-
+    useObservableChange(props.page,'changed')
+    useObservableChange(props.state,'selection')
 
     const dom_size = size.scale(window.devicePixelRatio)
     return <div className={'panel page-view'}>
