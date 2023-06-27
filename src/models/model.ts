@@ -129,12 +129,14 @@ export class RealSquare extends Observable implements VSquare, RealShape {
     bounds: Bounds
     uuid: string
     name: string
+    fill: VFill
     constructor(bounds:Bounds) {
         super()
         this.type = 'square'
         this.uuid = genId('square')
         this.name = 'unnamed'
         this.bounds = bounds
+        this.fill = "red"
     }
 
     contains(pt: Point): boolean {
@@ -142,13 +144,14 @@ export class RealSquare extends Observable implements VSquare, RealShape {
     }
 
     drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = 'red'
+        ctx.fillStyle = this.fill
         ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
     }
     getProperty(name:string) {
         if(name === 'x') return this.bounds.x
         if(name === 'y') return this.bounds.y
         if(name === 'name') return this.name
+        if(name === 'fill') return this.fill
     }
     setProperty(name:string, value:any) {
         if(name === 'x') {
@@ -165,6 +168,10 @@ export class RealSquare extends Observable implements VSquare, RealShape {
         }
         if(name === 'name') {
             this.name = value
+            this.fire('changed',{})
+        }
+        if(name === 'fill') {
+            this.fill = value
             this.fire('changed',{})
         }
     }

@@ -116,7 +116,6 @@ function FillInput(props:{ schema: PropSchema}) {
         <div className={'popover'}>
         <TabbedPanel titles={['swatches','other']}>
             <SwatchesPicker color={value} onChange={(e)=>{
-                console.log("new result is",e.hex)
                 props.schema.set(props.schema.name,e.hex)
             }}/>
             <button>Hello</button>
@@ -165,6 +164,7 @@ export function PropSheet(props:{state:GlobalState}) {
         schemas.push(new NumberPropSchema('x',selected))
         schemas.push(new NumberPropSchema('y',selected))
         schemas.push(new StringPropSchema('name',selected))
+        schemas.push(new FillPropSchema('fill',selected))
     }
     if(selected instanceof RealCircle) {
         schemas.push(new NumberPropSchema('x',selected))
