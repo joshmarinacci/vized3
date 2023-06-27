@@ -64,8 +64,12 @@ function TreeShapeItem(props: { shape: VShape, state:GlobalState, selected:any }
 
 function TreePageItem(props: { page: VPage, state:GlobalState, selected:any }) {
     const {page, state} = props
+    const clsses = toClass({
+        'selectable':true,
+        selected:props.page === state.getSelectedPage(),
+    })
     return <div className={'tree-item'}>
-        <b>page: name</b>
+        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page</b>
         {
             page.children.map(shape => <TreeShapeItem key={shape.uuid} shape={shape}
                                                             state={state} selected={props.selected}/>)

@@ -1,5 +1,5 @@
 .main-view {
-  border: 1px solid magenta;
+  /*border: 1px solid magenta;*/
   display: grid;
   grid-template-columns: 250px 3fr 250px;
   min-height: 80vh;
@@ -10,7 +10,7 @@
 }
 
 .page-view {
-  background-color: magenta;
+  background-color: #e0dede;
 }
 
 .prop-sheet {

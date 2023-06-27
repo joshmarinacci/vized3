@@ -76,7 +76,7 @@ function PropEditor(props: { schema: PropSchema }) {
 
 export function PropSheet(props:{state:GlobalState}) {
     const selected = props.state.getSelectedObject()
-    useObservableChange(selected,'changed')
+    useObservableChange(selected as unknown as Observable,'changed')
     useObservableChange(props.state,'selection')
     const schemas:PropSchema[] = []
     if(selected instanceof RealSquare) {

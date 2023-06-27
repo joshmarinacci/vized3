@@ -72,6 +72,8 @@ export interface VShape {
     uuid:VUUID
     name:string,
     drawSelf(ctx:CanvasRenderingContext2D):void
+    contains(pt:Point):boolean
+    drawSelected(ctx: CanvasRenderingContext2D): void;
 }
 export interface VSquare extends VShape {
     bounds:Bounds
@@ -125,6 +127,10 @@ export class RealSquare extends Observable implements VSquare, RealShape {
         this.bounds = bounds
     }
 
+    contains(pt: Point): boolean {
+        return this.bounds.contains(pt)
+    }
+
     drawSelf(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = 'red'
         ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
@@ -151,6 +157,10 @@ export class RealSquare extends Observable implements VSquare, RealShape {
             this.name = value
             this.fire('changed',{})
         }
+    }
+
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
     }
 }
 
@@ -197,12 +207,21 @@ export class RealCircle extends Observable implements VShape, RealShape {
             this.fire('changed',{})
         }
     }
+    contains(pt: Point): boolean {
+        return pt.subtract(this.center).magnitude() < this.radius
+    }
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.beginPath()
+        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
+        ctx.stroke()
+    }
 }
 
 export class GlobalState extends Observable {
     _doc:VDocument
     private current_page: RealPage;
     private selected_object: any;
+    private selected_page: VPage | null;
     constructor() {
         super()
         this._doc = new RealDocument()
@@ -212,6 +231,8 @@ export class GlobalState extends Observable {
         this.current_page = page
         this._doc.pages.push(page)
         this.selected_object = null
+        this.selected_page = page
+        this._doc.pages.push(new RealPage())
     }
 
     getCurrentDocument():VDocument {
@@ -222,11 +243,19 @@ export class GlobalState extends Observable {
         return this.current_page
     }
 
-    getSelectedObject():any {
+    getSelectedObject():VShape|undefined {
         return this.selected_object
     }
     setSelectedObject(obj:any) {
         this.selected_object = obj
         this.fire('selection',{})
+    }
+
+    setSelectedPage(page: VPage) {
+        this.selected_page = page
+        this.fire('selection',{})
+    }
+    getSelectedPage() {
+        return this.selected_page
     }
 }
