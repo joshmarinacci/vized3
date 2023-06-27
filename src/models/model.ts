@@ -174,12 +174,15 @@ export class RealSquare extends Observable implements VSquare, RealShape {
     }
 }
 
+type VFill = string
+
 export class RealCircle extends Observable implements VShape, RealShape {
     uuid: VUUID
     name: string
     center: Point
     radius: number
     type: 'circle'
+    fill: VFill
     constructor(center:Point) {
         super()
         this.type = 'circle'
@@ -187,10 +190,11 @@ export class RealCircle extends Observable implements VShape, RealShape {
         this.name = 'unnamed'
         this.center = center
         this.radius = 20
+        this.fill = "red"
     }
 
     drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = 'blue'
+        ctx.fillStyle = this.fill
         ctx.beginPath()
         ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
         ctx.fill()
@@ -200,6 +204,7 @@ export class RealCircle extends Observable implements VShape, RealShape {
         if(name === 'y') return this.center.y
         if(name === 'radius') return this.radius
         if(name === 'name') return this.name
+        if(name === 'fill') return this.fill
     }
     setProperty(name:string, value:any) {
         if(name === 'x') {
@@ -216,6 +221,10 @@ export class RealCircle extends Observable implements VShape, RealShape {
         }
         if(name === 'name') {
             this.name = value
+            this.fire('changed',{})
+        }
+        if(name === 'fill') {
+            this.fill = value as VFill
             this.fire('changed',{})
         }
     }
