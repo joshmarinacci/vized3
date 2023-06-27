@@ -80,11 +80,13 @@ export interface VShape {
 export interface VSquare extends VShape {
     type:'square'
     bounds:Bounds
+    fill: VFill
 }
 export interface VCircle extends VShape {
     type:'circle'
     center:Point
     radius:number
+    fill: VFill
 }
 
 class RealDocument implements VDocument {
