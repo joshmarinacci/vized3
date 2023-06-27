@@ -59,11 +59,13 @@ make center view which draws the current document, but is not interactive
 type Unit = "mm" | "in"
 type VUUID = string
 export interface VDocument {
+    type:'document'
     uuid:VUUID
     unit:Unit
     pages:VPage[]
 }
 export interface VPage {
+    type:'page'
     uuid:VUUID
     children:VShape[]
 }
@@ -76,9 +78,11 @@ export interface VShape {
     drawSelected(ctx: CanvasRenderingContext2D): void;
 }
 export interface VSquare extends VShape {
+    type:'square'
     bounds:Bounds
 }
 export interface VCircle extends VShape {
+    type:'circle'
     center:Point
     radius:number
 }
@@ -87,7 +91,9 @@ class RealDocument implements VDocument {
     pages: VPage[];
     unit: Unit;
     uuid: VUUID;
+    type: 'document';
     constructor() {
+        this.type = 'document'
         this.pages = []
         this.unit = "mm"
         this.uuid = genId('document')
@@ -95,10 +101,12 @@ class RealDocument implements VDocument {
 
 }
 class RealPage extends Observable implements VPage {
+    type: 'page'
     children: VShape[];
     uuid: VUUID;
     constructor() {
         super()
+        this.type = 'page'
         this.uuid = genId('page')
         this.children = []
     }
@@ -117,11 +125,13 @@ export interface RealShape {
     setProperty(name:string, value:any):void
 }
 export class RealSquare extends Observable implements VSquare, RealShape {
-    bounds: Bounds;
-    uuid: string;
-    name: string;
+    type: 'square'
+    bounds: Bounds
+    uuid: string
+    name: string
     constructor(bounds:Bounds) {
         super()
+        this.type = 'square'
         this.uuid = genId('square')
         this.name = 'unnamed'
         this.bounds = bounds
@@ -167,10 +177,12 @@ export class RealSquare extends Observable implements VSquare, RealShape {
 export class RealCircle extends Observable implements VShape, RealShape {
     uuid: VUUID
     name: string
-    center: Point;
-    radius: number;
+    center: Point
+    radius: number
+    type: 'circle'
     constructor(center:Point) {
         super()
+        this.type = 'circle'
         this.uuid = genId('square')
         this.name = 'unnamed'
         this.center = center
@@ -232,7 +244,6 @@ export class GlobalState extends Observable {
         this._doc.pages.push(page)
         this.selected_object = null
         this.selected_page = page
-        this._doc.pages.push(new RealPage())
     }
 
     getCurrentDocument():VDocument {
