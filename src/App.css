@@ -1,8 +1,13 @@
+.fill-page {
+  display: flex;
+  flex-direction: column;
+}
 .main-view {
   /*border: 1px solid magenta;*/
   display: grid;
-  grid-template-columns: 250px 3fr 250px;
+  /*grid-template-columns: 250px 3fr 250px;*/
   min-height: 80vh;
+  flex: 1;
 }
 
 .panel {

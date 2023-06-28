@@ -1,5 +1,5 @@
-import React from 'react';
-import {HBox, VBox} from "josh_react_util"
+import React, {useState} from 'react';
+import {FillPage, HBox, Spacer} from "josh_react_util"
 import './App.css';
 import {TreeView} from "./TreeView";
 import {PageView} from "./PageView";
@@ -8,12 +8,16 @@ import {GlobalState} from "./models/model";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
 import {exportCanvasJS} from "./exporters/canvas";
+import {MainLayout} from "./common";
 
 
 function App() {
     const state = new GlobalState()
+    const [leftVisible, setLeftVisible] = useState(true)
+    const [rightVisible, setRightVisible] = useState(true)
+
   return (
-      <VBox>
+      <FillPage>
         <HBox>
           <button>new</button>
           <button>save</button>
@@ -21,12 +25,19 @@ function App() {
             <button onClick={() => exportSVG(state)}>to SVG</button>
             <button onClick={() => exportCanvasJS(state)}>to Canvas JS</button>
         </HBox>
-        <div className={'main-view'}>
-          <TreeView document={state.getCurrentDocument()} state={state}/>
-          <PageView page={state.getCurrentPage()} state={state}/>
-          <PropSheet state={state}/>
-        </div>
-      </VBox>
+          <MainLayout
+              rightVisible={rightVisible}
+              leftVisible={leftVisible}
+              left={<TreeView document={state.getCurrentDocument()} state={state}/>}
+              center={<PageView page={state.getCurrentPage()} state={state}/>}
+              right={<PropSheet state={state}/>}
+          />
+          <HBox>
+              <button onClick={() => setLeftVisible(!leftVisible)}>left</button>
+              <Spacer/>
+              <button onClick={() => setRightVisible(!rightVisible)}>right</button>
+          </HBox>
+      </FillPage>
   );
 }
 
