@@ -1,4 +1,4 @@
-import React, {CSSProperties, JSX} from "react";
+import React, {CSSProperties, JSX, ReactNode} from "react";
 import {toClass} from "josh_react_util";
 
 export function MainLayout(props: {
@@ -30,6 +30,9 @@ export enum SupportedIcons {
     LeftPanelOpenIcon = 'left_panel_open',
     RightPanelCloseIcon = 'right_panel_close',
     RightPanelOpenIcon = 'right_panel_open',
+    Download='download',
+    NewDocument='note_add',
+    SaveDocument='save',
 }
 
 export function ToggleIconButton(props: {
@@ -44,5 +47,17 @@ export function ToggleIconButton(props: {
     })} onClick={props.onClick}>
         <span
             className="material-symbols-rounded">{props.selected ? props.selectedIcon : props.regularIcon}</span>
+    </button>
+}
+
+export function IconButton(props: {
+    onClick: () => any,
+    icon: SupportedIcons,
+    children: ReactNode
+}): JSX.Element {
+    return <button onClick={props.onClick} className={'icon-button'}>
+        <span
+            className="material-symbols-rounded">{props.icon}</span>
+        {props.children}
     </button>
 }

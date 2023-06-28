@@ -77,7 +77,12 @@
 .icon-button {
   background-color: var(--button-background-normal);
   border: 1px solid black;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
 }
+
 .icon-button:hover, .icon-button.borderless:hover {
   background-color: var(--slate-700);
   border-color: var(--slate-300);

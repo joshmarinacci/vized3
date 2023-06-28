@@ -8,7 +8,7 @@ import {GlobalState} from "./models/model";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
 import {exportCanvasJS} from "./exporters/canvas";
-import {MainLayout, SupportedIcons, ToggleIconButton} from "./common";
+import {IconButton, MainLayout, SupportedIcons, ToggleIconButton} from "./common";
 
 
 function App() {
@@ -19,11 +19,15 @@ function App() {
   return (
       <FillPage>
         <HBox>
-          <button>new</button>
-          <button>save</button>
-            <button onClick={() => exportPNG(state)}>to PNG</button>
-            <button onClick={() => exportSVG(state)}>to SVG</button>
-            <button onClick={() => exportCanvasJS(state)}>to Canvas JS</button>
+          <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
+              console.log("pretending to make new");
+          }}>new</IconButton>
+          <IconButton icon={SupportedIcons.SaveDocument} onClick={() => {
+              console.log("pretending to save")
+          }}>save</IconButton>
+            <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
+            <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
+            <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
         </HBox>
           <MainLayout
               rightVisible={rightVisible}
