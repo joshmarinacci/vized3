@@ -1,4 +1,5 @@
 import React, {CSSProperties, JSX} from "react";
+import {toClass} from "josh_react_util";
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -22,4 +23,26 @@ export function MainLayout(props: {
         {props.center}
         {props.rightVisible && props.right}
     </div>
+}
+
+export enum SupportedIcons {
+    LeftPanelCloseIcon = 'left_panel_close',
+    LeftPanelOpenIcon = 'left_panel_open',
+    RightPanelCloseIcon = 'right_panel_close',
+    RightPanelOpenIcon = 'right_panel_open',
+}
+
+export function ToggleIconButton(props: {
+    onClick: () => void,
+    regularIcon: SupportedIcons,
+    selectedIcon: SupportedIcons,
+    selected: boolean
+}): JSX.Element {
+    return <button className={toClass({
+        'icon-button': true,
+        'borderless': true,
+    })} onClick={props.onClick}>
+        <span
+            className="material-symbols-rounded">{props.selected ? props.selectedIcon : props.regularIcon}</span>
+    </button>
 }

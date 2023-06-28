@@ -72,3 +72,17 @@
 .color-picker-wrapper .cover {
   border: 0px solid blue;
 }
+
+
+.icon-button {
+  background-color: var(--button-background-normal);
+  border: 1px solid black;
+}
+.icon-button:hover, .icon-button.borderless:hover {
+  background-color: var(--slate-700);
+  border-color: var(--slate-300);
+}
+
+.icon-button.borderless {
+ border-color: transparent;
+}

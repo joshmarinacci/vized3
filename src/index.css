@@ -11,6 +11,8 @@ body {
   --button-background-hover: #35ffff;
   --button-background-active: #a2ffff;
   --button-background-selected: #14f8d3;
+  --slate-700: #eee;
+  --slate-300: #666;
 }
 
 code {

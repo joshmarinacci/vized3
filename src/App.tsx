@@ -8,7 +8,7 @@ import {GlobalState} from "./models/model";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
 import {exportCanvasJS} from "./exporters/canvas";
-import {MainLayout} from "./common";
+import {MainLayout, SupportedIcons, ToggleIconButton} from "./common";
 
 
 function App() {
@@ -33,9 +33,21 @@ function App() {
               right={<PropSheet state={state}/>}
           />
           <HBox>
-              <button onClick={() => setLeftVisible(!leftVisible)}>left</button>
+              <ToggleIconButton
+                  regularIcon={SupportedIcons.LeftPanelCloseIcon}
+                  selectedIcon={SupportedIcons.LeftPanelOpenIcon}
+                  onClick={() => setLeftVisible(!leftVisible)}
+                  selected={!leftVisible}
+              />
               <Spacer/>
-              <button onClick={() => setRightVisible(!rightVisible)}>right</button>
+              {/*<IconButton name={SupportedIcons.RightPanelCloseIcon}*/}
+              {/*            onClick={() => setRightVisible(!rightVisible)}/>*/}
+              <ToggleIconButton
+                  regularIcon={SupportedIcons.RightPanelCloseIcon}
+                  selectedIcon={SupportedIcons.RightPanelOpenIcon}
+                  onClick={() => setRightVisible(!rightVisible)}
+                  selected={!rightVisible}
+              />
           </HBox>
       </FillPage>
   );
