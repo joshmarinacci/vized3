@@ -2,7 +2,10 @@ import React, {useState} from 'react';
 import {FillPage, HBox, Spacer} from "josh_react_util"
 import './App.css';
 import {TreeView} from "./TreeView";
-import {PageView} from "./PageView";
+import {
+    PageView,
+    useObjectManagerChange,
+} from "./PageView";
 import {PropSheet} from "./PropSheet";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
@@ -10,14 +13,15 @@ import {exportCanvasJS} from "./exporters/canvas";
 import {IconButton, MainLayout, SupportedIcons, ToggleIconButton} from "./common";
 import {GlobalState} from "./models/state";
 import {saveJSON} from "./exporters/json";
+import {HistoryChanged} from "./models/om";
 
 
 const state = new GlobalState()
 function App() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
-
-  return (
+    useObjectManagerChange(state.om, HistoryChanged)
+      return (
       <FillPage>
         <HBox>
           <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
@@ -27,8 +31,8 @@ function App() {
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
-            <IconButton icon={SupportedIcons.Undo} disabled={!state.canUndo()} onClick={() => state.performUndo()}>Undo</IconButton>
-            <IconButton icon={SupportedIcons.Redo} disabled={!state.canRedo()} onClick={() => state.performRedo()}>Redo</IconButton>
+            <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
+            <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
         </HBox>
           <MainLayout
               rightVisible={rightVisible}

@@ -227,6 +227,8 @@ export class CircleClass implements DrawableShape {
 export const PropChanged = 'PropChanged'
 export const FamilyPropChanged = 'FamilyPropChanged'
 export type EventTypes = typeof PropChanged | typeof FamilyPropChanged
+export const HistoryChanged = 'HistoryChanged'
+export type OMEventTypes = typeof HistoryChanged
 
 export class ObjectProxy<T extends ObjectDef> {
     obj: any;
@@ -250,9 +252,17 @@ export class ObjectProxy<T extends ObjectDef> {
     }
 
     async setPropValue(prop: PropSchema, value: any) {
+        const evt:PropChangeEvent = {
+            target:this,
+            def:this.def,
+            prop:prop,
+            oldValue:this.obj[prop.name],
+            newValue:value,
+            desc: `${prop.name} ${this.obj[prop.name]} => ${value}`,
+    }
         this.obj[prop.name] = value
-        this._fire(PropChanged, value)
-        if (this.parent) this.parent._fire(FamilyPropChanged, value)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
 
     getListProp(prop: PropSchema):ObjectProxy<ObjectDef>[] {
@@ -382,17 +392,55 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
     return await om.make(def, props)
 }
 
+type PropChangeEvent = {
+    target: ObjectProxy<ObjectDef>,
+    def: ObjectDef,
+    prop: PropSchema,
+    oldValue:any,
+    newValue:any,
+    desc:string
+}
 export class ObjectManager {
     private defs: Map<string, ObjectDef>
     private classes: Map<string, any>
     private global_prop_change_handler: (e:any) => void;
+    private changes: PropChangeEvent[]
+    private _undoing: boolean;
+    private current_change_index: number;
+    private listeners:Map<OMEventTypes,[]>
 
     constructor() {
+        this.listeners = new Map()
         this.defs = new Map()
         this.classes = new Map()
-        this.global_prop_change_handler = (e) => {
-            console.log("prop has changed")
+        this.changes = []
+        this._undoing = false
+        this.current_change_index = -1
+        this.global_prop_change_handler = (evt:PropChangeEvent) => {
+            if(this._undoing) return
+            if(this.changes.length > this.current_change_index+1) {
+                this.changes = this.changes.slice(0,this.current_change_index+1)
+            }
+            this.changes.push(evt)
+            this.current_change_index++
+            this._fire(HistoryChanged, {})
         }
+    }
+    addEventListener(type: OMEventTypes, cb: (evt: any) => void) {
+        if (!this.listeners.get(type)) this.listeners.set(type, [])
+        // @ts-ignore
+        this.listeners.get(type).push(cb)
+    }
+    removeEventListener(type: OMEventTypes, cb: any) {
+        if (!this.listeners.get(type)) this.listeners.set(type, [])
+        // @ts-ignore
+        this.listeners.set(type, this.listeners.get(type).filter(c => c !== cb))
+    }
+
+    private _fire(type: OMEventTypes, value: any) {
+        if (!this.listeners.get(type)) this.listeners.set(type, [])
+        // @ts-ignore
+        this.listeners.get(type).forEach(cb => cb(value))
     }
 
     make(def: ObjectDef, props: Record<string, any>) {
@@ -426,5 +474,45 @@ export class ObjectManager {
     registerDef(def: ObjectDef, clazz:any) {
         this.defs.set(def.name, def)
         this.classes.set(def.name, clazz)
+    }
+
+    canUndo() {
+        if(this.current_change_index >= 0) return true
+        return false
+    }
+
+    canRedo() {
+        if(this.current_change_index < this.changes.length-1) return true
+        return false
+    }
+
+    async performUndo() {
+        if(!this.canUndo()) return
+        let recent = this.changes[this.current_change_index]
+        this._undoing = true
+        await recent.target.setPropValue(recent.prop,recent.oldValue)
+        this._undoing = false
+        this.current_change_index--
+        this._fire(HistoryChanged, {})
+    }
+
+    async performRedo() {
+        if(!this.canRedo()) return
+        this.current_change_index++
+        let recent = this.changes[this.current_change_index]
+        this._undoing = true
+        await recent.target.setPropValue(recent.prop,recent.newValue)
+        this._undoing = false
+        this._fire(HistoryChanged, {})
+    }
+
+    private dump_changes() {
+        console.log("len",this.changes.length)
+        console.log("current",this.current_change_index)
+        console.log(this.changes.map((ch,i) => {
+            const active = (i === this.current_change_index)
+            return `${active?'*':' '} ${ch.desc}`
+        }).join("\n"))
+        console.log('can undo',this.canUndo(), 'can redo', this.canRedo())
     }
 }

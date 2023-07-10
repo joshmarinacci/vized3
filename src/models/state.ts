@@ -53,7 +53,6 @@ export class GlobalState extends Observable {
 
     setSelectedObject(obj: any) {
         this.selected_object = obj
-        console.log("set selected object to",obj)
         this.fire('selection', {})
     }
 
@@ -66,18 +65,4 @@ export class GlobalState extends Observable {
         return this.selected_page
     }
 
-    performUndo() {
-        console.log("pretending to undo")
-    }
-
-    performRedo() {
-        console.log("pretending to redo")
-    }
-
-    canUndo() {
-        return false;
-    }
-    canRedo() {
-        return false;
-    }
 }

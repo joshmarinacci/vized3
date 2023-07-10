@@ -7,8 +7,8 @@ import {
     DrawableShape,
     EventTypes,
     FamilyPropChanged,
-    ObjectDef,
-    ObjectProxy,
+    ObjectDef, ObjectManager,
+    ObjectProxy, OMEventTypes,
     PageDef
 } from "./models/om";
 
@@ -28,6 +28,19 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, stat
 }
 
 export function useObservableChange(ob:Observable|undefined, eventType:string) {
+    const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count+1)
+        }
+        if(ob) ob.addEventListener(eventType,hand)
+        return () => {
+            if(ob) ob.removeEventListener(eventType,hand)
+        }
+
+    },[ob,count])
+}
+export function useObjectManagerChange(ob:ObjectManager, eventType:OMEventTypes) {
     const [count, setCount] = useState(0)
     return useEffect(() => {
         const hand = () => {
