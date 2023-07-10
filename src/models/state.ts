@@ -14,7 +14,7 @@ import {
 } from "./om";
 
 export class GlobalState extends Observable {
-    private om: ObjectManager;
+    om: ObjectManager;
     private _doc: ObjectProxy<ObjectDef>;
     private current_page: ObjectProxy<ObjectDef>;
     private selected_object: ObjectProxy<ObjectDef> | null

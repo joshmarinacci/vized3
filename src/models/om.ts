@@ -18,7 +18,7 @@ const UUIDDef:PropSchema = {
 }
 const FillDef:PropSchema = {
     name:'fill',
-    base: 'number',
+    base: 'string',
     readonly: false,
     custom:'css-color',
 }
@@ -235,7 +235,6 @@ export class ObjectProxy<T extends ObjectDef> {
     def: T;
 
     constructor(om: ObjectManager, def: T, props: Record<keyof T,any>) {
-        console.log(new Error("hi").stack)
         let cons = om.lookupConstructor(def.name)
         this.obj = new cons(props)
         this.def = def
@@ -318,25 +317,38 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
         name: obj.def.name,
         props: {},
     }
-    obj.getPropSchemas().forEach(pop => {
+    obj.getPropSchemas().forEach(prop => {
         // console.log("prop is",pop)
-        if (pop.base === 'string') {
-            json.props[pop.name] = obj.getPropValue(pop)
+        if (prop.base === 'string') {
+            json.props[prop.name] = obj.getPropValue(prop)
+            return
         }
-        if (pop.base === 'list') {
+        if (prop.base === 'list') {
             let arr: JSONObject[] = []
-            let list = obj.getPropValue(pop)
+            let list = obj.getPropValue(prop)
             list.forEach((val: ObjectProxy<ObjectDef>) => {
                 arr.push(toJSON(val))
             })
-            json.props[pop.name] = arr
+            json.props[prop.name] = arr
+            return
         }
-        if (pop.base === 'object') {
-            let val = obj.getPropValue(pop)
+        if (prop.base === 'object') {
+            let val = obj.getPropValue(prop)
             if (val instanceof Bounds) {
-                json.props[pop.name] = val.toJSON()
+                json.props[prop.name] = val.toJSON()
+                return
             }
+            if (val instanceof Point) {
+                json.props[prop.name] = val.toJSON()
+                return
+            }
+            throw new Error(`unhandled toJSON object type ${prop.name}`)
         }
+        if(prop.base === 'number') {
+            json.props[prop.name] = obj.getPropValue(prop)
+            return
+        }
+        throw new Error(`unhandled toJSON type ${prop.base}`)
     })
     return json
 }

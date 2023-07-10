@@ -18,6 +18,8 @@ describe('model tests', () => {
     it('should make a graph', async () => {
         const om = new ObjectManager()
         assert(om !== null, 'om is not null')
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         let rect:ObjectProxy<typeof RectDef> = await om.make(RectDef, { })
         assert(rect !== null)
         rect = await om.make(RectDef, { bounds: new Bounds(1,2,3,4)})
@@ -30,6 +32,8 @@ describe('model tests', () => {
     })
     it('should make an object with array chlidren', async () => {
         const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         let page = await om.make(PageDef, {})
         assert(page.getPropValue(PageDef.props.children).length == 0)
         let rect = await om.make(RectDef, {})
@@ -40,6 +44,8 @@ describe('model tests', () => {
     })
     it('should watch for changes on a single object', async () => {
         const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         let rect = await om.make(RectDef, {})
         // add listener
         let changed = false
@@ -52,6 +58,8 @@ describe('model tests', () => {
     })
     it('should watch for changes on a family tree object', async () => {
         const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         const page = await om.make(PageDef, {})
         const rect = await om.make(RectDef, {})
         await page.appendListProp(PageDef.props.children,rect)
@@ -65,6 +73,8 @@ describe('model tests', () => {
     })
     it('should list the properties and schemas of an object', async () => {
         const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         const page = await om.make(PageDef, {})
         const rect = await om.make(RectDef, {})
         page.getPropSchemas().forEach((s:PropSchema) => {
@@ -83,6 +93,8 @@ describe('model tests', () => {
     })
     it('should export to json', async () => {
         const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
         const pageProxy = await om.make(PageDef, {})
         const rectProxy = await om.make(RectDef, {bounds:new Bounds(1,2,3,4), fill: 'green'})
         await pageProxy.appendListProp(PageDef.props.children,rectProxy)

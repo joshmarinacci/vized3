@@ -9,6 +9,7 @@ import {exportPNG} from "./exporters/png";
 import {exportCanvasJS} from "./exporters/canvas";
 import {IconButton, MainLayout, SupportedIcons, ToggleIconButton} from "./common";
 import {GlobalState} from "./models/state";
+import {saveJSON} from "./exporters/json";
 
 
 function App() {
@@ -22,9 +23,7 @@ function App() {
           <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
               console.log("pretending to make new");
           }}>new</IconButton>
-          <IconButton icon={SupportedIcons.SaveDocument} onClick={() => {
-              console.log("pretending to save")
-          }}>save</IconButton>
+          <IconButton icon={SupportedIcons.SaveDocument} onClick={() => saveJSON(state)}>save</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
