@@ -1,122 +1,86 @@
-import React, {useEffect, useState} from "react";
-import {GlobalState, Observable, RealCircle, RealShape, RealSquare} from "./models/model";
-import {useObservableChange} from "./PageView";
-import {
-    BlockPicker,
-    ColorResult,
-    CustomPicker,
-    PhotoshopPicker,
-    SketchPicker,
-    SwatchesPicker
-} from 'react-color';
+import React, {useState} from "react";
+import {useObjectProxyChange, useObservableChange} from "./PageView";
+import {GlobalState} from "./models/state";
+import {ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
 import {TabbedPanel} from "josh_react_util";
+import {SwatchesPicker} from "react-color";
+import {Bounds} from "josh_js_util";
 
-interface PropSchema {
-    name:string,
-    base:'number'|"string"|"fill",
-    set(name:string, value:any): void
-    get(name:string):any
-}
-
-class NumberPropSchema implements  PropSchema {
-    base: "number";
-    name: string;
-    private target: RealShape;
-
-    constructor(name:string, target:RealShape) {
-        this.base = "number"
-        this.name = name
-        this.target = target
-    }
-
-    set(name:string, value:any) {
-        this.target.setProperty(name,value)
-    }
-    get(name:string) {
-        return this.target.getProperty(name)
-    }
-}
-class StringPropSchema implements PropSchema {
-    base: "string";
-    name: string;
-    private target: any;
-
-    constructor(name:string, target:any) {
-        this.base = "string"
-        this.name = name
-        this.target = target
-    }
-
-    set(name:string, value:any) {
-        this.target.setProperty(name,value)
-    }
-    get(name:string) {
-        return this.target.getProperty(name)
-    }
-}
-class FillPropSchema implements PropSchema {
-    base: 'string'
-    name: string
-    private target: RealShape
-    constructor(name:string, target:RealShape) {
-        this.base = 'string'
-        this.name = name
-        this.target = target
-    }
-    set(name:string, value:any) {
-        this.target.setProperty(name,value)
-    }
-    get(name:string) {
-        return this.target.getProperty(name)
-    }
-}
-
-function NumberEditor(props: { schema: PropSchema }) {
-    const value = props.schema.get(props.schema.name)
+function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+    const value = props.target.getPropValue(props.schema)
     return <>
         <label>{props.schema.name}</label>
-        <input type={"number"} value={value} onChange={(e)=>{
+        <input type={"number"} value={value} onChange={async (e) => {
             let num = parseInt(e.target.value)
-            props.schema.set(props.schema.name,num)
+            await props.target.setPropValue(props.schema, num)
         }}/>
     </>
 }
 
-function StringEditor(props: { schema: PropSchema }) {
-    const value = props.schema.get(props.schema.name)
+function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+    const value = props.target.getPropValue(props.parentSchema)
     return <>
         <label>{props.schema.name}</label>
-        <input type={"text"} value={value} onChange={(e)=>{
-            props.schema.set(props.schema.name,e.target.value)
+        <input type={"number"} value={value[props.schema.name]} onChange={async (e) => {
+            let num = parseInt(e.target.value)
+            let v = props.target.getPropValue(props.parentSchema)
+            if(!props.parentSchema.setter) throw new Error('cannot use sub props without a setter')
+            let nv = props.parentSchema.setter(v,props.schema.name,num)
+            await props.target.setPropValue(props.parentSchema, nv)
         }}/>
+    </>
+}
+
+function StringEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+    const value = props.target.getPropValue(props.schema)
+    return <>
+        <label>{props.schema.name}</label>
+        <input type={"text"} value={value} onChange={async (e) => {
+            await props.target.setPropValue(props.schema, e.target.value)
+        }}/>
+    </>
+}
+
+function SubPropEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+    const schema = props.schema
+    const target = props.target
+    const value = target.getPropValue(schema)
+    const subs = schema.subProps as Record<string,PropSchema>
+    return <>
+        <label>{props.schema.name}</label>
+        {Object.keys(subs).map((key:string) => {
+            return <SubNumberEditor key={key} parentSchema={schema} schema={subs[key]} target={target}/>
+        })}
     </>
 }
 
 type CB = () => any
-function FillSwatchButton(props:{schema: PropSchema, onClick:CB}) {
+function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<ObjectDef>, onClick:CB}) {
     return <div className={'color-swatch-button'}>
         <button
             className={'color-swatch-button'}
-            style={{backgroundColor:props.schema.get(props.schema.name) as string}}
+            style={{backgroundColor:props.target.getPropValue(props.schema) as string}}
             onClick={props.onClick}
         >&nbsp;</button>
         {/*<label>{objToHsla(props.color)}</label>*/}
     </div>
 }
 
-function FillInput(props:{ schema: PropSchema}) {
-    const value = props.schema.get(props.schema.name)
+
+function FillInput(props:{ schema: PropSchema, target:ObjectProxy<ObjectDef>}) {
+    const { schema, target } = props
+    const value = props.target.getPropValue(props.schema)
     const [visible, setVisible] = useState(false)
     const show:CB = () => setVisible((!visible))
     return <>
         <label>{props.schema.name}</label>
         <div className={'color-picker-wrapper'}>
-        <FillSwatchButton schema={props.schema} onClick={show}/>
+        <FillSwatchButton schema={props.schema} target={target} onClick={show}/>
         {visible && (
         <div className={'popover'}>
         <TabbedPanel titles={['swatches','other']}>
-            <SwatchesPicker color={value} onChange={(e)=>{
-                props.schema.set(props.schema.name,e.hex)
+            <SwatchesPicker color={value} onChange={async (e) => {
+                await target.setPropValue(props.schema, e.hex)
             }}/>
             <button>Hello</button>
         </TabbedPanel>
@@ -130,51 +94,22 @@ function FillInput(props:{ schema: PropSchema}) {
     </>
 }
 
-// function HSLColorInput(props: { value: HSLColor, onChange: (v:HSLColor) => void  }) {
-//     const [visible, setVisible] = useState(false)
-//     return <div className={"color-picker-wrapper"}>
-//         <ColorSwatchButton color={props.value} onClick={()=>setVisible(!visible)}/>
-//         {visible &&  <div className={'popover'}>
-//             <div className={'cover'}
-//                 // onClick={()=>setVisible(false)}
-//             >
-//                 <MetaColorInput value={props.value} onChange={props.onChange} onClose={()=>setVisible(false)}/>
-//                 {/*<SketchPicker color={props.value}*/}
-//                 {/*              onChange={(e)=> props.onChange(e.hsl as HSLColor)}/>*/}
-//             </div>
-//         </div>}
-//     </div>
-// }
-
-
-function PropEditor(props: { schema: PropSchema }) {
-    const { schema } = props
-    if(schema instanceof FillPropSchema) return <FillInput schema={schema}/>
-    if(schema.base === 'number') return <NumberEditor schema={schema}/>
-    if(schema.base === 'string') return <StringEditor schema={schema}/>
-    return <label>unknown property type {schema.name}</label>
+function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef> }) {
+    const { prop, target } = props
+    if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
+    if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop)}</b></>
+    if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
+    if(prop.base === 'number') return <NumberEditor schema={prop} target={target}/>
+    if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>
+    return <label>unknown property type {prop.name}</label>
 }
 
 export function PropSheet(props:{state:GlobalState}) {
     const selected = props.state.getSelectedObject()
-    useObservableChange(selected as unknown as Observable,'changed')
+    useObjectProxyChange(selected,PropChanged)
     useObservableChange(props.state,'selection')
-    const schemas:PropSchema[] = []
-    if(selected instanceof RealSquare) {
-        schemas.push(new NumberPropSchema('x',selected))
-        schemas.push(new NumberPropSchema('y',selected))
-        schemas.push(new StringPropSchema('name',selected))
-        schemas.push(new FillPropSchema('fill',selected))
-    }
-    if(selected instanceof RealCircle) {
-        schemas.push(new NumberPropSchema('x',selected))
-        schemas.push(new NumberPropSchema('y',selected))
-        schemas.push(new NumberPropSchema('radius',selected))
-        schemas.push(new StringPropSchema('name',selected))
-        schemas.push(new FillPropSchema('fill',selected))
-    }
-
+    const schemas = (selected)?selected.getPropSchemas():[]
     return <div className={'prop-sheet panel'}>{schemas.map((schema) => {
-        return <PropEditor key={schema.name} schema={schema}/>
+        return <PropEditor key={schema.name} prop={schema} target={selected as ObjectProxy<ObjectDef>}/>
     })}</div>
 }

@@ -1,10 +1,10 @@
-import {VDocument} from "../models/model";
+import {DocDef, ObjectDef, ObjectProxy, PageDef} from "../models/om";
 
-export function traverse(doc: VDocument, cb: (item: any) => void) {
+export function traverse(doc: ObjectProxy<ObjectDef>, cb: (item: any) => void) {
     cb(doc)
-    doc.pages.forEach(page => {
+    doc.getListProp(DocDef.props.pages).forEach(page => {
         cb(page)
-        page.children.forEach(shape => {
+        page.getListProp(PageDef.props.children).forEach(shape => {
             cb(shape)
         })
     })

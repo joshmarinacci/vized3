@@ -1,8 +1,9 @@
 import React, {MouseEventHandler, useContext, useEffect, useState} from "react"
-import {GlobalState, VDocument, VPage, VShape} from "./models/model"
 import './TreeView.css'
 import {toClass} from "josh_react_util";
 import {useObservableChange} from "./PageView";
+import {GlobalState} from "./models/state";
+import {DocDef, ObjectDef, ObjectProxy, PageDef} from "./models/om";
 
 //
 // function AddChildMenu(props: { node: TreeNode, state:GlobalState }) {
@@ -51,39 +52,44 @@ import {useObservableChange} from "./PageView";
 //     </div>
 // }
 
-function TreeShapeItem(props: { shape: VShape, state:GlobalState, selected:any }) {
+function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState, selected:any }) {
+    const shape = props.shape
     const clsses = toClass({
         'tree-item':true,
         'selectable':true,
         selected:props.shape === props.selected,
     })
-    return <div className={clsses} onClick={()=>props.state.setSelectedObject(props.shape)}>
-        <b>{props.shape.uuid}</b> <label>{props.shape.name}</label>
+    return <div className={clsses} onClick={()=> props.state.setSelectedObject(props.shape)}>
+        <b>{shape.hasPropNamed('uuid')?shape.getPropNamed("uuid"):"no uuid"}</b>
+        <label>name</label>
     </div>
 }
 
-function TreePageItem(props: { page: VPage, state:GlobalState, selected:any }) {
+function TreePageItem(props: { page: ObjectProxy<ObjectDef>, state:GlobalState, selected:any }) {
     const {page, state} = props
     const clsses = toClass({
         'selectable':true,
-        selected:props.page === state.getSelectedPage(),
+        selected:page === state.getSelectedPage(),
     })
     return <div className={'tree-item'}>
-        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page</b>
+        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page hi</b>
         {
-            page.children.map(shape => <TreeShapeItem key={shape.uuid} shape={shape}
-                                                            state={state} selected={props.selected}/>)
+            page.getListProp(PageDef.props.children).map((shape:ObjectProxy<ObjectDef>,i:number) =>
+                <TreeShapeItem key={i} shape={shape}
+                               state={state} selected={props.selected}/>)
         }
     </div>
 }
 
-export function TreeView(props: { document:VDocument, state:GlobalState}) {
-    const {document} = props
+export function TreeView(props: { state:GlobalState}) {
     useObservableChange(props.state,'selection')
     const selected = props.state.getSelectedObject()
+    const doc = props.state.getCurrentDocument()
     return <div className={'panel left tree-view'}>
         <h3>document</h3>
         <h3>pages</h3>
-        {document.pages.map(pg => <TreePageItem key={pg.uuid} page={pg} state={props.state} selected={selected}/>)}
+        {doc.getListProp(DocDef.props.pages).map((pg,i) => {
+            return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
+        })}
     </div>
 }

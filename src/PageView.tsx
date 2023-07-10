@@ -1,22 +1,30 @@
-import React, { useEffect, useRef, useState, MouseEvent } from "react";
+import React, {MouseEvent, useEffect, useRef, useState} from "react";
 import {Point, Size} from "josh_js_util";
 import {HBox} from "josh_react_util";
-import {GlobalState, Observable, VPage, VShape} from "./models/model"
+import {Observable} from "./models/model";
+import {GlobalState} from "./models/state";
+import {
+    DrawableShape,
+    EventTypes,
+    FamilyPropChanged,
+    ObjectDef,
+    ObjectProxy,
+    PageDef
+} from "./models/om";
 
-function drawCanvasState(canvas: HTMLCanvasElement, page: VPage, state: GlobalState) {
+function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, state: GlobalState) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
-    page.children.forEach(shape => {
-        shape.drawSelf(ctx)
+    page.getListProp(PageDef.props.children).forEach(shape => {
+        (shape.obj as DrawableShape).drawSelf(ctx)
     })
     let selected = state.getSelectedObject()
     if(selected) {
-        ctx.strokeStyle = 'magenta'
-        ctx.lineWidth = 8
-        selected.drawSelected(ctx)
+        ctx.strokeStyle = 'magenta';
+        ctx.lineWidth = 8;
+        (selected.obj as DrawableShape).drawSelected(ctx);
     }
-
 }
 
 export function useObservableChange(ob:Observable|undefined, eventType:string) {
@@ -32,9 +40,24 @@ export function useObservableChange(ob:Observable|undefined, eventType:string) {
 
     },[ob,count])
 }
+export function useObjectProxyChange(ob:ObjectProxy<ObjectDef>|null, eventType:EventTypes) {
+    const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count+1)
+        }
+        if(ob) ob.addEventListener(eventType,hand)
+        return () => {
+            if(ob) ob.removeEventListener(eventType,hand)
+        }
 
-function findShapeInPage(page: VPage, pt: Point):VShape|undefined {
-    let matching = page.children.filter(shape => shape.contains(pt))
+    },[ob,count])
+}
+
+function findShapeInPage(page: ObjectProxy<ObjectDef>, pt: Point):ObjectProxy<ObjectDef>|undefined {
+    let matching = page.getListProp(PageDef.props.children).filter(shape => {
+        return (shape.obj as DrawableShape).contains(pt)
+    })
     if(matching.length > 0) {
         return matching.at(-1)
     }
@@ -54,15 +77,15 @@ export function PageView(props:{page:any, state:GlobalState}) {
     const canvasRef = useRef<HTMLCanvasElement>();
     useEffect(() => {
         if(canvasRef.current) {
-            drawCanvasState(canvasRef.current, props.page as VPage, props.state)
+            drawCanvasState(canvasRef.current, props.page, props.state)
         }
     })
-    useObservableChange(props.page,'changed')
+    useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
     const onMouseDown = (e:MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
         if(props.page) {
-            let page = props.page as VPage
+            let page = props.page as ObjectProxy<ObjectDef>
             let shape = findShapeInPage(page,pt)
             if(shape) {
                 props.state.setSelectedObject(shape)

@@ -1,6 +1,7 @@
-import {GlobalState, VCircle, VDocument, VPage, VSquare} from "../models/model";
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
 import {traverse} from "./common";
+import {GlobalState} from "../models/state";
+import {CircleClass, DocClass, PageClass, RectClass} from "../models/om";
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
@@ -9,20 +10,20 @@ export async function exportPNG(state: GlobalState) {
     canvas.height = 600
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     traverse(state.getCurrentDocument(), (item: any) => {
-        if (item.type === 'document') {
-            const doc = item as VDocument
+        if (item.def.name === 'document') {
+            const doc = item.obj as DocClass
         }
-        if (item.type === 'page') {
-            const page = item as VPage
+        if (item.def.name === 'page') {
+            const page = item.obj as PageClass
             ctx.fillStyle = 'white'
             ctx.fillRect(0, 0, canvas.width, canvas.height)
         }
-        if (item.type === 'square') {
-            const sq = item as VSquare
+        if (item.def.name === 'rect') {
+            const sq = item.obj as RectClass
             sq.drawSelf(ctx)
         }
-        if (item.type === 'circle') {
-            const circle = item as VCircle
+        if (item.def.name === 'circle') {
+            const circle = item.obj as CircleClass
             circle.drawSelf(ctx)
         }
     })
