@@ -12,8 +12,8 @@ import {GlobalState} from "./models/state";
 import {saveJSON} from "./exporters/json";
 
 
+const state = new GlobalState()
 function App() {
-    const state = new GlobalState()
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
 
@@ -23,10 +23,12 @@ function App() {
           <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
               console.log("pretending to make new");
           }}>new</IconButton>
-          <IconButton icon={SupportedIcons.SaveDocument} onClick={() => saveJSON(state)}>save</IconButton>
+            <IconButton icon={SupportedIcons.SaveDocument} onClick={() => saveJSON(state)}>save</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
+            <IconButton icon={SupportedIcons.Undo} disabled={!state.canUndo()} onClick={() => state.performUndo()}>Undo</IconButton>
+            <IconButton icon={SupportedIcons.Redo} disabled={!state.canRedo()} onClick={() => state.performRedo()}>Redo</IconButton>
         </HBox>
           <MainLayout
               rightVisible={rightVisible}

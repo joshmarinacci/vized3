@@ -31,6 +31,8 @@ export enum SupportedIcons {
     RightPanelCloseIcon = 'right_panel_close',
     RightPanelOpenIcon = 'right_panel_open',
     Download='download',
+    Undo='undo',
+    Redo='redo',
     NewDocument='note_add',
     SaveDocument='save',
 }
@@ -54,8 +56,9 @@ export function IconButton(props: {
     onClick: () => any,
     icon: SupportedIcons,
     children: ReactNode
+    disabled?: boolean
 }): JSX.Element {
-    return <button onClick={props.onClick} className={'icon-button'}>
+    return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>
         <span
             className="material-symbols-rounded">{props.icon}</span>
         {props.children}

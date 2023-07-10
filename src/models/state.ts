@@ -65,4 +65,19 @@ export class GlobalState extends Observable {
     getSelectedPage() {
         return this.selected_page
     }
+
+    performUndo() {
+        console.log("pretending to undo")
+    }
+
+    performRedo() {
+        console.log("pretending to redo")
+    }
+
+    canUndo() {
+        return false;
+    }
+    canRedo() {
+        return false;
+    }
 }

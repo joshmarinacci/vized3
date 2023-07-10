@@ -385,14 +385,20 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
 export class ObjectManager {
     private defs: Map<string, ObjectDef>
     private classes: Map<string, any>
+    private global_prop_change_handler: (e:any) => void;
 
     constructor() {
         this.defs = new Map()
         this.classes = new Map()
+        this.global_prop_change_handler = (e) => {
+            console.log("prop has changed")
+        }
     }
 
     make(def: ObjectDef, props: Record<string, any>) {
-        return new ObjectProxy(this,def, props)
+        let op = new ObjectProxy(this,def, props)
+        op.addEventListener(PropChanged, this.global_prop_change_handler)
+        return op
     }
 
     async lookupDef(name: string) {

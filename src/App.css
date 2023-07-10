@@ -81,6 +81,7 @@
   flex-direction: row;
   justify-content: center;
   align-items: center;
+  padding: 0.25rem 0.5rem;
 }
 
 .icon-button:hover, .icon-button.borderless:hover {
@@ -90,4 +91,13 @@
 
 .icon-button.borderless {
  border-color: transparent;
+}
+
+.icon-button:disabled {
+  background-color: var(--slate-300);
+  border-color: transparent;
+}
+.icon-button:disabled:hover {
+  background-color: var(--slate-300);
+  border-color: transparent;
 }
