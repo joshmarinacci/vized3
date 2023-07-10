@@ -174,7 +174,7 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
         if(pop.base === 'object') {
             let val = obj.getPropValue(pop)
             if(val instanceof Bounds) {
-                json.props[pop.name] = { x: val.x, y: val.y, w: val.w, h: val.h}
+                json.props[pop.name] = val.toJSON()
             }
         }
     })
@@ -184,7 +184,29 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
 async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy<ObjectDef>> {
     const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, any> = {}
-    console.log("making new object from def",def)
+    for( let key of Object.keys(def.props)) {
+        const propSchema = def.props[key]
+        if(propSchema.base === 'string') {
+            props[key] = obj.props[key]
+            continue
+        }
+        if(propSchema.base === 'list') {
+            props[key] = []
+            const vals = obj.props[key] as JSONObject[]
+            for(let val of vals) {
+                let obj_val = await fromJSON(om, val)
+                props[key].push(obj_val)
+            }
+            continue
+        }
+        if(propSchema.base === 'object') {
+            if(key === 'bounds') {
+                props[key] = Bounds.fromJSON(obj.props[key])
+                continue
+            }
+        }
+        throw new Error(`cant restore property ${key}`)
+    }
     return await om.make(def, props)
 }
 
@@ -321,9 +343,9 @@ describe('model tests', () => {
         // will restore inner objects using the impl class names
         // correct def
         assert(new_root.def.name === 'page')
-        console.log("created object root is",new_root)
         // has actual RealPage methods
         assert(new_root.obj instanceof RealPage)
+        assert((new_root.obj as RealPage).hasChildren !== null)
         assert((new_root.obj as RealPage).hasChildren())
         let new_rects = new_root.getPropValue(PageDef.props.children)
         assert(new_rects.length == 1)
