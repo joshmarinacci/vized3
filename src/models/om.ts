@@ -22,6 +22,17 @@ const FillDef:PropSchema = {
     readonly: false,
     custom:'css-color',
 }
+const StrokeFillDef:PropSchema = {
+    name:'strokeFill',
+    base: 'string',
+    readonly: false,
+    custom:'css-color',
+}
+const StrokeWidthDef:PropSchema = {
+    name:'strokeWidth',
+    base: 'number',
+    readonly: false,
+}
 
 export type ObjectDef = {
     name: string,
@@ -87,6 +98,8 @@ export const RectDef: ObjectDef = {
             }
         },
         fill: FillDef,
+        strokeFill: StrokeFillDef,
+        strokeWidth: StrokeWidthDef,
     }
 }
 
@@ -125,6 +138,8 @@ export const CircleDef: ObjectDef = {
             readonly: false,
         },
         fill: FillDef,
+        strokeFill: StrokeFillDef,
+        strokeWidth: StrokeWidthDef,
     }
 
 }
@@ -155,17 +170,23 @@ export class RectClass implements DrawableShape {
     uuid: string
     name: string
     fill: string
-
+    strokeWidth: number;
+    strokeFill: string;
     constructor(opts: Record<keyof typeof RectDef.props, any>) {
         this.type = 'square'
         this.uuid = genId('square')
         this.name = 'unnamed'
         this.bounds = opts.bounds || new Bounds(0, 0, 1, 1)
-        this.fill = opts.fill || "red"
+        this.fill = opts.fill || "#888"
+        this.strokeWidth = 1
+        this.strokeFill = 'black'
     }
     drawSelf(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = this.fill
         ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+        ctx.strokeStyle = this.strokeFill
+        ctx.lineWidth = this.strokeWidth
+        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
     }
     contains(pt: Point): boolean {
         return this.bounds.contains(pt)
@@ -196,20 +217,26 @@ export class CircleClass implements DrawableShape {
     center: Point;
     radius: number;
     fill: string;
+    strokeWidth: number;
+    strokeFill: string;
     constructor(opts: Record<keyof typeof CircleDef.props, any>) {
         this.type = 'circle'
         this.uuid = genId('circle')
         this.name = 'unnamed'
         this.center = opts.center || new Point(50,50)
         this.radius = 20
-        this.fill = "red"
-
+        this.fill = "#ccc"
+        this.strokeWidth = 1
+        this.strokeFill = 'black'
     }
     drawSelf(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = this.fill
         ctx.beginPath()
         ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
         ctx.fill()
+        ctx.strokeStyle = this.strokeFill
+        ctx.lineWidth = this.strokeWidth
+        ctx.stroke()
     }
     contains(pt: Point): boolean {
         return pt.subtract(this.center).magnitude() < this.radius

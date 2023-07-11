@@ -22,8 +22,8 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, stat
     })
     let selected = state.getSelectedObject()
     if(selected) {
-        ctx.strokeStyle = 'magenta';
-        ctx.lineWidth = 8;
+        ctx.strokeStyle = 'rgba(255,100,255,0.5)';
+        ctx.lineWidth = 10;
         (selected.obj as DrawableShape).drawSelected(ctx);
     }
 }
