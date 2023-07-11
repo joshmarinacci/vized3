@@ -257,10 +257,15 @@ export type EventTypes = typeof PropChanged | typeof FamilyPropChanged
 export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
+type AppendListEvent = {
+}
+type DeleteListEvent = {
+}
+
 export class ObjectProxy<T extends ObjectDef> {
     obj: any;
     private listeners: Map<EventTypes, any[]>;
-    private parent: ObjectProxy<ObjectDef> | null
+    parent: ObjectProxy<ObjectDef> | null
     def: T;
 
     constructor(om: ObjectManager, def: T, props: Record<keyof T,any>) {
@@ -286,7 +291,7 @@ export class ObjectProxy<T extends ObjectDef> {
             oldValue:this.obj[prop.name],
             newValue:value,
             desc: `${prop.name} ${this.obj[prop.name]} => ${value}`,
-    }
+        }
         this.obj[prop.name] = value
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
@@ -297,8 +302,41 @@ export class ObjectProxy<T extends ObjectDef> {
         return this.obj[prop.name]
     }
     appendListProp(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
-        this.obj[prop.name].push(obj)
+        const list = this.obj[prop.name]
+        const oldList = list.slice()
+        list.push(obj)
+        const newList = list.slice()
+        const evt:AppendListEvent = {
+            target:this,
+            def:this.def,
+            prop:prop,
+            oldValue:oldList,
+            newValue:newList,
+            desc: `added element`
+        }
         obj.setParent(this)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
+    async removeListPropByValue(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
+        const list = this.obj[prop.name]
+        const oldList = list.slice()
+        let n = list.indexOf(obj)
+        if(n >= 0) {
+            list.splice(n,1)
+        }
+        const newList = list.slice()
+        const evt:DeleteListEvent = {
+            target:this,
+            def:this.def,
+            prop:prop,
+            oldValue:oldList,
+            newValue:newList,
+            desc: `deleted element`
+        }
+        obj.setParent(this)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
 
     getListPropAt(prop: PropSchema, index: number) {

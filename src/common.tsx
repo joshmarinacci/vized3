@@ -2,6 +2,8 @@ import React, {CSSProperties, JSX, ReactNode, useEffect, useState} from "react";
 import {toClass} from "josh_react_util";
 import {Observable} from "./models/model";
 import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
+import {MenuAction} from "./actions";
+import {GlobalState} from "./models/state";
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -37,6 +39,7 @@ export enum SupportedIcons {
     Redo='redo',
     NewDocument='note_add',
     SaveDocument='save',
+    Add='add',
 }
 
 export function ToggleIconButton(props: {
@@ -55,7 +58,7 @@ export function ToggleIconButton(props: {
 }
 
 export function IconButton(props: {
-    onClick: () => any,
+    onClick?: () => any,
     icon: SupportedIcons,
     children: ReactNode
     disabled?: boolean
@@ -107,4 +110,17 @@ export function useObjectProxyChange(ob: ObjectProxy<ObjectDef> | null, eventTyp
         }
 
     }, [ob, count])
+}
+
+export function MenuBox(props: { children: ReactNode }) {
+    return <div className={'menu-box'}>{props.children}</div>
+}
+
+function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
+    return <button onClick={props.onClick}>{props.children}</button>
+}
+
+export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
+    return <MenuButton
+        onClick={() => props.action.perform(props.state)}>{props.action.title}</MenuButton>
 }

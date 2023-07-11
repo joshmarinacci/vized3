@@ -1,11 +1,15 @@
 import React, {useState} from 'react';
-import {FillPage, HBox, Spacer} from "josh_react_util"
+import {
+    FillPage,
+    HBox,
+    PopupContainer,
+    PopupContext,
+    PopupContextImpl,
+    Spacer
+} from "josh_react_util"
 import './App.css';
 import {TreeView} from "./TreeView";
-import {
-    PageView,
-
-} from "./PageView";
+import {PageView,} from "./PageView";
 import {PropSheet} from "./PropSheet";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
@@ -20,18 +24,21 @@ import {
 import {GlobalState} from "./models/state";
 import {saveJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";
+import {AddNewCircleAction, AddNewRectAction} from "./actions";
 
 
 const state = new GlobalState()
+
 function App() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
     useObjectManagerChange(state.om, HistoryChanged)
       return (
+          <PopupContext.Provider value={new PopupContextImpl()}>
       <FillPage>
         <HBox>
           <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
-              console.log("pretending to make new");
+              console.log("pretending to make new document");
           }}>new</IconButton>
             <IconButton icon={SupportedIcons.SaveDocument} onClick={() => saveJSON(state)}>save</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
@@ -39,6 +46,8 @@ function App() {
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
+            <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewRectAction.perform(state)}>Add Rect</IconButton>
+            <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewCircleAction.perform(state)}>Add Circle</IconButton>
         </HBox>
           <MainLayout
               rightVisible={rightVisible}
@@ -64,7 +73,9 @@ function App() {
                   selected={!rightVisible}
               />
           </HBox>
+          <PopupContainer/>
       </FillPage>
+          </PopupContext.Provider>
   );
 }
 

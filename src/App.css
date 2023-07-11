@@ -101,3 +101,17 @@
   background-color: var(--slate-300);
   border-color: transparent;
 }
+
+
+.menu-box {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+}
+.menu-box button {
+  padding: 0.5rem 1.0rem;
+  border-width: 0;
+}
+.menu-box button:hover {
+  background-color: var(--button-background-selected);
+}
