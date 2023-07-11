@@ -1,9 +1,9 @@
 import React, {MouseEventHandler, useContext, useEffect, useState} from "react"
 import './TreeView.css'
 import {toClass} from "josh_react_util";
-import {useObservableChange} from "./PageView";
 import {GlobalState} from "./models/state";
 import {DocDef, ObjectDef, ObjectProxy, PageDef} from "./models/om";
+import {useObservableChange} from "./common";
 
 //
 // function AddChildMenu(props: { node: TreeNode, state:GlobalState }) {

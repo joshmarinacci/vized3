@@ -1,10 +1,10 @@
 import React, {useState} from "react";
-import {useObjectProxyChange, useObservableChange} from "./PageView";
 import {GlobalState} from "./models/state";
 import {ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
 import {TabbedPanel} from "josh_react_util";
 import {SwatchesPicker} from "react-color";
 import {Bounds} from "josh_js_util";
+import {useObjectProxyChange, useObservableChange} from "./common";
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
     const value = props.target.getPropValue(props.schema)

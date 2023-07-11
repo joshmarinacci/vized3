@@ -4,13 +4,19 @@ import './App.css';
 import {TreeView} from "./TreeView";
 import {
     PageView,
-    useObjectManagerChange,
+
 } from "./PageView";
 import {PropSheet} from "./PropSheet";
 import {exportSVG} from "./exporters/svg";
 import {exportPNG} from "./exporters/png";
 import {exportCanvasJS} from "./exporters/canvas";
-import {IconButton, MainLayout, SupportedIcons, ToggleIconButton} from "./common";
+import {
+    IconButton,
+    MainLayout,
+    SupportedIcons,
+    ToggleIconButton,
+    useObjectManagerChange
+} from "./common";
 import {GlobalState} from "./models/state";
 import {saveJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";

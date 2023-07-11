@@ -1,5 +1,7 @@
-import React, {CSSProperties, JSX, ReactNode} from "react";
+import React, {CSSProperties, JSX, ReactNode, useEffect, useState} from "react";
 import {toClass} from "josh_react_util";
+import {Observable} from "./models/model";
+import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -63,4 +65,46 @@ export function IconButton(props: {
             className="material-symbols-rounded">{props.icon}</span>
         {props.children}
     </button>
+}
+
+export function useObservableChange(ob: Observable | undefined, eventType: string) {
+    const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count + 1)
+        }
+        if (ob) ob.addEventListener(eventType, hand)
+        return () => {
+            if (ob) ob.removeEventListener(eventType, hand)
+        }
+
+    }, [ob, count])
+}
+
+export function useObjectManagerChange(ob: ObjectManager, eventType: OMEventTypes) {
+    const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count + 1)
+        }
+        if (ob) ob.addEventListener(eventType, hand)
+        return () => {
+            if (ob) ob.removeEventListener(eventType, hand)
+        }
+
+    }, [ob, count])
+}
+
+export function useObjectProxyChange(ob: ObjectProxy<ObjectDef> | null, eventType: EventTypes) {
+    const [count, setCount] = useState(0)
+    return useEffect(() => {
+        const hand = () => {
+            setCount(count + 1)
+        }
+        if (ob) ob.addEventListener(eventType, hand)
+        return () => {
+            if (ob) ob.removeEventListener(eventType, hand)
+        }
+
+    }, [ob, count])
 }
