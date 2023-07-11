@@ -28,7 +28,6 @@ export const AddNewCircleAction:MenuAction = {
             center: new Point(200, 200),
         })
         await page.appendListProp(PageDef.props.children, circle)
-        state.setSelectedObject(null)
     }
 }
 
@@ -38,8 +37,8 @@ export const DeleteSelection:MenuAction = {
         const obj = state.getSelectedObject()
         if(obj && obj.parent) {
             const parent = obj.parent
-            console.log("deleting",obj,'from',parent)
             await parent.removeListPropByValue(PageDef.props.children,obj)
+            state.setSelectedObject(null)
         }
     }
 }

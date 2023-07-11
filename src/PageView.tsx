@@ -1,6 +1,6 @@
-import React, {MouseEvent, useEffect, useRef, useState} from "react";
+import React, {MouseEvent, useContext, useEffect, useRef, useState} from "react";
 import {Bounds, Point, Size} from "josh_js_util";
-import {HBox} from "josh_react_util";
+import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "./models/state";
 import {
     CircleDef,
@@ -11,7 +11,8 @@ import {
     PageDef,
     RectDef
 } from "./models/om";
-import {useObjectProxyChange, useObservableChange} from "./common";
+import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
+import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
 
 function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, state: GlobalState) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -108,6 +109,16 @@ export function PageView(props:{page:any, state:GlobalState}) {
         let pt = canvasToModel(e)
         setPressed(false)
     }
+    const pm = useContext(PopupContext)
+    const showContextMenu = (e:MouseEvent<HTMLCanvasElement>) => {
+        e.preventDefault()
+        const menu = <MenuBox>
+            <MenuActionButton state={props.state} action={AddNewRectAction}/>
+            <MenuActionButton state={props.state} action={AddNewCircleAction}/>
+            <MenuActionButton state={props.state} action={DeleteSelection}/>
+        </MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0,0))
+    }
 
     const dom_size = size.scale(1/window.devicePixelRatio)
     return <div className={'panel page-view'}>
@@ -120,7 +131,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             // onWheelCapture={onWheel}
-            // onContextMenuCapture={showContextMenu}
+            onContextMenuCapture={showContextMenu}
             style={{
                 border: '1px solid black',
                 width: dom_size.w + 'px',
