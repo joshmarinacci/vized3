@@ -257,18 +257,16 @@ export type EventTypes = typeof PropChanged | typeof FamilyPropChanged
 export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
-type AppendListEvent = {
-}
-type DeleteListEvent = {
-}
 
 export class ObjectProxy<T extends ObjectDef> {
     obj: any;
     private listeners: Map<EventTypes, any[]>;
     parent: ObjectProxy<ObjectDef> | null
     def: T;
+    private uuid: string;
 
     constructor(om: ObjectManager, def: T, props: Record<keyof T,any>) {
+        this.uuid = genId('proxy')
         let cons = om.lookupConstructor(def.name)
         this.obj = new cons(props)
         this.def = def
@@ -284,15 +282,7 @@ export class ObjectProxy<T extends ObjectDef> {
     }
 
     async setPropValue(prop: PropSchema, value: any) {
-        const evt:PropChangeEvent = {
-            target:this,
-            def:this.def,
-            prop:prop,
-            oldValue:this.obj[prop.name],
-            newValue:value,
-            desc: `${prop.name} ${this.obj[prop.name]} => ${value}`,
-        }
-        this.obj[prop.name] = value
+        const evt = new PropChangeEvent(this, prop, value)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
@@ -302,39 +292,12 @@ export class ObjectProxy<T extends ObjectDef> {
         return this.obj[prop.name]
     }
     appendListProp(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
-        const list = this.obj[prop.name]
-        const oldList = list.slice()
-        list.push(obj)
-        const newList = list.slice()
-        const evt:AppendListEvent = {
-            target:this,
-            def:this.def,
-            prop:prop,
-            oldValue:oldList,
-            newValue:newList,
-            desc: `added element`
-        }
-        obj.setParent(this)
+        const evt:AppendListEvent = new AppendListEvent(this, prop, obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
     async removeListPropByValue(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
-        const list = this.obj[prop.name]
-        const oldList = list.slice()
-        let n = list.indexOf(obj)
-        if(n >= 0) {
-            list.splice(n,1)
-        }
-        const newList = list.slice()
-        const evt:DeleteListEvent = {
-            target:this,
-            def:this.def,
-            prop:prop,
-            oldValue:oldList,
-            newValue:newList,
-            desc: `deleted element`
-        }
-        obj.setParent(this)
+        const evt:DeleteListEvent = new DeleteListEvent(this, prop, obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
@@ -360,7 +323,7 @@ export class ObjectProxy<T extends ObjectDef> {
         this.listeners.get(type).forEach(cb => cb(value))
     }
 
-    private setParent(parent: ObjectProxy<any>) {
+    setParent(parent: ObjectProxy<any>|null) {
         this.parent = parent
     }
 
@@ -376,6 +339,9 @@ export class ObjectProxy<T extends ObjectDef> {
         return this.obj[this.def.props[name].name]
     }
 
+    getUUID() {
+        return this.uuid
+    }
 }
 
 export type JSONObject = {
@@ -437,6 +403,10 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
             props[key] = obj.props[key]
             continue
         }
+        if (propSchema.base === 'number') {
+            props[key] = obj.props[key]
+            continue
+        }
         if (propSchema.base === 'list') {
             props[key] = []
             const vals = obj.props[key] as JSONObject[]
@@ -457,19 +427,171 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
     return await om.make(def, props)
 }
 
-type PropChangeEvent = {
-    target: ObjectProxy<ObjectDef>,
-    def: ObjectDef,
-    prop: PropSchema,
-    oldValue:any,
-    newValue:any,
-    desc:string
+
+/// history log events
+interface HistoryEvent {
+    uuid:string
+    desc: string
+    undo():Promise<void>
+    redo():Promise<void>
 }
+class AppendListEvent implements HistoryEvent {
+    target: ObjectProxy<ObjectDef>
+    def: ObjectDef
+    prop: PropSchema
+    oldValue:any
+    newValue:any
+    obj: ObjectProxy<ObjectDef>
+    desc: string;
+    uuid: string;
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
+        this.uuid = genId('event:appendlist')
+        this.target = target
+        this.def = target.def
+        this.prop = prop
+        this.obj = obj
+
+        const list = this.target.obj[this.prop.name]
+        const oldList = list.slice()
+        list.push(this.obj)
+        this.obj.setParent(this.target)
+        const newList = list.slice()
+        this.oldValue = oldList
+        this.newValue = newList
+        this.desc = `added element`
+    }
+
+
+    async redo(): Promise<void> {
+        const list = this.target.obj[this.prop.name]
+        list.push(this.obj)
+        this.obj.setParent(this.target)
+    }
+
+    async undo(): Promise<void> {
+        const list = this.target.obj[this.prop.name]
+        list.splice(list.length-1,1)
+        this.obj.setParent(null)
+    }
+}
+class DeleteListEvent implements HistoryEvent {
+    target: ObjectProxy<ObjectDef>
+    def: ObjectDef
+    prop: PropSchema
+    oldValue:any
+    newValue:any
+    desc: string;
+    uuid: string;
+    index: number
+    obj: ObjectProxy<ObjectDef>
+    constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, obj:ObjectProxy<ObjectDef>) {
+        this.uuid = genId('event:deletelist')
+        this.target = target
+        this.def = target.def
+        this.prop = prop
+        this.desc = `deleted element`
+
+        const list = target.obj[prop.name]
+        const oldList = list.slice()
+        this.obj = obj
+        this.index = list.indexOf(this.obj)
+        if(this.index >= 0) {
+            list.splice(this.index,1)
+        }
+        const newList = list.slice()
+        this.oldValue = oldList
+        this.newValue = newList
+        this.obj.setParent(null)
+    }
+
+    async redo(): Promise<void> {
+        const list = this.target.obj[this.prop.name]
+        list.splice(this.index,1)
+        this.obj.setParent(null)
+    }
+
+    async undo(): Promise<void> {
+        const list = this.target.obj[this.prop.name]
+        list.splice(this.index,0,this.obj)
+        this.obj.setParent(this.target)
+    }
+}
+class CreateObjectEvent implements HistoryEvent {
+    desc: string;
+    uuid: string;
+    target: ObjectProxy<ObjectDef>;
+    private om: ObjectManager;
+
+    constructor(om: ObjectManager, def: ObjectDef, props: Record<string, any>) {
+        this.om = om
+        let proxy = new ObjectProxy(om,def, props)
+        this.om.addObject(proxy)
+        this.uuid = genId('event:createobject')
+        this.desc = 'not implemented'
+        this.target = proxy
+        this.desc = `created object from def ${this.target.def.name}`
+    }
+
+    async redo(): Promise<void> {
+        await this.om.addObject(this.target)
+    }
+    async undo(): Promise<void> {
+        await this.om.removeObject(this.target)
+    }
+}
+
+class DeleteObjectEvent implements HistoryEvent {
+    desc: string;
+    uuid: string;
+    constructor() {
+        this.uuid = genId('event:deleteobject')
+        this.desc = 'not implemented'
+    }
+
+    redo(): Promise<void> {
+        throw new Error("not implemented")
+    }
+
+    undo(): Promise<void> {
+        throw new Error("not implemented")
+    }
+
+}
+class PropChangeEvent implements HistoryEvent {
+    target: ObjectProxy<ObjectDef>
+    def: ObjectDef
+    prop: PropSchema
+    oldValue:any
+    newValue:any
+    desc: string;
+    uuid: string;
+    constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, value:any) {
+        this.uuid = genId('event:propchange')
+        this.target = target
+        this.def = target.def
+        this.prop = prop
+        this.oldValue = target.obj[prop.name]
+        this.newValue = value
+        this.desc = `${prop.name} ${target.obj[prop.name]} => ${value}`
+        this.target.obj[prop.name] = value
+    }
+
+    async redo(): Promise<void> {
+        await this.target.setPropValue(this.prop, this.newValue)
+    }
+
+    async undo(): Promise<void> {
+        console.log("undoing",this.desc)
+        await this.target.setPropValue(this.prop, this.oldValue)
+    }
+}
+
 export class ObjectManager {
     private defs: Map<string, ObjectDef>
     private classes: Map<string, any>
+    private _proxies: Map<string, ObjectProxy<ObjectDef>>
     private global_prop_change_handler: (e:any) => void;
-    private changes: PropChangeEvent[]
+    private changes: HistoryEvent[]
     private _undoing: boolean;
     private current_change_index: number;
     private listeners:Map<OMEventTypes,[]>
@@ -478,6 +600,7 @@ export class ObjectManager {
         this.listeners = new Map()
         this.defs = new Map()
         this.classes = new Map()
+        this._proxies = new Map()
         this.changes = []
         this._undoing = false
         this.current_change_index = -1
@@ -501,17 +624,17 @@ export class ObjectManager {
         // @ts-ignore
         this.listeners.set(type, this.listeners.get(type).filter(c => c !== cb))
     }
-
     private _fire(type: OMEventTypes, value: any) {
         if (!this.listeners.get(type)) this.listeners.set(type, [])
         // @ts-ignore
         this.listeners.get(type).forEach(cb => cb(value))
     }
-
     make(def: ObjectDef, props: Record<string, any>) {
-        let op = new ObjectProxy(this,def, props)
-        op.addEventListener(PropChanged, this.global_prop_change_handler)
-        return op
+        const evt = new CreateObjectEvent(this,def,props)
+        this.changes.push(evt)
+        this.current_change_index++
+        evt.target.addEventListener(PropChanged, this.global_prop_change_handler)
+        return evt.target
     }
 
     async lookupDef(name: string) {
@@ -555,7 +678,7 @@ export class ObjectManager {
         if(!this.canUndo()) return
         let recent = this.changes[this.current_change_index]
         this._undoing = true
-        await recent.target.setPropValue(recent.prop,recent.oldValue)
+        await recent.undo()
         this._undoing = false
         this.current_change_index--
         this._fire(HistoryChanged, {})
@@ -566,7 +689,7 @@ export class ObjectManager {
         this.current_change_index++
         let recent = this.changes[this.current_change_index]
         this._undoing = true
-        await recent.target.setPropValue(recent.prop,recent.newValue)
+        await recent.redo()
         this._undoing = false
         this._fire(HistoryChanged, {})
     }
@@ -579,5 +702,21 @@ export class ObjectManager {
             return `${active?'*':' '} ${ch.desc}`
         }).join("\n"))
         console.log('can undo',this.canUndo(), 'can redo', this.canRedo())
+    }
+
+    history() {
+        return this.changes
+    }
+
+    hasObject(uuid: string) {
+        return this._proxies.has(uuid)
+    }
+
+    async removeObject(target: ObjectProxy<ObjectDef>) {
+        this._proxies.delete(target.getUUID())
+    }
+
+    addObject(proxy: ObjectProxy<ObjectDef>) {
+        this._proxies.set(proxy.getUUID(),proxy)
     }
 }

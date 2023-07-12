@@ -12,6 +12,7 @@ import {
     PageClass, RectClass,
     RectDef
 } from "./om";
+import {assert_eq} from "josh_js_util/dist/assert";
 
 
 describe('model tests', () => {
@@ -22,7 +23,7 @@ describe('model tests', () => {
         om.registerDef(RectDef, RectClass)
         let rect:ObjectProxy<typeof RectDef> = await om.make(RectDef, { })
         assert(rect !== null)
-        rect = await om.make(RectDef, { bounds: new Bounds(1,2,3,4)})
+        rect = await om.make(RectDef, { bounds: new Bounds(1,2,3,4), fill:'red' })
         assert(rect.getPropValue(RectDef.props.bounds) !== null)
         assert(rect.getPropValue(RectDef.props.bounds).x === 1)
         assert(rect.getPropValue(RectDef.props.bounds).y === 2)
@@ -139,25 +140,70 @@ describe('model tests', () => {
         assert(new_rect.getPropValue(RectDef.props.bounds) instanceof Bounds)
         assert(new_rect.getPropValue(RectDef.props.bounds).w === 3)
     })
-    it('should undo and redo', async () => {
+    it('should undo and redo props', async () => {
         const om = new ObjectManager()
         om.registerDef(PageDef, PageClass)
         om.registerDef(RectDef, RectClass)
+        assert(!om.canUndo())
+        assert(!om.canRedo())
         const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
-        assert(om.canUndo() === false)
-        assert(om.canRedo() === false)
         await rect.setPropValue(RectDef.props.fill,'blue')
-        assert(om.canUndo() === true)
-        assert(om.canRedo() === false)
+        assert(om.canUndo())
+        assert(!om.canRedo())
         assert(rect.getPropValue(RectDef.props.fill) === 'blue')
         await om.performUndo()
         assert(rect.getPropValue(RectDef.props.fill) === 'red')
-        assert(om.canUndo() === false)
-        assert(om.canRedo() === true)
+        await om.performUndo()
+        assert(!om.canUndo())
+        assert(om.canRedo())
         await om.performRedo()
-        assert(om.canUndo() === true)
-        assert(om.canRedo() === false)
+        await om.performRedo()
+        assert(om.canUndo())
+        assert(!om.canRedo())
         assert(rect.getPropValue(RectDef.props.fill) === 'blue')
+    })
+    it('should undo and redo adding a rect to a page', async () => {
+        const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
+        // make an empty page
+        const page = om.make(PageDef, {})
+        assert(page.getListProp(PageDef.props.children).length === 0)
+        assert(om.history().length===1)
+        // make and add rect
+        const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+        assert(om.history().length===2)
+        await page.appendListProp(PageDef.props.children, rect)
+        assert(om.history().length===3)
+        assert(page.getListProp(PageDef.props.children).length === 1)
+        assert(page.getListPropAt(PageDef.props.children,0) === rect)
+        // undo
+        await om.performUndo()
+        assert(page.getListProp(PageDef.props.children).length === 0)
+        // redo
+        await om.performRedo()
+        assert(page.getListProp(PageDef.props.children).length === 1)
+    })
+
+    it('it should undo and redo deleting an object', async () => {
+        const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
+        // make a page containing a rect
+        const page = om.make(PageDef, {})
+        const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+        await page.appendListProp(PageDef.props.children, rect)
+        assert(page.getListProp(PageDef.props.children).length === 1)
+
+        //delete the rect
+        await page.removeListPropByValue(PageDef.props.children,rect)
+        assert(page.getListProp(PageDef.props.children).length === 0)
+        //undo
+        await om.performUndo()
+        assert(page.getListProp(PageDef.props.children).length === 1)
+        //redo
+        await om.performRedo()
+        assert(page.getListProp(PageDef.props.children).length === 0)
 
     })
     // it('should coalesce move events into a single undo/redo event', async () => {
@@ -171,25 +217,36 @@ describe('model tests', () => {
     //     // await om.undo()
     //     // assert(circ.getPropValue(CircDef.center).x === 10)
     // })
-    // // it('should get the document history', async () => {
-    //     // make some objects and change some values in om
-    //     // om.history().forEach(hist => {
-    //     //     console.log("at", hist.timestamp, 'did', hist.name, 'of type', hist.type)
-    //     //     if(hist.type === 'set') {
-    //     //         console.log('set property',hist.prop.name,'from',hist.prop.oldvalue,'to',hist.prop.newvalue)
-    //     //     }
-    //     //     if(hist.type === 'additem') {
-    //     //         console.log('added object',hist.add.value,'to',hist.obj)
-    //     //     }
-    //     //     if(hist.type === 'removeitem') {
-    //     //         console.log('added object',hist.add.value,'to',hist.obj)
-    //     //     }
-    //     //     if(hist.type === 'makeobject') {
-    //     //         console.log("made object', hist.obj)
-    //     //     }
-    //     //     if(hist.type === 'deleteobject') {
-    //     //         console.log("deleted object', hist.obj)
-    //     //     }
-    //     // })
-    // // });
+    it('should get the document history', async () => {
+        // make some objects and change some values in om
+        const om = new ObjectManager()
+        om.registerDef(PageDef, PageClass)
+        om.registerDef(RectDef, RectClass)
+        {
+            // make a rect
+            const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+            // confirm object is registered
+            assert(om.hasObject(rect.getUUID()))
+            // confirm history is one long
+            console.log('history 1',om.history())
+            assert_eq('history is one long',om.history().length,1)
+            // set a property
+            await rect.setPropValue(RectDef.props.fill,'blue')
+            console.log('history 2',om.history().map(e => e.desc))
+            // confirm prop value
+            assert(rect.getPropValue(RectDef.props.fill) === 'blue')
+            // confirm history is two long
+            assert(om.history().length === 2)
+            // undo
+            assert(om.canUndo())
+            await om.performUndo()
+            // confirm old prop value
+            assert(rect.getPropValue(RectDef.props.fill) === 'red')
+            // undo
+            assert(om.canUndo())
+            await om.performUndo()
+            // confirm object is not registered anymore
+            assert(!om.hasObject(rect.getUUID()))
+        }
+    });
 })
