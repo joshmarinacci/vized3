@@ -102,8 +102,6 @@ export const RectDef: ObjectDef = {
         strokeWidth: StrokeWidthDef,
     }
 }
-
-
 export const CircleDef: ObjectDef = {
     name: 'circle',
     props: {
@@ -581,8 +579,11 @@ class PropChangeEvent implements HistoryEvent {
     }
 
     async undo(): Promise<void> {
-        console.log("undoing",this.desc)
         await this.target.setPropValue(this.prop, this.oldValue)
+    }
+
+    compressWithSelf(recent: PropChangeEvent) {
+        this.newValue = recent.newValue
     }
 }
 
@@ -595,6 +596,7 @@ export class ObjectManager {
     private _undoing: boolean;
     private current_change_index: number;
     private listeners:Map<OMEventTypes,[]>
+    private compressing: boolean;
 
     constructor() {
         this.listeners = new Map()
@@ -604,6 +606,7 @@ export class ObjectManager {
         this.changes = []
         this._undoing = false
         this.current_change_index = -1
+        this.compressing = false
         this.global_prop_change_handler = (evt:PropChangeEvent) => {
             if(this._undoing) return
             if(this.changes.length > this.current_change_index+1) {
@@ -694,14 +697,16 @@ export class ObjectManager {
         this._fire(HistoryChanged, {})
     }
 
-    private dump_changes() {
-        console.log("len",this.changes.length)
-        console.log("current",this.current_change_index)
-        console.log(this.changes.map((ch,i) => {
+    dumpHistory() {
+        // console.log("len",this.changes.length, "current",this.current_change_index)
+        let changes = this.changes.map((ch,i) => {
             const active = (i === this.current_change_index)
-            return `${active?'*':' '} ${ch.desc}`
-        }).join("\n"))
-        console.log('can undo',this.canUndo(), 'can redo', this.canRedo())
+            return `${active?'*':' '} ${ch.uuid}: ${ch.desc}`
+        }).join("\n")
+
+        console.log(`history
+${changes}`)
+        // console.log('can undo',this.canUndo(), 'can redo', this.canRedo())
     }
 
     history() {
@@ -718,5 +723,30 @@ export class ObjectManager {
 
     addObject(proxy: ObjectProxy<ObjectDef>) {
         this._proxies.set(proxy.getUUID(),proxy)
+    }
+
+    setCompressingHistory(compressing: boolean) {
+        this.compressing = compressing
+        if(!compressing) {
+            while(this.compressHistory()) { }
+        }
+    }
+
+    private compressHistory() {
+        let recent = this.changes[this.current_change_index]
+        if(recent instanceof PropChangeEvent) {
+            if(this.current_change_index-1 > 0) {
+                let prev = this.changes[this.current_change_index - 1]
+                if(prev instanceof PropChangeEvent) {
+                    if(prev.prop.name === recent.prop.name) {
+                        prev.compressWithSelf(recent)
+                        this.changes.splice(this.current_change_index, 1)
+                        this.current_change_index -= 1
+                        return true
+                    }
+                }
+            }
+        }
+        return false
     }
 }

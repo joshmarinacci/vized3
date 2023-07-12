@@ -10,7 +10,7 @@ import {
     PropChanged,
     PropSchema,
     PageClass, RectClass,
-    RectDef
+    RectDef, CircleDef, CircleClass
 } from "./om";
 import {assert_eq} from "josh_js_util/dist/assert";
 
@@ -206,17 +206,57 @@ describe('model tests', () => {
         assert(page.getListProp(PageDef.props.children).length === 0)
 
     })
-    // it('should coalesce move events into a single undo/redo event', async () => {
-    //     // const circ = om.make(CircleDef, { center: new Point(10,10), fill: 'red', radius:35 })
-    //     // assert(om.canUndo() === false)
-    //     // await circ.setPropValueMerged(CircDef.center, new Point(50,50))
-    //     // assert(om.canUndo() ==== true)
-    //     // await circ.setPropValueMerged(CircDef.center, new Point(100,100))
-    //     // assert(om.history().length === 2)
-    //     // assert(circ.getPropValue(CircDef.center).x === 100)
-    //     // await om.undo()
-    //     // assert(circ.getPropValue(CircDef.center).x === 10)
-    // })
+    it('should coalesce move events into a single undo/redo event', async () => {
+        const om = new ObjectManager()
+        om.registerDef(CircleDef, CircleClass)
+        // make a page containing a rect
+        const circle = om.make(CircleDef, { radius: 5})
+        assert(circle.getPropValue(CircleDef.props.radius) === 5)
+
+        // change radius
+        await circle.setPropValue(CircleDef.props.radius,6)
+        assert(circle.getPropValue(CircleDef.props.radius) === 6)
+        // undo
+        await om.performUndo()
+        assert(circle.getPropValue(CircleDef.props.radius) === 5)
+
+        // set the radius twice
+        await circle.setPropValue(CircleDef.props.radius,7)
+        await circle.setPropValue(CircleDef.props.radius,8)
+        assert(circle.getPropValue(CircleDef.props.radius) === 8)
+
+        // undo twice
+        await om.performUndo()
+        assert(circle.getPropValue(CircleDef.props.radius) === 7)
+        await om.performUndo()
+        assert(circle.getPropValue(CircleDef.props.radius) === 5)
+
+        // set the radius twice with coalescing
+        // turn on coalescing
+        om.setCompressingHistory(true)
+        await circle.setPropValue(CircleDef.props.radius,7)
+        await circle.setPropValue(CircleDef.props.radius,8)
+        om.dumpHistory()
+        // turn off coalescing
+        om.setCompressingHistory(false)
+        assert(circle.getPropValue(CircleDef.props.radius) === 8)
+        om.dumpHistory()
+
+        // undo once
+        await om.performUndo()
+        assert(circle.getPropValue(CircleDef.props.radius) === 5)
+
+        // set the radius three times with coalescing, then undo
+        om.setCompressingHistory(true)
+        await circle.setPropValue(CircleDef.props.radius,90)
+        await circle.setPropValue(CircleDef.props.radius,91)
+        await circle.setPropValue(CircleDef.props.radius,92)
+        om.dumpHistory()
+        om.setCompressingHistory(false)
+        om.dumpHistory()
+        await om.performUndo()
+        assert(circle.getPropValue(CircleDef.props.radius) === 5)
+    })
     it('should get the document history', async () => {
         // make some objects and change some values in om
         const om = new ObjectManager()
