@@ -1,0 +1,24 @@
+.dialog {
+    border: 1px solid var(--slate-200);
+    padding:0;
+}
+.dialog header {
+    font-size: 1rem;
+    font-weight: bold;
+}
+.dialog footer, .dialog header {
+    padding: 0.5rem;
+    border: 0px solid red;
+    background-color: var(--panel-dark-background);
+    color: var(--slate-200);
+}
+.dialog section {
+    padding: 0.5rem;
+    background-color: var(--panel-background);
+}
+.dialog footer > * {
+    margin: 0.25rem 0.25rem;
+}
+
+
+

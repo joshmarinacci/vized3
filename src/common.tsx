@@ -40,6 +40,7 @@ export enum SupportedIcons {
     Redo='redo',
     NewDocument='note_add',
     SaveDocument='save',
+    UploadDocument='upload_file',
     Add='add',
 }
 

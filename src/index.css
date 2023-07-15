@@ -6,13 +6,32 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  --panel-background: #efeeee;
-  --button-background-normal: #b4b3b3;
-  --button-background-hover: #35ffff;
-  --button-background-active: #a2ffff;
-  --button-background-selected: #14f8d3;
+  --slate-800: #fff;
   --slate-700: #eee;
+  --slate-600: #ccc;
+  --slate-500: #aaa;
+  --slate-400: #999;
   --slate-300: #666;
+  --slate-200: #333;
+  --slate-100: #000;
+
+  --panel-background: var(--slate-700);
+  --panel-dark-background: var(--slate-600);
+  --button-default-background-normal: var(--slate-500);
+  --button-default-background-hover: var(--slate-700);
+  --button-default-background-active: var(--slate-800);
+  --button-default-background-disabled: var(--slate-400);
+  --button-default-border-normal: #666666;
+  --button-default-color-normal: var(--slate-100);
+
+  --button-primary-background-normal: #65dfff;
+  --button-primary-color-normal: var(--slate-800);
+  --button-primary-border-normal: #666666;
+  --button-primary-background-hover: #b7eaff;
+  --button-primary-background-disabled: var(--slate-400);
+  --button-background-selected: #14f8d3;
+
+  --button-borderless-background-hover: var(--slate-500);
 }
 
 code {

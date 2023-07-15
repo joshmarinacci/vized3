@@ -1,6 +1,8 @@
-import React, {ChangeEvent, useContext, useRef, useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
-    DialogContainer, DialogContext, DialogContextImpl,
+    DialogContainer,
+    DialogContext,
+    DialogContextImpl,
     FillPage,
     HBox,
     PopupContainer,
@@ -20,81 +22,31 @@ import {
     MainLayout,
     SupportedIcons,
     ToggleIconButton,
-    useObjectManagerChange, useObservableChange
+    useObjectManagerChange,
+    useObservableChange
 } from "./common";
 import {GlobalState} from "./models/state";
-import {loadPNGJSON, savePNGJSON} from "./exporters/json";
+import {savePNGJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";
 import {AddNewCircleAction, AddNewRectAction} from "./actions";
-
+import {LoadFileDialog} from "./LoadFileDialog";
 
 const state = new GlobalState()
-
-function LoadFileDialog(props:{state:GlobalState}) {
-    const [canLoad, setCanLoad] = useState(false)
-    const dm = useContext(DialogContext)
-    const input = useRef<HTMLInputElement>(null)
-    const load = async () => {
-        console.log("loading")
-        if (input && input.current && input.current.files) {
-            const file = input.current.files[0]
-            console.log("file is", file)
-            const doc_proxy = await loadPNGJSON(state, file)
-            console.log("loaded doc is",doc_proxy)
-            state.swapDoc(doc_proxy)
-        }
-        dm.hide()
-    }
-    const cancel = () => {
-        dm.hide()
-    }
-    const fileChanged = (e:ChangeEvent<HTMLInputElement>) => {
-        // console.log("file changed",e.target.files)
-        if(e.target.files && e.target.files.length === 1) {
-            // console.log("single file chosen")
-            let file = e.target.files[0]
-            // console.log("file is",file)
-            if(file.name.toLowerCase().endsWith('.png') && file.name.toLowerCase().includes('.json')) {
-                // console.log("is the right kind")
-                setCanLoad(true)
-            } else {
-                // console.log("its the wrong kind")
-            }
-        }
-    }
-    return <div className={'dialog'}>
-        <header>Choose JSON.PNG file to load</header>
-        <section>
-            <input ref={input}
-                   type={'file'}
-                   onChange={e=> fileChanged(e)}/>
-        </section>
-        <footer>
-            <Spacer/>
-            <button className={'default'} onClick={() => cancel()}>Cancel</button>
-            <button disabled={!canLoad} className={'primary'} onClick={() => load()}>Load</button>
-        </footer>
-    </div>
-}
 
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
     useObjectManagerChange(state.om, HistoryChanged)
     useObservableChange(state,'selection')
-    console.log("using doc",state.getCurrentDocument().getUUID())
-    console.log("using page",state.getSelectedPage()?.getUUID())
     const dm = useContext(DialogContext)
-    const showDialog = () => {
-        dm.show(<LoadFileDialog state={state}/>)
-    }
+    const showDialog = () => dm.show(<LoadFileDialog state={state}/>)
     return (<FillPage>
-        <HBox>
+        <HBox className={'toolbar'}>
             <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
                 console.log("pretending to make new document");
             }}>new</IconButton>
             <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => await savePNGJSON(state)}>save</IconButton>
-            <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => showDialog()}>load</IconButton>
+            <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
