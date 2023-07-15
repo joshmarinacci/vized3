@@ -22,7 +22,7 @@ import {
     useObjectManagerChange
 } from "./common";
 import {GlobalState} from "./models/state";
-import {saveJSON} from "./exporters/json";
+import {saveJSON, savePNGJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";
 import {AddNewCircleAction, AddNewRectAction} from "./actions";
 
@@ -40,7 +40,7 @@ function App() {
           <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
               console.log("pretending to make new document");
           }}>new</IconButton>
-            <IconButton icon={SupportedIcons.SaveDocument} onClick={() => saveJSON(state)}>save</IconButton>
+            <IconButton icon={SupportedIcons.SaveDocument} onClick={() => savePNGJSON(state)}>save</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>

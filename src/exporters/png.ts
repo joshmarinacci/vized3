@@ -5,6 +5,12 @@ import {CircleClass, DocClass, PageClass, RectClass} from "../models/om";
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
+    const canvas = await stateToCanvas(state)
+    const blob = await canvas_to_blob(canvas)
+    forceDownloadBlob('demo.png',blob)
+}
+
+export async function stateToCanvas(state:GlobalState) {
     const canvas = document.createElement('canvas')
     canvas.width = 800
     canvas.height = 600
@@ -27,6 +33,5 @@ export async function exportPNG(state: GlobalState) {
             circle.drawSelf(ctx)
         }
     })
-    const blob = await canvas_to_blob(canvas)
-    forceDownloadBlob('demo.png',blob)
+    return Promise.resolve(canvas)
 }
