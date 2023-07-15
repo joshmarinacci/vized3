@@ -23,6 +23,7 @@ body {
   --button-default-background-disabled: var(--slate-400);
   --button-default-border-normal: #666666;
   --button-default-color-normal: var(--slate-100);
+  --button-default-color-disabled: var(--slate-300);
 
   --button-primary-background-normal: #65dfff;
   --button-primary-color-normal: var(--slate-800);

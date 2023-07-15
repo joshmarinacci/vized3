@@ -54,6 +54,8 @@ function Main() {
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
             <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewRectAction.perform(state)}>Add Rect</IconButton>
             <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewCircleAction.perform(state)}>Add Circle</IconButton>
+            <Spacer/>
+            <IconButton disabled={true} icon={SupportedIcons.Settings}>settings</IconButton>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}

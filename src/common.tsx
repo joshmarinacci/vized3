@@ -41,6 +41,7 @@ export enum SupportedIcons {
     NewDocument='note_add',
     SaveDocument='save',
     UploadDocument='upload_file',
+    Settings='settings',
     Add='add',
 }
 

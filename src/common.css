@@ -15,6 +15,7 @@ button:active {
 }
 button:disabled {
     background-color: var(--button-default-background-disabled);
+    color: var(--button-default-color-disabled);
 }
 
 button.primary {
