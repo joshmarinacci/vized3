@@ -30,6 +30,7 @@ import {savePNGJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";
 import {AddNewCircleAction, AddNewRectAction} from "./actions";
 import {LoadFileDialog} from "./LoadFileDialog";
+import {SettingsDialog} from "./SettingsDialog";
 
 const state = new GlobalState()
 
@@ -39,14 +40,14 @@ function Main() {
     useObjectManagerChange(state.om, HistoryChanged)
     useObservableChange(state,'selection')
     const dm = useContext(DialogContext)
-    const showDialog = () => dm.show(<LoadFileDialog state={state}/>)
+    const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
     return (<FillPage>
         <HBox className={'toolbar'}>
             <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
                 console.log("pretending to make new document");
             }}>new</IconButton>
             <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => await savePNGJSON(state)}>save</IconButton>
-            <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showDialog()}>load</IconButton>
+            <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
             <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
@@ -55,7 +56,7 @@ function Main() {
             <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewRectAction.perform(state)}>Add Rect</IconButton>
             <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewCircleAction.perform(state)}>Add Circle</IconButton>
             <Spacer/>
-            <IconButton disabled={true} icon={SupportedIcons.Settings}>settings</IconButton>
+            <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}>settings</IconButton>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}
