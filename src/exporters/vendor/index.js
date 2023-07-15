@@ -6,8 +6,7 @@
  * The Metadata in PNG files: https://dev.exiv2.org/projects/exiv2/wiki/The_Metadata_in_PNG_files
  */
 
-import crc32 from "./crc32.js"
-// let crc32 = require('./crc-32.js')
+import crc32 from "crc-32"
 
 /*if(!Blob.prototype.arrayBuffer){
     Blob.prototype.arrayBuffer = function(){
@@ -396,14 +395,14 @@ export function readMetadata(buffer){
 
 /**
  * create new Buffer with metadata. only tEXt and pHYs chunks are supported.
- * @param buffer {Buffer}
+ * @param buffer {Uint8Array}
  * @param metadata {{tEXt: {keyword: value}, pHYs: {x: number, y: number, units: RESOLUTION_UNITS}}}
- * @returns {Buffer}
+ * @returns {object}
  */
 export function writeMetadata(buffer,metadata){
     const chunks = extractChunks(buffer);
     insertMetadata(chunks,metadata);
-    return new Buffer.from(encodeChunks(chunks))
+    return encodeChunks(chunks)
 }
 
 /**

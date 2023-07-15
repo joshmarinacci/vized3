@@ -65,4 +65,14 @@ export class GlobalState extends Observable {
         return this.selected_page
     }
 
+    swapDoc(doc:ObjectProxy<ObjectDef>) {
+        this._doc = doc
+        this.setSelectedObject(null)
+        this.setSelectedPage(this._doc.getListPropAt(DocDef.props.pages,0))
+        if(this.selected_page) {
+            this.current_page = this.selected_page
+        }
+        this.fire('selection', {})
+    }
+
 }

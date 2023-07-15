@@ -4,6 +4,7 @@ import {Observable} from "./models/model";
 import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
 import {MenuAction} from "./actions";
 import {GlobalState} from "./models/state";
+import './common.css';
 
 export function MainLayout(props: {
     leftVisible: boolean,

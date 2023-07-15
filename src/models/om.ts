@@ -419,6 +419,10 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
                 props[key] = Bounds.fromJSON(obj.props[key])
                 continue
             }
+            if (key === 'center') {
+                props[key] = Point.fromJSON(obj.props[key])
+                continue
+            }
         }
         throw new Error(`cant restore property ${key}`)
     }

@@ -1,0 +1,15 @@
+button {
+    background-color: #666666;
+    border: 1px solid #000000;
+    color: white;
+    margin: 0.25em;
+    padding: 0.25em 0.5em;
+}
+button.primary {
+    border: 1px solid #000000;
+    background-color: #14f8d3;
+}
+
+button.primary:disabled {
+    background-color: #0c917b;
+}

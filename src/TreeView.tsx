@@ -38,7 +38,7 @@ function TreePageItem(props: { page: ObjectProxy<ObjectDef>, state:GlobalState, 
         selected:page === state.getSelectedPage(),
     })
     return <div className={'tree-item'}>
-        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page hi</b>
+        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page {props.page.getUUID()}</b>
         {
             page.getListProp(PageDef.props.children).map((shape:ObjectProxy<ObjectDef>,i:number) =>
                 <TreeShapeItem key={i} shape={shape}
@@ -52,7 +52,7 @@ export function TreeView(props: { state:GlobalState}) {
     const selected = props.state.getSelectedObject()
     const doc = props.state.getCurrentDocument()
     return <div className={'panel left tree-view'}>
-        <h3>document</h3>
+        <h3>document: {props.state.getCurrentDocument().getUUID()}</h3>
         <h3>pages</h3>
         {doc.getListProp(DocDef.props.pages).map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
