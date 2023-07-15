@@ -97,6 +97,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
         }
         setPressPoint(pt)
         setPressed(true)
+        props.state.om.setCompressingHistory(true)
     }
     const onMouseMove = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
@@ -108,6 +109,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
     const onMouseUp = (e:MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
         setPressed(false)
+        props.state.om.setCompressingHistory(false)
     }
     const pm = useContext(PopupContext)
     const showContextMenu = (e:MouseEvent<HTMLCanvasElement>) => {
