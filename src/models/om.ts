@@ -434,6 +434,7 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
 interface HistoryEvent {
     uuid:string
     desc: string
+    compressable: boolean
     undo():Promise<void>
     redo():Promise<void>
 }
@@ -446,6 +447,7 @@ class AppendListEvent implements HistoryEvent {
     obj: ObjectProxy<ObjectDef>
     desc: string;
     uuid: string;
+    compressable: boolean;
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:appendlist')
         this.target = target
@@ -461,6 +463,7 @@ class AppendListEvent implements HistoryEvent {
         this.oldValue = oldList
         this.newValue = newList
         this.desc = `added element`
+        this.compressable = false
     }
 
 
@@ -486,6 +489,7 @@ class DeleteListEvent implements HistoryEvent {
     uuid: string;
     index: number
     obj: ObjectProxy<ObjectDef>
+    compressable: boolean;
     constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, obj:ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:deletelist')
         this.target = target
@@ -504,6 +508,7 @@ class DeleteListEvent implements HistoryEvent {
         this.oldValue = oldList
         this.newValue = newList
         this.obj.setParent(null)
+        this.compressable = false
     }
 
     async redo(): Promise<void> {
@@ -523,6 +528,7 @@ class CreateObjectEvent implements HistoryEvent {
     uuid: string;
     target: ObjectProxy<ObjectDef>;
     private om: ObjectManager;
+    compressable: boolean;
 
     constructor(om: ObjectManager, def: ObjectDef, props: Record<string, any>) {
         this.om = om
@@ -532,6 +538,7 @@ class CreateObjectEvent implements HistoryEvent {
         this.desc = 'not implemented'
         this.target = proxy
         this.desc = `created object from def ${this.target.def.name}`
+        this.compressable = false
     }
 
     async redo(): Promise<void> {
@@ -545,9 +552,11 @@ class CreateObjectEvent implements HistoryEvent {
 class DeleteObjectEvent implements HistoryEvent {
     desc: string;
     uuid: string;
+    compressable: boolean
     constructor() {
         this.uuid = genId('event:deleteobject')
         this.desc = 'not implemented'
+        this.compressable = false
     }
 
     redo(): Promise<void> {
@@ -567,6 +576,7 @@ class PropChangeEvent implements HistoryEvent {
     newValue:any
     desc: string;
     uuid: string;
+    compressable: boolean;
     constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, value:any) {
         this.uuid = genId('event:propchange')
         this.target = target
@@ -576,6 +586,7 @@ class PropChangeEvent implements HistoryEvent {
         this.newValue = value
         this.desc = `${prop.name} ${target.obj[prop.name]} => ${value}`
         this.target.obj[prop.name] = value
+        this.compressable = true
     }
 
     async redo(): Promise<void> {
@@ -702,10 +713,10 @@ export class ObjectManager {
     }
 
     dumpHistory() {
-        // console.log("len",this.changes.length, "current",this.current_change_index)
+        console.log("len",this.changes.length, "current",this.current_change_index)
         let changes = this.changes.map((ch,i) => {
             const active = (i === this.current_change_index)
-            return `${active?'*':' '} ${ch.uuid}: ${ch.desc}`
+            return `${active?'*':' '} ${ch.uuid}: ${ch.desc} ${ch.compressable?'!':'_'}`
         }).join("\n")
 
         console.log(`history
@@ -733,6 +744,12 @@ ${changes}`)
         this.compressing = compressing
         if(!compressing) {
             while(this.compressHistory()) { }
+            console.log("compressing")
+            let last = this.changes[this.current_change_index]
+            if(last instanceof PropChangeEvent) {
+                last.compressable = false
+            }
+            this.dumpHistory()
         }
     }
 
@@ -741,7 +758,7 @@ ${changes}`)
         if(recent instanceof PropChangeEvent) {
             if(this.current_change_index-1 > 0) {
                 let prev = this.changes[this.current_change_index - 1]
-                if(prev instanceof PropChangeEvent) {
+                if(prev instanceof PropChangeEvent && (prev as PropChangeEvent).compressable) {
                     if(prev.prop.name === recent.prop.name) {
                         prev.compressWithSelf(recent)
                         this.changes.splice(this.current_change_index, 1)
