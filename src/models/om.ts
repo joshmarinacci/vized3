@@ -744,12 +744,12 @@ ${changes}`)
         this.compressing = compressing
         if(!compressing) {
             while(this.compressHistory()) { }
-            console.log("compressing")
+            // console.log("compressing")
             let last = this.changes[this.current_change_index]
             if(last instanceof PropChangeEvent) {
                 last.compressable = false
             }
-            this.dumpHistory()
+            // this.dumpHistory()
         }
     }
 

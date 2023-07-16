@@ -83,4 +83,7 @@ export class GlobalState extends Observable {
         this.fire('selection', {})
     }
 
+    fireSelectionChange() {
+        this.fire('selection',{})
+    }
 }
