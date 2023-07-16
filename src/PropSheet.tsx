@@ -105,11 +105,20 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef> })
 }
 
 export function PropSheet(props:{state:GlobalState}) {
-    const selected = props.state.getSelectedObject()
-    useObjectProxyChange(selected,PropChanged)
+    const selected = props.state.getSelectedObjects()
+    if(selected.length == 0) {
+        return <div>nothing selected</div>
+    }
+    if(selected.length > 1) {
+        return <div>multiple items selected</div>
+    }
+    return <InnerPropSheet state={props.state} selected={selected[0]}/>
+}
+export function InnerPropSheet(props:{state:GlobalState, selected:ObjectProxy<ObjectDef>}) {
+    useObjectProxyChange(props.selected,PropChanged)
     useObservableChange(props.state,'selection')
-    const schemas = (selected)?selected.getPropSchemas():[]
+    const schemas = (props.selected)?props.selected.getPropSchemas():[]
     return <div className={'prop-sheet panel'}>{schemas.map((schema) => {
-        return <PropEditor key={schema.name} prop={schema} target={selected as ObjectProxy<ObjectDef>}/>
+        return <PropEditor key={schema.name} prop={schema} target={props.selected}/>
     })}</div>
 }

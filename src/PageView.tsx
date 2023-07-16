@@ -21,11 +21,11 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, stat
     page.getListProp(PageDef.props.children).forEach(shape => {
         (shape.obj as DrawableShape).drawSelf(ctx)
     })
-    let selected = state.getSelectedObject()
-    if(selected) {
+    let selected = state.getSelectedObjects()
+    for(let sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)';
         ctx.lineWidth = 10;
-        (selected.obj as DrawableShape).drawSelected(ctx);
+        (sel.obj as DrawableShape).drawSelected(ctx);
     }
 }
 
@@ -47,26 +47,81 @@ function canvasToModel(e: React.MouseEvent<HTMLCanvasElement>) {
     return pt
 }
 
-function calcObjPos(target: ObjectProxy<ObjectDef>) {
-    if(!target) return new Point(-1,-1)
-    if(target.def.name === 'rect') {
-        return (target.getPropValue(RectDef.props.bounds) as Bounds).position()
-    }
-    if(target.def.name === 'circle') {
-        return target.getPropValue(CircleDef.props.center)
-    }
-    return new Point(-1,-1)
-}
 
-async function moveObj(startPress: Point, originalPos: Point, curr: Point, target: ObjectProxy<ObjectDef>) {
-    const diff = curr.subtract(startPress)
-    let new_pos = originalPos.add(diff)
-    if (target.def.name === 'rect') {
-        let bounds = target.getPropValue(RectDef.props.bounds) as Bounds
-        await target.setPropValue(RectDef.props.bounds, new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
+class DragHandler {
+    private pressed: boolean;
+    private originalPositions: Map<ObjectProxy<ObjectDef>, Point>;
+    private dragStartPoint: Point;
+    constructor() {
+        this.pressed = false
+        this.originalPositions = new Map()
+        this.dragStartPoint = new Point(-99,-99)
     }
-    if (target.def.name === 'circle') {
-        await target.setPropValue(CircleDef.props.center, new_pos)
+
+    calcObjPos(target: ObjectProxy<ObjectDef>) {
+        if(!target) return new Point(-1,-1)
+        if(target.def.name === 'rect') {
+            return (target.getPropValue(RectDef.props.bounds) as Bounds).position()
+        }
+        if(target.def.name === 'circle') {
+            return target.getPropValue(CircleDef.props.center)
+        }
+        return new Point(-1,-1)
+    }
+
+
+    async setObjPos(target: ObjectProxy<ObjectDef>, new_pos: Point) {
+        if (target.def.name === 'rect') {
+            let bounds = target.getPropValue(RectDef.props.bounds) as Bounds
+            await target.setPropValue(RectDef.props.bounds, new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
+        }
+        if (target.def.name === 'circle') {
+            await target.setPropValue(CircleDef.props.center, new_pos)
+        }
+    }
+
+    async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
+        const page = state.getSelectedPage();
+        if(!page) return
+        let shape = findShapeInPage(page,pt)
+        const sel = state.getSelectedObjects()
+        if(shape) {
+            if(sel.some(s => s === shape)) {
+                // console.log("already selected")
+            } else {
+                if(e.shiftKey) {
+                    state.addSelectedObjects([shape])
+                } else {
+                    state.setSelectedObjects([shape])
+                }
+            }
+        } else {
+            state.clearSelectedObjects()
+        }
+        this.dragStartPoint = pt
+        this.pressed = true
+        state.om.setCompressingHistory(true)
+    }
+
+    async mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
+        if (this.pressed) {
+            const diff = pt.subtract(this.dragStartPoint)
+            for(let sel of state.getSelectedObjects()) {
+                if (!this.originalPositions.has(sel)) {
+                    this.originalPositions.set(sel,this.calcObjPos(sel))
+                }
+                let original_pos = this.originalPositions.get(sel) as Point
+                let new_pos = original_pos.add(diff)
+                await this.setObjPos(sel,new_pos)
+            }
+        }
+    }
+
+    async mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
+        this.pressed = false
+        this.originalPositions.clear()
+        this.dragStartPoint = new Point(-99,-99)
+        state.om.setCompressingHistory(false)
     }
 }
 
@@ -80,36 +135,18 @@ export function PageView(props:{page:any, state:GlobalState}) {
     })
     useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
-    const [pressed, setPressed] = useState(false)
-    const [pressPoint, setPressPoint] = useState(new Point(0,0))
-    const [startPoint, setStartPoint] = useState(new Point(0,0))
-    const onMouseDown = (e:MouseEvent<HTMLCanvasElement>) => {
+    const [handler, setHandler] = useState(new DragHandler())
+    const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
-        if(props.page) {
-            let page = props.page as ObjectProxy<ObjectDef>
-            let shape = findShapeInPage(page,pt)
-            if(shape) {
-                props.state.setSelectedObject(shape)
-                setStartPoint(calcObjPos(shape))
-            } else {
-                props.state.setSelectedObject(null)
-            }
-        }
-        setPressPoint(pt)
-        setPressed(true)
-        props.state.om.setCompressingHistory(true)
+        await handler.mouseDown(pt, e, props.state)
     }
     const onMouseMove = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
-        let obj = props.state.getSelectedObject()
-        if (pressed && obj) {
-            await moveObj(pressPoint, startPoint, pt, obj)
-        }
+        await handler.mouseMove(pt,e,props.state)
     }
-    const onMouseUp = (e:MouseEvent<HTMLCanvasElement>) => {
+    const onMouseUp = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
-        setPressed(false)
-        props.state.om.setCompressingHistory(false)
+        await handler.mouseUp(pt, e, props.state)
     }
     const pm = useContext(PopupContext)
     const showContextMenu = (e:MouseEvent<HTMLCanvasElement>) => {

@@ -34,11 +34,13 @@ export const AddNewCircleAction:MenuAction = {
 export const DeleteSelection:MenuAction = {
     title: 'delete',
     perform: async (state: GlobalState) => {
-        const obj = state.getSelectedObject()
-        if(obj && obj.parent) {
-            const parent = obj.parent
-            await parent.removeListPropByValue(PageDef.props.children,obj)
-            state.setSelectedObject(null)
+        const objs = state.getSelectedObjects()
+        for(let obj of objs) {
+            if (obj && obj.parent) {
+                const parent = obj.parent
+                await parent.removeListPropByValue(PageDef.props.children, obj)
+            }
         }
+        state.clearSelectedObjects()
     }
 }

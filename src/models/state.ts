@@ -17,7 +17,7 @@ export class GlobalState extends Observable {
     om: ObjectManager;
     private _doc: ObjectProxy<ObjectDef>;
     private current_page: ObjectProxy<ObjectDef>;
-    private selected_object: ObjectProxy<ObjectDef> | null
+    private selected_objects: ObjectProxy<ObjectDef>[]
     private selected_page: ObjectProxy<ObjectDef> | null
 
     constructor() {
@@ -35,7 +35,7 @@ export class GlobalState extends Observable {
         let circ = this.om.make(CircleDef, { center: new Point(100,200), radius: 20})
         page.appendListProp(PageDef.props.children, circ)
         this.current_page = page
-        this.selected_object = null
+        this.selected_objects = []
         this.selected_page = page
     }
 
@@ -47,12 +47,20 @@ export class GlobalState extends Observable {
         return this.current_page
     }
 
-    getSelectedObject(): ObjectProxy<ObjectDef> | null {
-        return this.selected_object
+    getSelectedObjects(): ObjectProxy<ObjectDef>[] {
+        return this.selected_objects
     }
 
-    setSelectedObject(obj: any) {
-        this.selected_object = obj
+    addSelectedObjects(objs: ObjectProxy<ObjectDef>[]) {
+        this.selected_objects  = this.selected_objects.concat(...objs)
+        this.fire('selection', {})
+    }
+    setSelectedObjects(objs: ObjectProxy<ObjectDef>[]) {
+        this.selected_objects = objs
+        this.fire('selection', {})
+    }
+    clearSelectedObjects() {
+        this.selected_objects = []
         this.fire('selection', {})
     }
 
@@ -67,7 +75,7 @@ export class GlobalState extends Observable {
 
     swapDoc(doc:ObjectProxy<ObjectDef>) {
         this._doc = doc
-        this.setSelectedObject(null)
+        this.clearSelectedObjects()
         this.setSelectedPage(this._doc.getListPropAt(DocDef.props.pages,0))
         if(this.selected_page) {
             this.current_page = this.selected_page
