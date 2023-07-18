@@ -49,6 +49,9 @@ export const DocDef:ObjectDef = {
         }
     }
 }
+export type DocType = {
+    pages:[]
+}
 export const PageDef: ObjectDef = {
     name: 'page',
     props: {
@@ -58,6 +61,9 @@ export const PageDef: ObjectDef = {
             readonly: false,
         }
     }
+}
+export type PageType = {
+    children:any[]
 }
 export const RectDef: ObjectDef = {
     name: 'rect',
@@ -102,6 +108,12 @@ export const RectDef: ObjectDef = {
         strokeWidth: StrokeWidthDef,
     }
 }
+export type RectType = {
+    bounds:Bounds,
+    fill:string,
+    strokeFill:string,
+    strokeWidth:number
+}
 export const CircleDef: ObjectDef = {
     name: 'circle',
     props: {
@@ -139,7 +151,10 @@ export const CircleDef: ObjectDef = {
         strokeFill: StrokeFillDef,
         strokeWidth: StrokeWidthDef,
     }
-
+}
+export type CircleType = {
+    center: Point,
+    radius:number,
 }
 
 export class DocClass {
@@ -252,18 +267,19 @@ export class CircleClass implements DrawableShape {
 export const PropChanged = 'PropChanged'
 export const FamilyPropChanged = 'FamilyPropChanged'
 export type EventTypes = typeof PropChanged | typeof FamilyPropChanged
+export type EventHandler = (evt:any) => void
 export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
 
-export class ObjectProxy<T extends ObjectDef> {
+export class ObjectProxy<T> {
     obj: any;
     private listeners: Map<EventTypes, any[]>;
     parent: ObjectProxy<ObjectDef> | null
-    def: T;
+    def: ObjectDef;
     private uuid: string;
 
-    constructor(om: ObjectManager, def: T, props: Record<keyof T,any>) {
+    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
         this.uuid = genId('proxy')
         let cons = om.lookupConstructor(def.name)
         this.obj = new cons(props)
@@ -275,44 +291,48 @@ export class ObjectProxy<T extends ObjectDef> {
         this.parent = null
     }
 
-    getPropValue(prop: PropSchema) {
-        return this.obj[prop.name]
+    getPropValue<K extends keyof T>(key: K):T[K] {
+        return this.obj[key]
     }
 
-    async setPropValue(prop: PropSchema, value: any) {
-        const evt = new PropChangeEvent(this, prop, value)
-        this._fire(PropChanged, evt)
-        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
-    }
-
-    getListProp(prop: PropSchema):ObjectProxy<ObjectDef>[] {
-        if(prop.base !== 'list') throw new Error(`prop not a list: ${prop.name}`)
-        return this.obj[prop.name]
-    }
-    appendListProp(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
-        const evt:AppendListEvent = new AppendListEvent(this, prop, obj)
-        this._fire(PropChanged, evt)
-        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
-    }
-    async removeListPropByValue(prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
-        const evt:DeleteListEvent = new DeleteListEvent(this, prop, obj)
-        this._fire(PropChanged, evt)
-        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
-    }
-
-    getListPropAt(prop: PropSchema, index: number) {
-        return this.obj[prop.name][index]
-    }
-
-    addEventListener(type: EventTypes, cb: (evt: any) => void) {
-        if (!this.listeners.get(type)) this.listeners.set(type, [])
+    async setPropValue<K extends keyof T>(prop: K, value: T[K]) {
         // @ts-ignore
-        this.listeners.get(type).push(cb)
+        const evt = new PropChangeEvent<T>(this, this.def.props[prop], value)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
-    removeEventListener(type: EventTypes, cb: any) {
-        if (!this.listeners.get(type)) this.listeners.set(type, [])
+
+    getListProp<K extends keyof T>(prop: K):any[] {
         // @ts-ignore
-        this.listeners.set(type, this.listeners.get(type).filter(c => c !== cb))
+        if(this.def.props[prop].base !== 'list') throw new Error(`prop not a list: ${prop.name}`)
+        return this.obj[prop]
+    }
+    appendListProp<K extends keyof T>(prop: K, obj: any) {
+        // @ts-ignore
+        const evt:AppendListEvent<T> = new AppendListEvent<T>(this, this.def.props[prop], obj)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
+    async removeListPropByValue<K extends keyof T>(prop: K, obj: any) {
+        // @ts-ignore
+        const evt:DeleteListEvent<T> = new DeleteListEvent<T>(this, this.def.props[prop], obj)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
+    getListPropAt<K extends keyof T>(prop: K, index: number) {
+        return this.obj[prop][index]
+    }
+
+    private _get_listeners(type: EventTypes):EventHandler[] {
+        if(!this.listeners.has(type)) this.listeners.set(type,[])
+        return this.listeners.get(type) as EventHandler[]
+    }
+
+    addEventListener(type: EventTypes, handler: EventHandler) {
+        this._get_listeners(type).push(handler)
+    }
+    removeEventListener(type: EventTypes, handler: EventHandler) {
+        this.listeners.set(type, this._get_listeners(type).filter(h => h !== handler))
     }
 
     private _fire(type: EventTypes, value: any) {
@@ -351,7 +371,7 @@ export type JSONDoc = {
     root: JSONObject
 }
 
-function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
+function toJSON(obj: ObjectProxy<any>): JSONObject {
     const json: JSONObject = {
         name: obj.def.name,
         props: {},
@@ -359,12 +379,12 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
     obj.getPropSchemas().forEach(prop => {
         // console.log("prop is",pop)
         if (prop.base === 'string') {
-            json.props[prop.name] = obj.getPropValue(prop)
+            json.props[prop.name] = obj.getPropValue(prop.name)
             return
         }
         if (prop.base === 'list') {
             let arr: JSONObject[] = []
-            let list = obj.getPropValue(prop)
+            let list = obj.getPropValue(prop.name)
             list.forEach((val: ObjectProxy<ObjectDef>) => {
                 arr.push(toJSON(val))
             })
@@ -372,7 +392,7 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
             return
         }
         if (prop.base === 'object') {
-            let val = obj.getPropValue(prop)
+            let val = obj.getPropValue(prop.name)
             if (val instanceof Bounds) {
                 json.props[prop.name] = val.toJSON()
                 return
@@ -384,7 +404,7 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
             throw new Error(`unhandled toJSON object type ${prop.name}`)
         }
         if(prop.base === 'number') {
-            json.props[prop.name] = obj.getPropValue(prop)
+            json.props[prop.name] = obj.getPropValue(prop.name)
             return
         }
         throw new Error(`unhandled toJSON type ${prop.base}`)
@@ -392,7 +412,7 @@ function toJSON(obj: ObjectProxy<ObjectDef>): JSONObject {
     return json
 }
 
-async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy<ObjectDef>> {
+async function fromJSON<T>(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy<T>> {
     const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, any> = {}
     for (let key of Object.keys(def.props)) {
@@ -426,7 +446,7 @@ async function fromJSON(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy
         }
         throw new Error(`cant restore property ${key}`)
     }
-    return await om.make(def, props)
+    return await om.make<T>(def, props as Partial<T>)
 }
 
 
@@ -438,7 +458,7 @@ interface HistoryEvent {
     undo():Promise<void>
     redo():Promise<void>
 }
-class AppendListEvent implements HistoryEvent {
+class AppendListEvent<T> implements HistoryEvent {
     target: ObjectProxy<ObjectDef>
     def: ObjectDef
     prop: PropSchema
@@ -479,8 +499,8 @@ class AppendListEvent implements HistoryEvent {
         this.obj.setParent(null)
     }
 }
-class DeleteListEvent implements HistoryEvent {
-    target: ObjectProxy<ObjectDef>
+class DeleteListEvent<T> implements HistoryEvent {
+    target: ObjectProxy<any>
     def: ObjectDef
     prop: PropSchema
     oldValue:any
@@ -488,9 +508,9 @@ class DeleteListEvent implements HistoryEvent {
     desc: string;
     uuid: string;
     index: number
-    obj: ObjectProxy<ObjectDef>
+    obj: ObjectProxy<any>
     compressable: boolean;
-    constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, obj:ObjectProxy<ObjectDef>) {
+    constructor(target:ObjectProxy<any>, prop:PropSchema, obj:ObjectProxy<any>) {
         this.uuid = genId('event:deletelist')
         this.target = target
         this.def = target.def
@@ -523,16 +543,16 @@ class DeleteListEvent implements HistoryEvent {
         this.obj.setParent(this.target)
     }
 }
-class CreateObjectEvent implements HistoryEvent {
+class CreateObjectEvent<T> implements HistoryEvent {
     desc: string;
     uuid: string;
-    target: ObjectProxy<ObjectDef>;
+    target: ObjectProxy<T>;
     private om: ObjectManager;
     compressable: boolean;
 
-    constructor(om: ObjectManager, def: ObjectDef, props: Record<string, any>) {
+    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
         this.om = om
-        let proxy = new ObjectProxy(om,def, props)
+        let proxy:ObjectProxy<T> = new ObjectProxy<T>(om,def, props)
         this.om.addObject(proxy)
         this.uuid = genId('event:createobject')
         this.desc = 'not implemented'
@@ -549,7 +569,7 @@ class CreateObjectEvent implements HistoryEvent {
     }
 }
 
-class DeleteObjectEvent implements HistoryEvent {
+class DeleteObjectEvent<T> implements HistoryEvent {
     desc: string;
     uuid: string;
     compressable: boolean
@@ -568,8 +588,8 @@ class DeleteObjectEvent implements HistoryEvent {
     }
 
 }
-class PropChangeEvent implements HistoryEvent {
-    target: ObjectProxy<ObjectDef>
+class PropChangeEvent<T> implements HistoryEvent {
+    target: ObjectProxy<T>
     def: ObjectDef
     prop: PropSchema
     oldValue:any
@@ -577,7 +597,7 @@ class PropChangeEvent implements HistoryEvent {
     desc: string;
     uuid: string;
     compressable: boolean;
-    constructor(target:ObjectProxy<ObjectDef>, prop:PropSchema, value:any) {
+    constructor(target:ObjectProxy<T>, prop:PropSchema, value:any) {
         this.uuid = genId('event:propchange')
         this.target = target
         this.def = target.def
@@ -590,14 +610,14 @@ class PropChangeEvent implements HistoryEvent {
     }
 
     async redo(): Promise<void> {
-        await this.target.setPropValue(this.prop, this.newValue)
+        await this.target.setPropValue(this.prop.name as keyof T, this.newValue)
     }
 
     async undo(): Promise<void> {
-        await this.target.setPropValue(this.prop, this.oldValue)
+        await this.target.setPropValue(this.prop.name as keyof T, this.oldValue)
     }
 
-    compressWithSelf(recent: PropChangeEvent) {
+    compressWithSelf(recent: PropChangeEvent<T>) {
         this.newValue = recent.newValue
     }
 }
@@ -622,7 +642,7 @@ export class ObjectManager {
         this._undoing = false
         this.current_change_index = -1
         this.compressing = false
-        this.global_prop_change_handler = (evt:PropChangeEvent) => {
+        this.global_prop_change_handler = (evt:PropChangeEvent<any>) => {
             if(this._undoing) return
             if(this.changes.length > this.current_change_index+1) {
                 this.changes = this.changes.slice(0,this.current_change_index+1)
@@ -647,8 +667,8 @@ export class ObjectManager {
         // @ts-ignore
         this.listeners.get(type).forEach(cb => cb(value))
     }
-    make(def: ObjectDef, props: Record<string, any>) {
-        const evt = new CreateObjectEvent(this,def,props)
+    make<T>(def: ObjectDef, props: Partial<T>):ObjectProxy<T> {
+        const evt = new CreateObjectEvent<T>(this,def,props)
         this.changes.push(evt)
         this.current_change_index++
         evt.target.addEventListener(PropChanged, this.global_prop_change_handler)
@@ -664,7 +684,7 @@ export class ObjectManager {
         return this.classes.get(name)
     }
 
-    async toJSON(root: ObjectProxy<ObjectDef>) {
+    async toJSON(root: ObjectProxy<any>) {
         const doc: JSONDoc = {
             version: 1,
             root: toJSON(root),
@@ -672,8 +692,8 @@ export class ObjectManager {
         return Promise.resolve(doc)
     }
 
-    async fromJSON(json_obj: JSONDoc): Promise<ObjectProxy<ObjectDef>> {
-        const root: ObjectProxy<ObjectDef> = await fromJSON(this, json_obj.root)
+    async fromJSON<T>(json_obj: JSONDoc): Promise<ObjectProxy<T>> {
+        const root: ObjectProxy<T> = await fromJSON<T>(this, json_obj.root)
         return root
     }
 
@@ -732,11 +752,11 @@ ${changes}`)
         return this._proxies.has(uuid)
     }
 
-    async removeObject(target: ObjectProxy<ObjectDef>) {
+    async removeObject(target: ObjectProxy<any>) {
         this._proxies.delete(target.getUUID())
     }
 
-    addObject(proxy: ObjectProxy<ObjectDef>) {
+    addObject(proxy: ObjectProxy<any>) {
         this._proxies.set(proxy.getUUID(),proxy)
     }
 
@@ -744,12 +764,12 @@ ${changes}`)
         this.compressing = compressing
         if(!compressing) {
             while(this.compressHistory()) { }
-            console.log("compressing")
+            // console.log("compressing")
             let last = this.changes[this.current_change_index]
             if(last instanceof PropChangeEvent) {
                 last.compressable = false
             }
-            this.dumpHistory()
+            // this.dumpHistory()
         }
     }
 
@@ -758,7 +778,7 @@ ${changes}`)
         if(recent instanceof PropChangeEvent) {
             if(this.current_change_index-1 > 0) {
                 let prev = this.changes[this.current_change_index - 1]
-                if(prev instanceof PropChangeEvent && (prev as PropChangeEvent).compressable) {
+                if(prev instanceof PropChangeEvent && (prev as PropChangeEvent<any>).compressable) {
                     if(prev.prop.name === recent.prop.name) {
                         prev.compressWithSelf(recent)
                         this.changes.splice(this.current_change_index, 1)

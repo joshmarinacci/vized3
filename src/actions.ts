@@ -1,5 +1,5 @@
 import {GlobalState} from "./models/state";
-import {CircleDef, PageDef, RectDef} from "./models/om";
+import {CircleDef, ObjectProxy, PageType, RectDef, RectType} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 
 export type MenuAction = {
@@ -12,10 +12,10 @@ export const AddNewRectAction:MenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const rect = state.om.make(RectDef, {
+        const rect = state.om.make<RectType>(RectDef, {
             bounds: new Bounds(100, 300, 100, 100)
         })
-        page.appendListProp(PageDef.props.children, rect)
+        page.appendListProp('children', rect)
     }
 }
 
@@ -27,18 +27,20 @@ export const AddNewCircleAction:MenuAction = {
         const circle = state.om.make(CircleDef, {
             center: new Point(200, 200),
         })
-        await page.appendListProp(PageDef.props.children, circle)
+        await page.appendListProp('children', circle)
     }
 }
 
 export const DeleteSelection:MenuAction = {
     title: 'delete',
     perform: async (state: GlobalState) => {
-        const obj = state.getSelectedObject()
-        if(obj && obj.parent) {
-            const parent = obj.parent
-            await parent.removeListPropByValue(PageDef.props.children,obj)
-            state.setSelectedObject(null)
+        const objs = state.getSelectedObjects()
+        for(let obj of objs) {
+            if (obj && obj.parent) {
+                const parent = obj.parent as unknown as ObjectProxy<PageType>
+                await parent.removeListPropByValue('children', obj)
+            }
         }
+        state.clearSelectedObjects()
     }
 }
