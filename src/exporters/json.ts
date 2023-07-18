@@ -2,7 +2,7 @@ import {GlobalState} from "../models/state";
 import {stateToCanvas} from "./png";
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
 import {readMetadata, writeMetadata} from "./vendor";
-import {JSONDoc, ObjectDef, ObjectProxy} from "../models/om";
+import {DocType, JSONDoc, ObjectProxy} from "../models/om";
 
 export async function saveJSON(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
@@ -34,7 +34,7 @@ export async function savePNGJSON(state: GlobalState) {
 
 type Metadata = {tEXt: {keyword: any, SOURCE:any}}
 
-export async function loadPNGJSON(state:GlobalState, file:File):Promise<ObjectProxy<ObjectDef>> {
+export async function loadPNGJSON(state:GlobalState, file:File):Promise<ObjectProxy<DocType>> {
     return new Promise((res,rej) => {
         const reader = new FileReader()
         reader.addEventListener('load', () => {
@@ -43,7 +43,7 @@ export async function loadPNGJSON(state:GlobalState, file:File):Promise<ObjectPr
             console.log("metadata is",metadata)
             if(metadata && metadata.tEXt && metadata.tEXt.SOURCE) {
                 let json = JSON.parse(metadata.tEXt.SOURCE)
-                let obj = state.om.fromJSON(json as JSONDoc)
+                let obj = state.om.fromJSON<DocType>(json as JSONDoc)
                 obj.then(ob => {
                     res(ob)
                 })

@@ -1,10 +1,10 @@
-import {DocDef, ObjectDef, ObjectProxy, PageDef} from "../models/om";
+import {DocType, ObjectProxy} from "../models/om";
 
-export function traverse(doc: ObjectProxy<ObjectDef>, cb: (item: any) => void) {
+export function traverse(doc: ObjectProxy<DocType>, cb: (item: any) => void) {
     cb(doc)
-    doc.getListProp(DocDef.props.pages).forEach(page => {
+    doc.getListProp('pages').forEach(page => {
         cb(page)
-        page.getListProp(PageDef.props.children).forEach(shape => {
+        page.getListProp('children').forEach((shape:any) => {
             cb(shape)
         })
     })

@@ -3,22 +3,20 @@ import {Bounds, Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "./models/state";
 import {
-    CircleDef,
     DrawableShape,
     FamilyPropChanged,
     ObjectDef,
     ObjectProxy,
-    PageDef,
-    RectDef
+    PageType
 } from "./models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
 import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
 
-function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, state: GlobalState, handler:DragHandler) {
+function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>, state: GlobalState, handler:DragHandler) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
-    page.getListProp(PageDef.props.children).forEach(shape => {
+    page.getListProp('children').forEach(shape => {
         (shape.obj as DrawableShape).drawSelf(ctx)
     })
     let selected = state.getSelectedObjects()
@@ -30,8 +28,8 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<any>, stat
     handler.drawOverlay(ctx,state)
 }
 
-function findShapeInPage(page: ObjectProxy<ObjectDef>, pt: Point):ObjectProxy<ObjectDef>|undefined {
-    let matching = page.getListProp(PageDef.props.children).filter(shape => {
+function findShapeInPage(page: ObjectProxy<PageType>, pt: Point):ObjectProxy<ObjectDef>|undefined {
+    let matching = page.getListProp('children').filter(shape => {
         return (shape.obj as DrawableShape).contains(pt)
     })
     if(matching.length > 0) {
@@ -65,23 +63,23 @@ class DragHandler {
         this.potentialShapes = []
     }
 
-    calcObjPos(target: ObjectProxy<ObjectDef>) {
+    calcObjPos(target: ObjectProxy<any>) {
         if(!target) return new Point(-1,-1)
         if(target.def.name === 'rect') {
-            return (target.getPropValue(RectDef.props.bounds) as Bounds).position()
+            return (target.getPropValue('bounds') as Bounds).position()
         }
         if(target.def.name === 'circle') {
-            return target.getPropValue(CircleDef.props.center)
+            return target.getPropValue('center')
         }
         return new Point(-1,-1)
     }
-    private calcObjIntersects(obj: ObjectProxy<ObjectDef>, bounds:Bounds):boolean {
+    private calcObjIntersects(obj: ObjectProxy<any>, bounds:Bounds):boolean {
         if(obj.def.name === 'rect') {
-            return ((obj.getPropValue(RectDef.props.bounds)) as Bounds).intersects(bounds)
+            return ((obj.getPropValue('bounds')) as Bounds).intersects(bounds)
         }
         if(obj.def.name === 'circle') {
-            let center = obj.getPropValue(CircleDef.props.center) as Point
-            let rad = obj.getPropValue(CircleDef.props.radius) as number
+            let center = obj.getPropValue('center') as Point
+            let rad = obj.getPropValue('radius') as number
             let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
             return bds.intersects(bounds)
         }
@@ -89,13 +87,13 @@ class DragHandler {
     }
 
 
-    async setObjPos(target: ObjectProxy<ObjectDef>, new_pos: Point) {
+    async setObjPos(target: ObjectProxy<any>, new_pos: Point) {
         if (target.def.name === 'rect') {
-            let bounds = target.getPropValue(RectDef.props.bounds) as Bounds
-            await target.setPropValue(RectDef.props.bounds, new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
+            let bounds = target.getPropValue('bounds') as Bounds
+            await target.setPropValue('bounds', new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
         }
         if (target.def.name === 'circle') {
-            await target.setPropValue(CircleDef.props.center, new_pos)
+            await target.setPropValue('center', new_pos)
         }
     }
 
@@ -174,10 +172,10 @@ class DragHandler {
         }
     }
 
-    private findShapesInPageRect(page: ObjectProxy<ObjectDef> | null, dragRect: Bounds) {
+    private findShapesInPageRect(page: ObjectProxy<PageType> | null, dragRect: Bounds) {
         if(!page) return []
         const included = []
-        let chs = page.getListProp(PageDef.props.children)
+        let chs = page.getListProp('children')
         for(let obj of chs) {
             let bds = this.calcObjIntersects(obj, dragRect)
             if(bds)included.push(obj)

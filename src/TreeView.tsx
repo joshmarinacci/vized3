@@ -2,12 +2,12 @@ import React, {useContext} from "react"
 import './TreeView.css'
 import {PopupContext, toClass,} from "josh_react_util";
 import {GlobalState} from "./models/state";
-import {DocDef, ObjectDef, ObjectProxy, PageDef} from "./models/om";
+import {ObjectDef, ObjectProxy, PageType} from "./models/om";
 import {MenuActionButton, MenuBox, useObservableChange} from "./common";
 import {Point} from "josh_js_util";
 import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
 
-function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
     const clsses = toClass({
         'tree-item':true,
@@ -31,7 +31,7 @@ function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState
     </div>
 }
 
-function TreePageItem(props: { page: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreePageItem(props: { page: ObjectProxy<PageType>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const {page, state} = props
     const clsses = toClass({
         'selectable':true,
@@ -40,7 +40,7 @@ function TreePageItem(props: { page: ObjectProxy<ObjectDef>, state:GlobalState, 
     return <div className={'tree-item'}>
         <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page {props.page.getUUID()}</b>
         {
-            page.getListProp(PageDef.props.children).map((shape:ObjectProxy<ObjectDef>,i:number) =>
+            page.getListProp('children').map((shape:ObjectProxy<ObjectDef>,i:number) =>
                 <TreeShapeItem key={i} shape={shape}
                                state={state} selected={props.selected}/>)
         }
@@ -54,7 +54,7 @@ export function TreeView(props: { state:GlobalState}) {
     return <div className={'panel left tree-view'}>
         <h3>document: {props.state.getCurrentDocument().getUUID()}</h3>
         <h3>pages</h3>
-        {doc.getListProp(DocDef.props.pages).map((pg,i) => {
+        {doc.getListProp('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
         })}
     </div>
