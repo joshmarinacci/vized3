@@ -1,6 +1,7 @@
-import {Bounds} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util";
 import assert from "assert";
 import {
+    CircleDef, CircleType,
     PageDef, PageType,
     RectDef,
     RectType
@@ -25,6 +26,26 @@ async function createThreeRectsDoc() {
         state:state,
         page:page,
         rects:[rect1,rect2,rect3]
+    }
+}
+
+async function createThreeCirclesDoc() {
+    const state = new GlobalState()
+    let page = await state.om.make<PageType>(PageDef, {})
+    let circ1 = await state.om.make<CircleType>(CircleDef, {
+        center: new Point(100,100), radius: 10})
+    await page.appendListProp('children',circ1)
+    let circ2 = await state.om.make<CircleType>(CircleDef, {
+        center: new Point(200,200), radius: 20})
+    await page.appendListProp('children',circ2)
+    let circ3 = await state.om.make<CircleType>(CircleDef, {
+        center: new Point(300,300), radius: 30})
+    await page.appendListProp('children',circ3)
+
+    return {
+        state:state,
+        page:page,
+        circs:[circ1,circ2,circ3]
     }
 }
 
@@ -63,5 +84,16 @@ describe('alignment actions', () => {
         assert(rects[0].getPropValue('bounds').x === 100)
         assert(rects[1].getPropValue('bounds').x === 100)
         assert(rects[2].getPropValue('bounds').x === 100)
+    })
+    it('should left align circles', async () => {
+        const {state, page, circs} = await  createThreeCirclesDoc()
+        assert(circs[0].getPropValue('center').x === 100)
+        assert(circs[1].getPropValue('center').x === 200)
+        assert(circs[2].getPropValue('center').x === 300)
+        state.addSelectedObjects(circs)
+        await LeftAlignShapes.perform(state)
+        assert(circs[0].getPropValue('center').x === 100)
+        assert(circs[1].getPropValue('center').x === 100)
+        assert(circs[2].getPropValue('center').x === 100)
     })
 })
