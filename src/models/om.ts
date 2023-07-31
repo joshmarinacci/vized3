@@ -62,6 +62,7 @@ export const PageDef: ObjectDef = {
         }
     }
 }
+
 export type PageType = {
     children:any[]
 }

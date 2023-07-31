@@ -124,6 +124,10 @@ function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
 }
 
 export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
+    let icon = <></>
+    if(props.action.icon) {
+        icon = <span  className="material-symbols-rounded">{props.action.icon}</span>
+    }
     return <MenuButton
-        onClick={() => props.action.perform(props.state)}>{props.action.title}</MenuButton>
+        onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>
 }

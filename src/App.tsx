@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useState, MouseEvent} from 'react';
 import {
     DialogContainer,
     DialogContext,
@@ -8,29 +8,35 @@ import {
     PopupContainer,
     PopupContext,
     PopupContextImpl,
-    Spacer
+    Spacer,
 } from "josh_react_util"
 import './App.css';
 import {TreeView} from "./TreeView";
 import {PageView,} from "./PageView";
 import {PropSheet} from "./PropSheet";
-import {exportSVG} from "./exporters/svg";
-import {exportPNG} from "./exporters/png";
-import {exportCanvasJS} from "./exporters/canvas";
 import {
     IconButton,
     MainLayout,
+    MenuActionButton,
+    MenuBox,
     SupportedIcons,
     ToggleIconButton,
     useObjectManagerChange,
     useObservableChange
 } from "./common";
 import {GlobalState} from "./models/state";
-import {savePNGJSON} from "./exporters/json";
 import {HistoryChanged} from "./models/om";
-import {AddNewCircleAction, AddNewRectAction} from "./actions";
+import {
+    AddNewCircleAction,
+    AddNewRectAction,
+    DownloadPNGAction,
+    DownloadSVGAction,
+    ExportCanvasJSAction,
+    SavePNGJSONAction
+} from "./actions";
 import {LoadFileDialog} from "./LoadFileDialog";
 import {SettingsDialog} from "./SettingsDialog";
+import {Point} from "josh_js_util";
 
 const state = new GlobalState()
 
@@ -41,20 +47,31 @@ function Main() {
     useObservableChange(state,'selection')
     const dm = useContext(DialogContext)
     const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
+    const pm = useContext(PopupContext)
+    const showFileMenu = (e:MouseEvent<HTMLButtonElement>) => {
+        const menu = <MenuBox>
+            <MenuActionButton state={state} action={SavePNGJSONAction}/>
+            <MenuActionButton state={state} action={DownloadPNGAction}/>
+            <MenuActionButton state={state} action={DownloadSVGAction}/>
+            <MenuActionButton state={state} action={ExportCanvasJSAction}/>
+        </MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0,0))
+    }
+    const showAddMenu = (e:MouseEvent<HTMLButtonElement>) => {
+        const menu = <MenuBox>
+            <MenuActionButton action={AddNewRectAction} state={state} />
+            <MenuActionButton action={AddNewCircleAction} state={state}/>
+        </MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0,0))
+    }
     return (<FillPage>
         <HBox className={'toolbar'}>
-            <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{
-                console.log("pretending to make new document");
-            }}>new</IconButton>
-            <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => await savePNGJSON(state)}>save</IconButton>
+            <button onClick={showFileMenu}>File</button>
+            <button onClick={showAddMenu}>Add</button>
+            <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{  console.log("pretending to make new document");  }}>new</IconButton>
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
-            <IconButton icon={SupportedIcons.Download} onClick={() => exportPNG(state)}>PNG</IconButton>
-            <IconButton icon={SupportedIcons.Download} onClick={() => exportSVG(state)}>SVG</IconButton>
-            <IconButton icon={SupportedIcons.Download} onClick={() => exportCanvasJS(state)}>Canvas JS</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
-            <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewRectAction.perform(state)}>Add Rect</IconButton>
-            <IconButton icon={SupportedIcons.Add} onClick={()=>AddNewCircleAction.perform(state)}>Add Circle</IconButton>
             <Spacer/>
             <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}>settings</IconButton>
         </HBox>

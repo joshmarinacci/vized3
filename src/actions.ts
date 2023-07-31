@@ -1,14 +1,51 @@
 import {GlobalState} from "./models/state";
 import {CircleDef, ObjectProxy, PageType, RectDef, RectType} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
+import {SupportedIcons} from "./common";
+import {savePNGJSON} from "./exporters/json";
+import {exportPNG} from "./exporters/png";
+import {exportSVG} from "./exporters/svg";
+import {exportCanvasJS} from "./exporters/canvas";
 
 export type MenuAction = {
     title:string
+    icon?:SupportedIcons,
     perform: (state:GlobalState) => Promise<void>
+}
+
+export const SavePNGJSONAction:MenuAction = {
+    icon:SupportedIcons.SaveDocument,
+    title:'save',
+    perform:async (state) => {
+        await savePNGJSON(state)
+    }
+}
+export const DownloadPNGAction:MenuAction = {
+    icon:SupportedIcons.Download,
+    title:'PNG',
+    perform: async (state) => {
+        await exportPNG(state)
+    }
+}
+export const DownloadSVGAction:MenuAction = {
+    title:'SVG',
+    icon:SupportedIcons.Download,
+    perform:async (state) => {
+        await exportSVG(state)
+    }
+}
+
+export const ExportCanvasJSAction:MenuAction = {
+    title:'Canvas JS',
+    icon:SupportedIcons.Download,
+    perform:async (state) => {
+        await exportCanvasJS(state)
+    }
 }
 
 export const AddNewRectAction:MenuAction = {
     title: 'new rect',
+    icon: SupportedIcons.Add,
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
@@ -21,6 +58,7 @@ export const AddNewRectAction:MenuAction = {
 
 export const AddNewCircleAction:MenuAction = {
     title: 'new circle',
+    icon: SupportedIcons.Add,
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
