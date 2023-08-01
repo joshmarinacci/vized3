@@ -1,7 +1,7 @@
 import {Bounds, Point} from "josh_js_util";
 import assert from "assert";
 import {
-    CircleDef, CircleType,
+    CircleDef, CircleType, ObjectProxy,
     PageDef, PageType,
     RectDef,
     RectType
@@ -52,16 +52,89 @@ async function createThreeCirclesDoc() {
 export const LeftAlignShapes:MenuAction = {
     title:'align left',
     perform: async (state) => {
-        console.log("running")
         const objs = state.getSelectedObjects()
-        if (objs.length > 0) {
-            let first = objs[0]
-            let left = first.getPropValue('bounds').x
-            for(let obj of objs) {
-                let bds:Bounds = obj.getPropValue('bounds')
-                let bds2 = new Bounds(left,bds.y,bds.w,bds.h)
-                obj.setPropValue('bounds',bds2)
-            }
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds')
+        for(let obj of objs) {
+            let bds:Bounds = obj.getPropValue('bounds')
+            let bds2 = new Bounds(fbds.x,bds.y,bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
+        }
+    }
+}
+
+export const RightAlignShapes:MenuAction = {
+    title:'align right',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds') as Bounds
+        for(let obj of objs) {
+            let bds:Bounds = obj.getPropValue('bounds')
+            let bds2 = new Bounds(fbds.right() - bds.w,bds.y,bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
+        }
+    }
+}
+
+export const HCenterAlignShapes:MenuAction = {
+    title:'align hcenter',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds') as Bounds
+        for(let obj of objs) {
+            let bds:Bounds = obj.getPropValue('bounds')
+            let bds2 = new Bounds(fbds.center().x - bds.w/2,bds.y,bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
+        }
+    }
+}
+
+export const TopAlignShapes:MenuAction = {
+    title:'align top',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds') as Bounds
+        for(let obj of objs) {
+            let bds = obj.getPropValue('bounds') as Bounds
+            let bds2 = new Bounds(fbds.x,fbds.top(),bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
+        }
+    }
+}
+
+export const VCenterAlignShapes:MenuAction = {
+    title:'align top',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds') as Bounds
+        for(let obj of objs) {
+            let bds = obj.getPropValue('bounds') as Bounds
+            let bds2 = new Bounds(fbds.x,fbds.center().y - bds.h/2,bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
+        }
+    }
+}
+
+export const BottomAlignShapes:MenuAction = {
+    title:'align top',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let first = objs[0]
+        let fbds = first.getPropValue('bounds') as Bounds
+        for(let obj of objs) {
+            let bds = obj.getPropValue('bounds') as Bounds
+            let bds2 = new Bounds(fbds.x,fbds.bottom() - bds.h,bds.w,bds.h)
+            obj.setPropValue('bounds',bds2)
         }
     }
 }
@@ -95,5 +168,60 @@ describe('alignment actions', () => {
         assert(circs[0].getPropValue('center').x === 100)
         assert(circs[1].getPropValue('center').x === 100)
         assert(circs[2].getPropValue('center').x === 100)
+    })
+    it('should right align rects', async () => {
+        const {state, page, rects} = await  createThreeRectsDoc()
+        assert(rects[0].getPropValue('bounds').x === 100)
+        assert(rects[1].getPropValue('bounds').x === 200)
+        assert(rects[2].getPropValue('bounds').x === 300)
+        state.addSelectedObjects(rects)
+        await RightAlignShapes.perform(state)
+        assert(rects[0].getPropValue('bounds').x === 100)
+        assert(rects[1].getPropValue('bounds').x === 90)
+        assert(rects[2].getPropValue('bounds').x === 80)
+    })
+    it('should center align rects', async () => {
+        const {state, page, rects} = await  createThreeRectsDoc()
+        assert(rects[0].getPropValue('bounds').x === 100)
+        assert(rects[1].getPropValue('bounds').x === 200)
+        assert(rects[2].getPropValue('bounds').x === 300)
+        state.addSelectedObjects(rects)
+        await HCenterAlignShapes.perform(state)
+        assert(rects[0].getPropValue('bounds').x === 100)
+        assert(rects[1].getPropValue('bounds').x === 95)
+        assert(rects[2].getPropValue('bounds').x === 90)
+    })
+    it('should Top align rects', async () => {
+        const {state, page, rects} = await  createThreeRectsDoc()
+        assert(rects[0].getPropValue('bounds').y === 100)
+        assert(rects[1].getPropValue('bounds').y === 200)
+        assert(rects[2].getPropValue('bounds').y === 300)
+        state.addSelectedObjects(rects)
+        await TopAlignShapes.perform(state)
+        assert(rects[0].getPropValue('bounds').top() === 100)
+        assert(rects[1].getPropValue('bounds').top() === 100)
+        assert(rects[2].getPropValue('bounds').top() === 100)
+    })
+    it('should center vertical align rects', async () => {
+        const {state, page, rects} = await  createThreeRectsDoc()
+        assert(rects[0].getPropValue('bounds').y === 100)
+        assert(rects[1].getPropValue('bounds').y === 200)
+        assert(rects[2].getPropValue('bounds').y === 300)
+        state.addSelectedObjects(rects)
+        await VCenterAlignShapes.perform(state)
+        assert(rects[0].getPropValue('bounds').center().y === 110)
+        assert(rects[1].getPropValue('bounds').center().y === 110)
+        assert(rects[2].getPropValue('bounds').center().y === 110)
+    })
+    it('should bottom align rects', async () => {
+        const {state, page, rects} = await  createThreeRectsDoc()
+        assert(rects[0].getPropValue('bounds').y === 100)
+        assert(rects[1].getPropValue('bounds').y === 200)
+        assert(rects[2].getPropValue('bounds').y === 300)
+        state.addSelectedObjects(rects)
+        await BottomAlignShapes.perform(state)
+        assert(rects[0].getPropValue('bounds').bottom() === 120)
+        assert(rects[1].getPropValue('bounds').bottom() === 120)
+        assert(rects[2].getPropValue('bounds').bottom() === 120)
     })
 })
