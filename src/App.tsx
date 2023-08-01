@@ -19,7 +19,6 @@ import {
     MainLayout,
     MenuActionButton,
     MenuBox,
-    SupportedIcons,
     ToggleIconButton,
     useObjectManagerChange,
     useObservableChange
@@ -37,6 +36,7 @@ import {
 import {LoadFileDialog} from "./LoadFileDialog";
 import {SettingsDialog} from "./SettingsDialog";
 import {Point} from "josh_js_util";
+import {SupportedIcons} from "./icons";
 
 const state = new GlobalState()
 

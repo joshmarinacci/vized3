@@ -5,6 +5,7 @@ import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from ".
 import {MenuAction} from "./actions";
 import {GlobalState} from "./models/state";
 import './common.css';
+import {SupportedIcons} from "./icons";
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -30,20 +31,6 @@ export function MainLayout(props: {
     </div>
 }
 
-export enum SupportedIcons {
-    LeftPanelCloseIcon = 'left_panel_close',
-    LeftPanelOpenIcon = 'left_panel_open',
-    RightPanelCloseIcon = 'right_panel_close',
-    RightPanelOpenIcon = 'right_panel_open',
-    Download='download',
-    Undo='undo',
-    Redo='redo',
-    NewDocument='note_add',
-    SaveDocument='save',
-    UploadDocument='upload_file',
-    Settings='settings',
-    Add='add',
-}
 
 export function ToggleIconButton(props: {
     onClick: () => void,
