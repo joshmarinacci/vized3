@@ -5,7 +5,7 @@ import {GlobalState} from "./models/state";
 import {ObjectDef, ObjectProxy, PageType} from "./models/om";
 import {MenuActionButton, MenuBox, useObservableChange} from "./common";
 import {Point} from "josh_js_util";
-import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
+import {AddNewCircleAction, AddNewRectAction, DeleteSelection, LeftAlignShapes} from "./actions";
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape

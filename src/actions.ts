@@ -139,7 +139,7 @@ export const HCenterAlignShapes: MenuAction = {
     }
 }
 export const TopAlignShapes: MenuAction = {
-    title: 'align top',
+    title: 'Align Top',
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -147,13 +147,13 @@ export const TopAlignShapes: MenuAction = {
         let fbds = first.getPropValue('bounds') as Bounds
         for (let obj of objs) {
             let bds = obj.getPropValue('bounds') as Bounds
-            let bds2 = new Bounds(fbds.x, fbds.top(), bds.w, bds.h)
+            let bds2 = new Bounds(bds.x, fbds.top(), bds.w, bds.h)
             obj.setPropValue('bounds', bds2)
         }
     }
 }
 export const VCenterAlignShapes: MenuAction = {
-    title: 'align top',
+    title: 'align vcenter',
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -161,7 +161,7 @@ export const VCenterAlignShapes: MenuAction = {
         let fbds = first.getPropValue('bounds') as Bounds
         for (let obj of objs) {
             let bds = obj.getPropValue('bounds') as Bounds
-            let bds2 = new Bounds(fbds.x, fbds.center().y - bds.h / 2, bds.w, bds.h)
+            let bds2 = new Bounds(bds.x, fbds.center().y - bds.h / 2, bds.w, bds.h)
             obj.setPropValue('bounds', bds2)
         }
     }

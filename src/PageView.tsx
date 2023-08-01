@@ -10,7 +10,13 @@ import {
     PageType
 } from "./models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
-import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
+import {
+    AddNewCircleAction,
+    AddNewRectAction, BottomAlignShapes,
+    DeleteSelection,
+    LeftAlignShapes,
+    RightAlignShapes, TopAlignShapes
+} from "./actions";
 
 function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>, state: GlobalState, handler:DragHandler) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -209,12 +215,24 @@ export function PageView(props:{page:any, state:GlobalState}) {
         await handler.mouseUp(pt, e, props.state)
     }
     const pm = useContext(PopupContext)
-    const showContextMenu = (e:MouseEvent<HTMLCanvasElement>) => {
+    const showContextMenu = async (e:MouseEvent<HTMLCanvasElement>) => {
+        let pt = canvasToModel(e)
+        await handler.mouseUp(pt, e, props.state)
         e.preventDefault()
+        let extras = <></>
+        if(props.state.getSelectedObjects().length > 1) {
+            extras = <>
+                <MenuActionButton action={LeftAlignShapes} state={props.state}/>
+                <MenuActionButton action={RightAlignShapes} state={props.state}/>
+                <MenuActionButton action={TopAlignShapes} state={props.state}/>
+                <MenuActionButton action={BottomAlignShapes} state={props.state}/>
+            </>
+        }
         const menu = <MenuBox>
             <MenuActionButton state={props.state} action={AddNewRectAction}/>
             <MenuActionButton state={props.state} action={AddNewCircleAction}/>
             <MenuActionButton state={props.state} action={DeleteSelection}/>
+            {extras}
         </MenuBox>
         pm.show_at(menu, e.target, "left", new Point(0,0))
     }
