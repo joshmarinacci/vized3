@@ -144,17 +144,6 @@ export const RightAlignShapes: MenuAction = {
         }
     }
 }
-export const HCenterAlignShapes: MenuAction = {
-    title: 'align hcenter',
-    perform: async (state) => {
-        const objs = state.getSelectedObjects()
-        if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0])
-        for (let obj of objs) {
-            moveObjBy(obj, new Point(fbds.center().x - calcObjectBounds(obj).w/2, 0))
-        }
-    }
-}
 export const TopAlignShapes: MenuAction = {
     title: 'Align Top',
     perform: async (state) => {
@@ -166,6 +155,17 @@ export const TopAlignShapes: MenuAction = {
         }
     }
 }
+export const HCenterAlignShapes: MenuAction = {
+    title: 'align hcenter',
+    perform: async (state) => {
+        const objs = state.getSelectedObjects()
+        if (objs.length < 2) return
+        let fbds = calcObjectBounds(objs[0])
+        for (let obj of objs) {
+            await moveObjBy(obj, new Point(fbds.center().x - calcObjectBounds(obj).center().x, 0))
+        }
+    }
+}
 export const VCenterAlignShapes: MenuAction = {
     title: 'align vcenter',
     perform: async (state) => {
@@ -173,7 +173,7 @@ export const VCenterAlignShapes: MenuAction = {
         if (objs.length < 2) return
         let fbds = calcObjectBounds(objs[0])
         for (let obj of objs) {
-            moveObjBy(obj, new Point(0,fbds.center().y - calcObjectBounds(obj).h/2))
+            await moveObjBy(obj, new Point(0,fbds.center().y - calcObjectBounds(obj).center().y))
         }
     }
 }

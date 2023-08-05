@@ -13,9 +13,9 @@ import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} fr
 import {
     AddNewCircleAction,
     AddNewRectAction, BottomAlignShapes,
-    DeleteSelection,
+    DeleteSelection, HCenterAlignShapes,
     LeftAlignShapes,
-    RightAlignShapes, TopAlignShapes
+    RightAlignShapes, TopAlignShapes, VCenterAlignShapes
 } from "./actions";
 
 function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>, state: GlobalState, handler:DragHandler) {
@@ -228,6 +228,8 @@ export function PageView(props:{page:any, state:GlobalState}) {
                 <MenuActionButton action={RightAlignShapes} state={props.state}/>
                 <MenuActionButton action={TopAlignShapes} state={props.state}/>
                 <MenuActionButton action={BottomAlignShapes} state={props.state}/>
+                <MenuActionButton action={VCenterAlignShapes} state={props.state}/>
+                <MenuActionButton action={HCenterAlignShapes} state={props.state}/>
             </>
         }
         const menu = <MenuBox>
