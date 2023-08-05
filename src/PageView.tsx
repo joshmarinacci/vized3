@@ -236,7 +236,9 @@ export function PageView(props:{page:any, state:GlobalState}) {
             <MenuActionButton state={props.state} action={DeleteSelection}/>
             {extras}
         </MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0,0))
+        let elem = e.target as HTMLElement
+        let dim = new Size(elem.clientWidth,elem.clientHeight)
+        pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
     }
 
     const dom_size = size.scale(1/window.devicePixelRatio)
