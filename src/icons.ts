@@ -12,4 +12,5 @@ export enum SupportedIcons {
     Settings='settings',
     Add='add',
     Delete='delete',
+    Search='search',
 }

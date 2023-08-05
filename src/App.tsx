@@ -1,4 +1,4 @@
-import React, {useContext, useState, MouseEvent} from 'react';
+import React, {MouseEvent, useContext, useState} from 'react';
 import {
     DialogContainer,
     DialogContext,
@@ -37,6 +37,7 @@ import {LoadFileDialog} from "./LoadFileDialog";
 import {SettingsDialog} from "./SettingsDialog";
 import {Point} from "josh_js_util";
 import {SupportedIcons} from "./icons";
+import {ActionSearchBox} from "./actionsearch";
 
 const state = new GlobalState()
 
@@ -72,6 +73,8 @@ function Main() {
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
+            <Spacer/>
+            <ActionSearchBox state={state}/>
             <Spacer/>
             <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}>settings</IconButton>
         </HBox>

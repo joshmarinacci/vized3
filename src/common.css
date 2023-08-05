@@ -98,3 +98,38 @@ button.primary:disabled {
 .selectable.selected:hover {
     background-color: var(--button-primary-background-hover);
 }
+
+.action-search-box {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.action-search-box input {
+    border: 1px solid var(--button-default-border-normal);
+    padding: 0.5rem;
+}
+
+
+.menu-action-description {
+    border: 1px solid black;
+    margin: 0.5rem;
+    border-radius: 5px;
+    background-color: white;
+    color: black;
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+.menu-action-description b {
+    padding: 0.5rem;
+    margin: 0;
+    text-transform: uppercase;
+}
+.menu-action-description p {
+    padding: 0.5rem;
+    margin: 0.5rem;
+    margin: 0;
+}
+.menu-action-description button {
+    margin: 0.5rem;
+}

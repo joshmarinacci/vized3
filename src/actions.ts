@@ -9,13 +9,17 @@ import {SupportedIcons} from "./icons";
 
 export type MenuAction = {
     title:string
+    description?:string
     icon?:SupportedIcons,
+    tags?:string[],
     perform: (state:GlobalState) => Promise<void>
 }
 
 export const SavePNGJSONAction:MenuAction = {
     icon:SupportedIcons.SaveDocument,
     title:'save',
+    description:'Save the document as a PNG with the document embedded inside of the PNG as JSON.',
+    tags:['save','export','download','png'],
     perform:async (state) => {
         await savePNGJSON(state)
     }
@@ -23,13 +27,17 @@ export const SavePNGJSONAction:MenuAction = {
 export const DownloadPNGAction:MenuAction = {
     icon:SupportedIcons.Download,
     title:'PNG',
+    tags:['save','export','download','png'],
+    description:"Export the document as a PNG file",
     perform: async (state) => {
         await exportPNG(state)
     }
 }
 export const DownloadSVGAction:MenuAction = {
     title:'SVG',
+    tags:['save','export','download','svg'],
     icon:SupportedIcons.Download,
+    description:'Export the document as an SVG file',
     perform:async (state) => {
         await exportSVG(state)
     }
@@ -37,6 +45,8 @@ export const DownloadSVGAction:MenuAction = {
 
 export const ExportCanvasJSAction:MenuAction = {
     title:'Canvas JS',
+    description:'export to javascript code using HTML Canvas',
+    tags:['save','export','download','code'],
     icon:SupportedIcons.Download,
     perform:async (state) => {
         await exportCanvasJS(state)
@@ -46,6 +56,7 @@ export const ExportCanvasJSAction:MenuAction = {
 export const AddNewRectAction:MenuAction = {
     title: 'new rect',
     icon: SupportedIcons.Add,
+    tags:['add','shape','rect','rectangle'],
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
@@ -59,6 +70,7 @@ export const AddNewRectAction:MenuAction = {
 export const AddNewCircleAction:MenuAction = {
     title: 'new circle',
     icon: SupportedIcons.Add,
+    tags:['add','shape','circle','circle'],
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
@@ -72,6 +84,7 @@ export const AddNewCircleAction:MenuAction = {
 export const DeleteSelection:MenuAction = {
     title: 'delete',
     icon:SupportedIcons.Delete,
+    tags:['delete','shape'],
     perform: async (state: GlobalState) => {
         const objs = state.getSelectedObjects()
         for(let obj of objs) {
@@ -113,6 +126,7 @@ async function moveObjBy(obj: ObjectProxy<any>, diff: Point) {
 
 export const BottomAlignShapes: MenuAction = {
     title: 'align bottom',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -124,6 +138,7 @@ export const BottomAlignShapes: MenuAction = {
 }
 export const LeftAlignShapes: MenuAction = {
     title: 'align left',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -135,6 +150,7 @@ export const LeftAlignShapes: MenuAction = {
 }
 export const RightAlignShapes: MenuAction = {
     title: 'align right',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -147,6 +163,7 @@ export const RightAlignShapes: MenuAction = {
 }
 export const TopAlignShapes: MenuAction = {
     title: 'Align Top',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -158,6 +175,7 @@ export const TopAlignShapes: MenuAction = {
 }
 export const HCenterAlignShapes: MenuAction = {
     title: 'align hcenter',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -169,6 +187,7 @@ export const HCenterAlignShapes: MenuAction = {
 }
 export const VCenterAlignShapes: MenuAction = {
     title: 'align vcenter',
+    tags:['align','shape'],
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
@@ -178,3 +197,19 @@ export const VCenterAlignShapes: MenuAction = {
         }
     }
 }
+
+export const ALL_ACTIONS: MenuAction[] = [
+    SavePNGJSONAction,
+    DownloadPNGAction,
+    DownloadSVGAction,
+    ExportCanvasJSAction,
+    AddNewRectAction,
+    AddNewCircleAction,
+    DeleteSelection,
+    RightAlignShapes,
+    LeftAlignShapes,
+    TopAlignShapes,
+    BottomAlignShapes,
+    VCenterAlignShapes,
+    HCenterAlignShapes,
+]
