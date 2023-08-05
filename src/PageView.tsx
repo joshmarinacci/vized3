@@ -29,7 +29,9 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>,
     for(let sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)';
         ctx.lineWidth = 10;
-        (sel.obj as DrawableShape).drawSelected(ctx);
+        if (sel.obj.drawSelected) {
+            (sel.obj as DrawableShape).drawSelected(ctx);
+        }
     }
     handler.drawOverlay(ctx,state)
 }

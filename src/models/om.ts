@@ -42,6 +42,12 @@ export type ObjectDef = {
 export const DocDef:ObjectDef = {
     name:'document',
     props: {
+        uuid: UUIDDef,
+        name: {
+            name:'name',
+            base:"string",
+            readonly: false,
+        },
         pages: {
             name:'pages',
             base:'list',
@@ -51,10 +57,33 @@ export const DocDef:ObjectDef = {
 }
 export type DocType = {
     pages:[]
+    name:string,
 }
+export class DocClass {
+    type:'document'
+    uuid: string
+    name: string
+    pages: []
+    private unit: string;
+    constructor(opts: Record<keyof typeof DocDef.props, any>) {
+        this.type = 'document'
+        this.name = 'unnamed'
+        this.pages = []
+        this.unit = "mm"
+        this.uuid = genId('document')
+    }
+}
+
+
 export const PageDef: ObjectDef = {
     name: 'page',
     props: {
+        uuid: UUIDDef,
+        name: {
+            name:'name',
+            base:"string",
+            readonly: false,
+        },
         children: {
             name: 'children',
             base: 'list',
@@ -62,10 +91,35 @@ export const PageDef: ObjectDef = {
         }
     }
 }
-
-export type PageType = {
+export type  PageType = {
+    name:string,
     children:any[]
 }
+export class PageClass {
+    type: 'page'
+    children: any[]
+    uuid: string
+    name: string
+
+    constructor(opts: Record<keyof typeof PageDef.props, any>) {
+        this.type = 'page'
+        this.name = 'unnamed'
+        this.uuid = genId('page')
+        this.children = []
+    }
+
+    hasChildren(): boolean {
+        return this.children.length > 0
+    }
+}
+
+export interface DrawableShape {
+    drawSelf(ctx:CanvasRenderingContext2D):void
+    contains(pt:Point):boolean
+    drawSelected(ctx:CanvasRenderingContext2D):void
+}
+
+
 export const RectDef: ObjectDef = {
     name: 'rect',
     props: {
@@ -109,12 +163,44 @@ export const RectDef: ObjectDef = {
         strokeWidth: StrokeWidthDef,
     }
 }
-export type RectType = {
+export type  RectType = {
     bounds:Bounds,
     fill:string,
     strokeFill:string,
     strokeWidth:number
 }
+export class RectClass implements DrawableShape {
+    type: 'square'
+    bounds: Bounds
+    uuid: string
+    name: string
+    fill: string
+    strokeWidth: number;
+    strokeFill: string;
+    constructor(opts: Record<keyof typeof RectDef.props, any>) {
+        this.type = 'square'
+        this.uuid = genId('square')
+        this.name = 'unnamed'
+        this.bounds = opts.bounds || new Bounds(0, 0, 1, 1)
+        this.fill = opts.fill || "#888"
+        this.strokeWidth = 1
+        this.strokeFill = 'black'
+    }
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = this.fill
+        ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+        ctx.strokeStyle = this.strokeFill
+        ctx.lineWidth = this.strokeWidth
+        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+    }
+    contains(pt: Point): boolean {
+        return this.bounds.contains(pt)
+    }
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+    }
+}
+
 export const CircleDef: ObjectDef = {
     name: 'circle',
     props: {
@@ -156,73 +242,6 @@ export const CircleDef: ObjectDef = {
 export type CircleType = {
     center: Point,
     radius:number,
-}
-
-export class DocClass {
-    type:'document'
-    uuid: string
-    name: string
-    pages: []
-    private unit: string;
-    constructor(opts: Record<keyof typeof DocDef.props, any>) {
-        this.type = 'document'
-        this.name = 'unnamed'
-        this.pages = []
-        this.unit = "mm"
-        this.uuid = genId('document')
-    }
-}
-
-export interface DrawableShape {
-    drawSelf(ctx:CanvasRenderingContext2D):void
-    contains(pt:Point):boolean
-    drawSelected(ctx:CanvasRenderingContext2D):void
-}
-export class RectClass implements DrawableShape {
-    type: 'square'
-    bounds: Bounds
-    uuid: string
-    name: string
-    fill: string
-    strokeWidth: number;
-    strokeFill: string;
-    constructor(opts: Record<keyof typeof RectDef.props, any>) {
-        this.type = 'square'
-        this.uuid = genId('square')
-        this.name = 'unnamed'
-        this.bounds = opts.bounds || new Bounds(0, 0, 1, 1)
-        this.fill = opts.fill || "#888"
-        this.strokeWidth = 1
-        this.strokeFill = 'black'
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
-        ctx.strokeStyle = this.strokeFill
-        ctx.lineWidth = this.strokeWidth
-        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
-    }
-    contains(pt: Point): boolean {
-        return this.bounds.contains(pt)
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
-    }
-}
-export class PageClass {
-    type: 'page'
-    children: any[]
-    uuid: string
-
-    constructor(opts: Record<keyof typeof PageDef.props, any>) {
-        this.type = 'page'
-        this.uuid = genId('page')
-        this.children = []
-    }
-
-    hasChildren(): boolean {
-        return this.children.length > 0
-    }
 }
 export class CircleClass implements DrawableShape {
     private type: string;

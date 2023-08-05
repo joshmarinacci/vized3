@@ -5,7 +5,7 @@ import {GlobalState} from "./models/state";
 import {ObjectDef, ObjectProxy, PageType} from "./models/om";
 import {MenuActionButton, MenuBox, useObservableChange} from "./common";
 import {Point} from "josh_js_util";
-import {AddNewCircleAction, AddNewRectAction, DeleteSelection, LeftAlignShapes} from "./actions";
+import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
@@ -37,8 +37,12 @@ function TreePageItem(props: { page: ObjectProxy<PageType>, state:GlobalState, s
         'selectable':true,
         selected:page === state.getSelectedPage(),
     })
+    const select_page = () => {
+        state.setSelectedPage(page)
+        state.setSelectedObjects([page])
+    }
     return <div className={'tree-item'}>
-        <b className={clsses} onClick={()=>props.state.setSelectedPage(props.page)}>page {props.page.getUUID()}</b>
+        <b className={clsses} onClick={select_page}>page {props.page.getPropValue('name')}</b>
         {
             page.getListProp('children').map((shape:ObjectProxy<ObjectDef>,i:number) =>
                 <TreeShapeItem key={i} shape={shape}
@@ -51,8 +55,11 @@ export function TreeView(props: { state:GlobalState}) {
     useObservableChange(props.state,'selection')
     const selected = props.state.getSelectedObjects()
     const doc = props.state.getCurrentDocument()
+    const select_document = () => {
+        props.state.setSelectedObjects([doc])
+    }
     return <div className={'panel left tree-view'}>
-        <h3>document: {props.state.getCurrentDocument().getUUID()}</h3>
+        <h3 onClick={select_document}>document: {props.state.getCurrentDocument().getPropValue('name')}</h3>
         <h3>pages</h3>
         {doc.getListProp('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
