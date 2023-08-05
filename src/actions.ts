@@ -82,17 +82,42 @@ export const DeleteSelection:MenuAction = {
         state.clearSelectedObjects()
     }
 }
+
+function calcObjectBounds(obj: ObjectProxy<any>) {
+    if (obj.def.name === 'rect') {
+        return obj.getPropValue('bounds') as Bounds
+    }
+    if (obj.def.name === 'circle') {
+        let center = obj.getPropValue('center') as Point
+        let rad = obj.getPropValue('radius') as number
+        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
+        return bds
+    }
+    throw new Error("object has no bounds")
+}
+
+async function moveObjBy(obj: ObjectProxy<any>, diff: Point) {
+    if (obj.def.name === 'rect') {
+        let bds = obj.getPropValue('bounds') as Bounds
+        await obj.setPropValue('bounds', bds.add(diff))
+        return
+    }
+    if (obj.def.name === 'circle') {
+        let center = obj.getPropValue('center') as Point
+        await obj.setPropValue('center', center.add(diff))
+        return
+    }
+    throw new Error("object has no bounds to move ")
+}
+
 export const BottomAlignShapes: MenuAction = {
     title: 'align bottom',
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let first = objs[0]
-        let fbds = first.getPropValue('bounds') as Bounds
+        let fbds = calcObjectBounds(objs[0])
         for (let obj of objs) {
-            let bds = obj.getPropValue('bounds') as Bounds
-            let bds2 = new Bounds(fbds.x, fbds.bottom() - bds.h, bds.w, bds.h)
-            obj.setPropValue('bounds', bds2)
+            await moveObjBy(obj,new Point(0,fbds.bottom()- calcObjectBounds(obj).bottom()))
         }
     }
 }
@@ -101,12 +126,9 @@ export const LeftAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let first = objs[0]
-        let fbds = first.getPropValue('bounds')
+        let fbds = calcObjectBounds(objs[0]);
         for (let obj of objs) {
-            let bds: Bounds = obj.getPropValue('bounds')
-            let bds2 = new Bounds(fbds.x, bds.y, bds.w, bds.h)
-            obj.setPropValue('bounds', bds2)
+            await moveObjBy(obj,new Point(fbds.left() - calcObjectBounds(obj).left(),0))
         }
     }
 }
@@ -115,12 +137,10 @@ export const RightAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let first = objs[0]
-        let fbds = first.getPropValue('bounds') as Bounds
+        let fbds = calcObjectBounds(objs[0]);
         for (let obj of objs) {
-            let bds: Bounds = obj.getPropValue('bounds')
-            let bds2 = new Bounds(fbds.right() - bds.w, bds.y, bds.w, bds.h)
-            obj.setPropValue('bounds', bds2)
+            let bds = calcObjectBounds(obj)
+            await moveObjBy(obj,new Point(fbds.right() - bds.right(),0))
         }
     }
 }
@@ -143,12 +163,9 @@ export const TopAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let first = objs[0]
-        let fbds = first.getPropValue('bounds') as Bounds
+        let fbds = calcObjectBounds(objs[0]);
         for (let obj of objs) {
-            let bds = obj.getPropValue('bounds') as Bounds
-            let bds2 = new Bounds(bds.x, fbds.top(), bds.w, bds.h)
-            obj.setPropValue('bounds', bds2)
+            await moveObjBy(obj,new Point(0,fbds.top() - calcObjectBounds(obj).top()))
         }
     }
 }
