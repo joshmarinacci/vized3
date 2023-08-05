@@ -71,6 +71,7 @@ export const AddNewCircleAction:MenuAction = {
 
 export const DeleteSelection:MenuAction = {
     title: 'delete',
+    icon:SupportedIcons.Delete,
     perform: async (state: GlobalState) => {
         const objs = state.getSelectedObjects()
         for(let obj of objs) {

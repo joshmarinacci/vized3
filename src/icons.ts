@@ -11,4 +11,5 @@ export enum SupportedIcons {
     UploadDocument='upload_file',
     Settings='settings',
     Add='add',
+    Delete='delete',
 }

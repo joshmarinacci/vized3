@@ -69,7 +69,11 @@ button.primary:disabled {
 }
 .menu-box button {
     padding: 0.5rem 1.0rem;
+    display: flex;
+    flex-direction: row;
     margin:0;
+    align-items: center;
+    justify-content: start;
 }
 .menu-box button:hover {
     background-color: var(--button-default-background-hover);
