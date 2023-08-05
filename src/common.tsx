@@ -16,13 +16,13 @@ export function MainLayout(props: {
 }): JSX.Element {
     const mainStyle: CSSProperties = {}
     if (props.leftVisible && props.rightVisible) {
-        mainStyle.gridTemplateColumns = '250px 3fr 250px'
+        mainStyle.gridTemplateColumns = '250px 3fr 350px'
     }
     if (props.leftVisible && !props.rightVisible) {
         mainStyle.gridTemplateColumns = '250px 3fr'
     }
     if (!props.leftVisible && props.rightVisible) {
-        mainStyle.gridTemplateColumns = '3fr 250px'
+        mainStyle.gridTemplateColumns = '3fr 350px'
     }
     return <div className={'main-view'} style={mainStyle}>
         {props.leftVisible && props.left}

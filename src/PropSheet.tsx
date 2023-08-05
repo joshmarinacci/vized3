@@ -94,6 +94,16 @@ function FillInput(props:{ schema: PropSchema, target:ObjectProxy<any>}) {
     </>
 }
 
+function BooleanEditor(props: { schema: PropSchema, target: ObjectProxy<any> }) {
+    const value = props.target.getPropValue(props.schema.name)
+    return <>
+        <label>{props.schema.name}</label>
+        <input type={"checkbox"} value={value} onChange={async (e) => {
+            await props.target.setPropValue(props.schema.name, e.target.value)
+        }}/>
+    </>
+}
+
 function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
     const { prop, target } = props
     if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
@@ -101,6 +111,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
     if(prop.base === 'number') return <NumberEditor schema={prop} target={target}/>
     if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>
+    if(prop.base === 'boolean') return <BooleanEditor schema={prop} target={target}/>
     return <label>unknown property type {prop.name}</label>
 }
 

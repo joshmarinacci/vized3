@@ -4,7 +4,7 @@ export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
 
 export type PropSchema = {
     name: string,
-    base: 'number' | 'string' | 'object' | 'list',
+    base: 'number' | 'string' | 'object' | 'list' | 'boolean',
     readonly:boolean,
     custom?:'css-color',
     subProps?:Record<string,PropSchema>,
@@ -73,7 +73,6 @@ export class DocClass {
         this.uuid = genId('document')
     }
 }
-
 
 export const PageDef: ObjectDef = {
     name: 'page',
@@ -161,13 +160,25 @@ export const RectDef: ObjectDef = {
         fill: FillDef,
         strokeFill: StrokeFillDef,
         strokeWidth: StrokeWidthDef,
+        roundedCornersEnabled: {
+            name:'roundedCornersEnabled',
+            base:'boolean',
+            readonly:false,
+        },
+        roundedCornersRadius: {
+            name:'roundedCornersRadius',
+            base:'number',
+            readonly:false,
+        }
     }
 }
-export type  RectType = {
+export type RectType = {
     bounds:Bounds,
     fill:string,
     strokeFill:string,
-    strokeWidth:number
+    strokeWidth:number,
+    roundedCornersEnabled:boolean,
+    roundedCornersRadius:0,
 }
 export class RectClass implements DrawableShape {
     type: 'square'
@@ -177,6 +188,8 @@ export class RectClass implements DrawableShape {
     fill: string
     strokeWidth: number;
     strokeFill: string;
+    private roundedCornersEnabled: boolean;
+    private roundedCornersRadius: number;
     constructor(opts: Record<keyof typeof RectDef.props, any>) {
         this.type = 'square'
         this.uuid = genId('square')
@@ -185,13 +198,33 @@ export class RectClass implements DrawableShape {
         this.fill = opts.fill || "#888"
         this.strokeWidth = 1
         this.strokeFill = 'black'
+        this.roundedCornersEnabled = false
+        this.roundedCornersRadius = 0
     }
     drawSelf(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = this.fill
-        ctx.fillRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+        if(this.roundedCornersEnabled) {
+            let b = this.bounds
+            let r = this.roundedCornersRadius
+            ctx.beginPath()
+            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
+            ctx.closePath()
+            ctx.fill()
+        } else {
+            ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
+        }
         ctx.strokeStyle = this.strokeFill
         ctx.lineWidth = this.strokeWidth
-        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
+        if(this.roundedCornersEnabled) {
+            let b = this.bounds
+            let r = this.roundedCornersRadius
+            ctx.beginPath()
+            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
+            ctx.closePath()
+            ctx.stroke()
+        } else {
+            ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
+        }
     }
     contains(pt: Point): boolean {
         return this.bounds.contains(pt)
