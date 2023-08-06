@@ -314,7 +314,79 @@ export class CircleClass implements DrawableShape {
     }
 }
 
+export const SimpleTextDef: ObjectDef = {
+    name:'simple-text',
+    props: {
+        uuid:UUIDDef,
+        center: {
+            name: 'center',
+            base: 'object',
+            readonly: false,
+            setter: (obj,name,value) => {
+                let pt = obj as Point;
+                let pt2 = pt.clone()
+                // @ts-ignore
+                pt2[name] = value
+                return pt2;
+            },
+            subProps:{
+                x: {
+                    name:'x',
+                    base: "number",
+                    readonly: false,
+                },
+                y: {
+                    name:'y',
+                    base: 'number',
+                    readonly: false,
+                },
+            }
+        },
+        text: {
+            name:'text',
+            readonly: false,
+            base: 'string',
+        },
+        fill: FillDef,
+    }
+}
+export type SimpleTextType = {
+    center: Point,
+    text: string,
+}
+export class SimpleTextClass implements DrawableShape {
+    private type: string;
+    private uuid: string;
+    private name: string;
+    private text: string;
+    private center: any;
+    private width: number
+    private height: number
+    constructor(opts: Record<keyof typeof SimpleTextDef.props, any>) {
+        this.type = 'simple-text'
+        this.uuid = genId('simple-text')
+        this.text = opts.text || "no text"
+        this.name = 'unnamed'
+        this.center = opts.center || new Point(50,50)
+        this.width = 100
+        this.height = 50
+    }
+    contains(pt: Point): boolean {
+        let bds = new Bounds(this.center.x,this.center.y-this.height,this.width,this.height)
+        return bds.contains(pt)
+    }
 
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.strokeRect(this.center.x,this.center.y-this.height,this.width,this.height)
+    }
+
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = 'black'
+        ctx.font = '24pt sans-serif'
+        ctx.fillText(this.text, this.center.x,this.center.y)
+    }
+
+}
 
 
 export const PropChanged = 'PropChanged'

@@ -10,7 +10,7 @@ import {
     ObjectProxy,
     PageClass,
     PageDef, PageType, RectClass,
-    RectDef, RectType
+    RectDef, RectType, SimpleTextClass, SimpleTextDef, SimpleTextType
 } from "./om";
 
 export class GlobalState extends Observable {
@@ -27,6 +27,7 @@ export class GlobalState extends Observable {
         this.om.registerDef(PageDef,PageClass)
         this.om.registerDef(RectDef,RectClass)
         this.om.registerDef(CircleDef,CircleClass)
+        this.om.registerDef(SimpleTextDef, SimpleTextClass)
         this._doc = this.om.make(DocDef,{})
         let page = this.om.make<PageType>(PageDef, {})
         this._doc.appendListProp('pages',page)
@@ -34,6 +35,8 @@ export class GlobalState extends Observable {
         page.appendListProp('children', rect)
         let circ = this.om.make<CircleType>(CircleDef, { center: new Point(100,200), radius: 20})
         page.appendListProp("children", circ)
+        let text = this.om.make<SimpleTextType>(SimpleTextDef, {})
+        page.appendListProp("children", text)
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

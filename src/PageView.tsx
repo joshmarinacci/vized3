@@ -44,15 +44,19 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>,
     handler.drawOverlay(ctx,state)
     //draw the handles
     for(let sel of selected) {
-        if(sel.def.name === 'rect') {
-            let h = new RectResizeHandle(sel)
-            drawHandle(ctx,h)
-        }
-        if(sel.def.name === 'circle') {
-            let h = new CircleResizeHandle(sel)
-            drawHandle(ctx,h)
-        }
+        let h = handleForShape(sel)
+        if(h) drawHandle(ctx,h)
     }
+}
+
+function handleForShape(obj:ObjectProxy<any>):Handle | null {
+    if(obj.def.name === 'rect') {
+        return new RectResizeHandle(obj)
+    }
+    if(obj.def.name === 'circle') {
+        return new CircleResizeHandle(obj)
+    }
+    return null
 }
 
 function findShapeInPage(page: ObjectProxy<PageType>, pt: Point):ObjectProxy<ObjectDef>|undefined {
@@ -132,20 +136,53 @@ class CircleResizeHandle implements Handle{
 function findHandleInPage(page: ObjectProxy<PageType>, pt: Point, state:GlobalState):Handle|null {
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
-        if(sel.def.name === 'rect') {
-            let h = new RectResizeHandle(sel)
-            if(h.contains(pt)) {
-                return h
-            }
-        }
-        if(sel.def.name === 'circle') {
-            let h = new CircleResizeHandle(sel)
-            if(h.contains(pt)) {
-                return h
-            }
-        }
+        let h = handleForShape(sel)
+        if (h && h.contains(pt)) return h
     }
     return null
+}
+
+function calcObjPos(target: ObjectProxy<any>) {
+    if(!target) return new Point(-1,-1)
+    if(target.def.name === 'rect') {
+        return (target.getPropValue('bounds') as Bounds).position()
+    }
+    if(target.def.name === 'circle') {
+        return target.getPropValue('center')
+    }
+    if(target.def.name === 'simple-text') {
+        return target.getPropValue('center')
+    }
+    return new Point(-1,-1)
+}
+function calcObjIntersects(obj: ObjectProxy<any>, bounds:Bounds):boolean {
+    if(obj.def.name === 'rect') {
+        return ((obj.getPropValue('bounds')) as Bounds).intersects(bounds)
+    }
+    if(obj.def.name === 'circle') {
+        let center = obj.getPropValue('center') as Point
+        let rad = obj.getPropValue('radius') as number
+        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
+        return bds.intersects(bounds)
+    }
+    if(obj.def.name === 'simple-text') {
+        let center = obj.getPropValue('center') as Point
+        let bds = new Bounds(center.x,center.y-50,100,50)
+        return bds.intersects(bounds)
+    }
+    return false
+}
+async function setObjPos(target: ObjectProxy<any>, new_pos: Point) {
+    if (target.def.name === 'rect') {
+        let bounds = target.getPropValue('bounds') as Bounds
+        await target.setPropValue('bounds', new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
+    }
+    if (target.def.name === 'circle') {
+        await target.setPropValue('center', new_pos)
+    }
+    if (target.def.name === 'simple-text') {
+        await target.setPropValue('center', new_pos)
+    }
 }
 
 class DragHandler {
@@ -168,39 +205,6 @@ class DragHandler {
         this.potentialShapes = []
     }
 
-    calcObjPos(target: ObjectProxy<any>) {
-        if(!target) return new Point(-1,-1)
-        if(target.def.name === 'rect') {
-            return (target.getPropValue('bounds') as Bounds).position()
-        }
-        if(target.def.name === 'circle') {
-            return target.getPropValue('center')
-        }
-        return new Point(-1,-1)
-    }
-    private calcObjIntersects(obj: ObjectProxy<any>, bounds:Bounds):boolean {
-        if(obj.def.name === 'rect') {
-            return ((obj.getPropValue('bounds')) as Bounds).intersects(bounds)
-        }
-        if(obj.def.name === 'circle') {
-            let center = obj.getPropValue('center') as Point
-            let rad = obj.getPropValue('radius') as number
-            let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
-            return bds.intersects(bounds)
-        }
-        return false
-    }
-
-
-    async setObjPos(target: ObjectProxy<any>, new_pos: Point) {
-        if (target.def.name === 'rect') {
-            let bounds = target.getPropValue('bounds') as Bounds
-            await target.setPropValue('bounds', new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
-        }
-        if (target.def.name === 'circle') {
-            await target.setPropValue('center', new_pos)
-        }
-    }
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
         const page = state.getSelectedPage();
@@ -255,11 +259,11 @@ class DragHandler {
             }
             for (let sel of state.getSelectedObjects()) {
                 if (!this.originalPositions.has(sel)) {
-                    this.originalPositions.set(sel, this.calcObjPos(sel))
+                    this.originalPositions.set(sel, calcObjPos(sel))
                 }
                 let original_pos = this.originalPositions.get(sel) as Point
                 let new_pos = original_pos.add(diff)
-                await this.setObjPos(sel, new_pos)
+                await setObjPos(sel, new_pos)
             }
         }
     }
@@ -299,7 +303,7 @@ class DragHandler {
         const included = []
         let chs = page.getListProp('children')
         for(let obj of chs) {
-            let bds = this.calcObjIntersects(obj, dragRect)
+            let bds = calcObjIntersects(obj, dragRect)
             if(bds)included.push(obj)
         }
         return included
