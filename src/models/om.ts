@@ -275,6 +275,7 @@ export const CircleDef: ObjectDef = {
 export type CircleType = {
     center: Point,
     radius:number,
+    fill:string,
 }
 export class CircleClass implements DrawableShape {
     private type: string;
@@ -353,6 +354,7 @@ export const SimpleTextDef: ObjectDef = {
 export type SimpleTextType = {
     center: Point,
     text: string,
+    fill:string,
 }
 export class SimpleTextClass implements DrawableShape {
     private type: string;
@@ -360,30 +362,49 @@ export class SimpleTextClass implements DrawableShape {
     private name: string;
     private text: string;
     private center: any;
-    private width: number
-    private height: number
+    private fill: string;
+    private metrics: TextMetrics;
+    private can: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D;
     constructor(opts: Record<keyof typeof SimpleTextDef.props, any>) {
+        this.fill = opts.fill || "#888"
         this.type = 'simple-text'
         this.uuid = genId('simple-text')
         this.text = opts.text || "no text"
         this.name = 'unnamed'
         this.center = opts.center || new Point(50,50)
-        this.width = 100
-        this.height = 50
+        this.can = document.createElement('canvas')
+        this.can.width = 100
+        this.can.height = 100
+        this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
+        this.ctx.font = '24pt sans-serif'
+        this.metrics = this.ctx.measureText(this.text)
+    }
+    private calcHeight() {
+        return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
     }
     contains(pt: Point): boolean {
-        let bds = new Bounds(this.center.x,this.center.y-this.height,this.width,this.height)
+        let h = this.calcHeight()
+        let bds = new Bounds(this.center.x,this.center.y-h,this.metrics.width,h)
         return bds.contains(pt)
     }
 
     drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.center.x,this.center.y-this.height,this.width,this.height)
+        let h = this.calcHeight()
+        ctx.strokeRect(this.center.x,this.center.y-h,this.metrics.width,h)
     }
 
     drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = 'black'
+        ctx.fillStyle = this.fill
         ctx.font = '24pt sans-serif'
         ctx.fillText(this.text, this.center.x,this.center.y)
+    }
+
+    refresh(prop:PropSchema) {
+        if(prop.name === 'text') {
+            this.ctx.font = '24pt sans-serif'
+            this.metrics = this.ctx.measureText(this.text)
+        }
     }
 
 }
@@ -731,6 +752,7 @@ class PropChangeEvent<T> implements HistoryEvent {
         this.newValue = value
         this.desc = `${prop.name} ${target.obj[prop.name]} => ${value}`
         this.target.obj[prop.name] = value
+        if(target.obj.refresh) target.obj.refresh(prop)
         this.compressable = true
     }
 
