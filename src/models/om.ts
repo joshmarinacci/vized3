@@ -348,6 +348,11 @@ export const SimpleTextDef: ObjectDef = {
             readonly: false,
             base: 'string',
         },
+        fontSize: {
+            name:'fontSize',
+            base: 'number',
+            readonly: false
+        },
         fill: FillDef,
     }
 }
@@ -355,6 +360,7 @@ export type SimpleTextType = {
     center: Point,
     text: string,
     fill:string,
+    fontSize:number
 }
 export class SimpleTextClass implements DrawableShape {
     private type: string;
@@ -366,18 +372,20 @@ export class SimpleTextClass implements DrawableShape {
     private metrics: TextMetrics;
     private can: HTMLCanvasElement;
     private ctx: CanvasRenderingContext2D;
+    private fontSize: number;
     constructor(opts: Record<keyof typeof SimpleTextDef.props, any>) {
         this.fill = opts.fill || "#888"
         this.type = 'simple-text'
         this.uuid = genId('simple-text')
         this.text = opts.text || "no text"
         this.name = 'unnamed'
+        this.fontSize = opts.fontSize || 24
         this.center = opts.center || new Point(50,50)
         this.can = document.createElement('canvas')
         this.can.width = 100
         this.can.height = 100
         this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
-        this.ctx.font = '24pt sans-serif'
+        this.ctx.font = this.calcFont()
         this.metrics = this.ctx.measureText(this.text)
     }
     private calcHeight() {
@@ -396,17 +404,20 @@ export class SimpleTextClass implements DrawableShape {
 
     drawSelf(ctx: CanvasRenderingContext2D): void {
         ctx.fillStyle = this.fill
-        ctx.font = '24pt sans-serif'
+        ctx.font = this.calcFont()
         ctx.fillText(this.text, this.center.x,this.center.y)
     }
 
     refresh(prop:PropSchema) {
-        if(prop.name === 'text') {
-            this.ctx.font = '24pt sans-serif'
+        if(prop.name === 'text' || prop.name === 'fontSize') {
+            this.ctx.font = this.calcFont()
             this.metrics = this.ctx.measureText(this.text)
         }
     }
 
+    private calcFont() {
+        return `${this.fontSize}pt sans-serif`
+    }
 }
 
 
