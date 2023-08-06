@@ -3,11 +3,13 @@ import {Bounds, Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "./models/state";
 import {
+    CircleType,
     DrawableShape,
     FamilyPropChanged,
     ObjectDef,
     ObjectProxy,
-    PageType
+    PageType,
+    RectType
 } from "./models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
 import {
@@ -17,6 +19,12 @@ import {
     LeftAlignShapes,
     RightAlignShapes, TopAlignShapes, VCenterAlignShapes
 } from "./actions";
+
+function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
+    ctx.fillStyle = 'red'
+    let p = h.getPosition()
+    ctx.fillRect(p.x-10,p.y-10,20,20)
+}
 
 function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>, state: GlobalState, handler:DragHandler) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
@@ -34,6 +42,17 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>,
         }
     }
     handler.drawOverlay(ctx,state)
+    //draw the handles
+    for(let sel of selected) {
+        if(sel.def.name === 'rect') {
+            let h = new RectResizeHandle(sel)
+            drawHandle(ctx,h)
+        }
+        if(sel.def.name === 'circle') {
+            let h = new CircleResizeHandle(sel)
+            drawHandle(ctx,h)
+        }
+    }
 }
 
 function findShapeInPage(page: ObjectProxy<PageType>, pt: Point):ObjectProxy<ObjectDef>|undefined {
@@ -54,6 +73,80 @@ function canvasToModel(e: React.MouseEvent<HTMLCanvasElement>) {
     return pt
 }
 
+interface Handle {
+    getPosition(): Point;
+    setPosition(pos: Point): Promise<void>;
+    contains(pt: Point): boolean;
+}
+
+class RectResizeHandle implements Handle {
+    private obj: ObjectProxy<RectType>;
+    constructor(obj:ObjectProxy<RectType>) {
+        this.obj = obj
+    }
+    getPosition():Point {
+        return this.obj.getPropValue("bounds").bottom_right()
+    }
+    async setPosition(pos: Point) {
+        let old_bounds = this.obj.getPropValue('bounds')
+        const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
+        await this.obj.setPropValue("bounds", new_bounds)
+    }
+
+    contains(pt: Point) {
+        let pos = this.obj.getPropValue('bounds').bottom_right()
+        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        return b.contains(pt)
+    }
+}
+
+class CircleResizeHandle implements Handle{
+    private obj: ObjectProxy<CircleType>;
+    constructor(obj:ObjectProxy<CircleType>) {
+        this.obj = obj
+    }
+
+    getPosition(): Point {
+        let center = this.obj.getPropValue("center")
+        let radius = this.obj.getPropValue('radius')
+        return center.add(new Point(radius, 0))
+    }
+
+    async setPosition(pos: Point) {
+        let center = this.obj.getPropValue("center")
+        let radius = this.obj.getPropValue('radius')
+        let diff = pos.subtract(center)
+        radius = diff.x
+        await this.obj.setPropValue('radius', radius)
+    }
+
+    contains(pt: Point) {
+        let center = this.obj.getPropValue("center")
+        let radius = this.obj.getPropValue('radius')
+        let pos = center.add(new Point(radius, 0))
+        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        return b.contains(pt)
+    }
+}
+
+function findHandleInPage(page: ObjectProxy<PageType>, pt: Point, state:GlobalState):Handle|null {
+    let selected = state.getSelectedObjects()
+    for(let sel of selected) {
+        if(sel.def.name === 'rect') {
+            let h = new RectResizeHandle(sel)
+            if(h.contains(pt)) {
+                return h
+            }
+        }
+        if(sel.def.name === 'circle') {
+            let h = new CircleResizeHandle(sel)
+            if(h.contains(pt)) {
+                return h
+            }
+        }
+    }
+    return null
+}
 
 class DragHandler {
     private pressed: boolean;
@@ -62,11 +155,15 @@ class DragHandler {
     private draggingRect: boolean;
     private dragRect: Bounds;
     private potentialShapes: ObjectProxy<ObjectDef>[];
+    private draggingHandle: boolean;
+    private dragHandle: Handle | null;
     constructor() {
         this.pressed = false
         this.originalPositions = new Map()
         this.dragStartPoint = new Point(-99,-99)
         this.draggingRect = false
+        this.draggingHandle = false
+        this.dragHandle = null
         this.dragRect = new Bounds(0,0,50,50)
         this.potentialShapes = []
     }
@@ -108,6 +205,15 @@ class DragHandler {
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
         const page = state.getSelectedPage();
         if(!page) return
+        let hand = findHandleInPage(page,pt, state)
+        if(hand) {
+            this.draggingHandle = true
+            this.dragHandle = hand
+            this.dragStartPoint = pt
+            this.pressed = true
+            return
+        }
+
         let shape = findShapeInPage(page,pt)
         const sel = state.getSelectedObjects()
         if(shape) {
@@ -140,16 +246,20 @@ class DragHandler {
                 )
                 this.potentialShapes = this.findShapesInPageRect(state.getSelectedPage(),this.dragRect)
                 state.fireSelectionChange()
-            } else {
-                const diff = pt.subtract(this.dragStartPoint)
-                for (let sel of state.getSelectedObjects()) {
-                    if (!this.originalPositions.has(sel)) {
-                        this.originalPositions.set(sel, this.calcObjPos(sel))
-                    }
-                    let original_pos = this.originalPositions.get(sel) as Point
-                    let new_pos = original_pos.add(diff)
-                    await this.setObjPos(sel, new_pos)
+                return
+            }
+            const diff = pt.subtract(this.dragStartPoint)
+            if(this.draggingHandle && this.dragHandle) {
+                await this.dragHandle.setPosition(pt)
+                return
+            }
+            for (let sel of state.getSelectedObjects()) {
+                if (!this.originalPositions.has(sel)) {
+                    this.originalPositions.set(sel, this.calcObjPos(sel))
                 }
+                let original_pos = this.originalPositions.get(sel) as Point
+                let new_pos = original_pos.add(diff)
+                await this.setObjPos(sel, new_pos)
             }
         }
     }
@@ -158,6 +268,10 @@ class DragHandler {
         if(this.draggingRect) {
             state.setSelectedObjects(this.potentialShapes)
             this.potentialShapes = []
+        }
+        if(this.draggingHandle) {
+            this.draggingHandle = false
+            this.dragHandle = null
         }
         this.pressed = false
         this.originalPositions.clear()
@@ -198,9 +312,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState(new DragHandler())
     useEffect(() => {
-        if(canvasRef.current) {
-            drawCanvasState(canvasRef.current, props.page, props.state, handler)
-        }
+        if(canvasRef.current) drawCanvasState(canvasRef.current, props.page, props.state, handler)
     })
     useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
