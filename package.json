@@ -2,6 +2,7 @@
   "name": "vized3",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
@@ -27,7 +28,7 @@
   "scripts": {
     "start": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build --watch --serve --servedir=build",
     "build": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build",
-    "test": "react-scripts test",
+    "test": "esbuild src/models/*.ts --outdir=build && NODE_OPTIONS=--experimental-vm-modules jest build/om.test.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

@@ -11,7 +11,7 @@ import {
     PropSchema,
     PageClass, RectClass,
     RectDef, CircleDef, CircleClass, RectType, PageType, CircleType
-} from "./om";
+} from "./om.js";
 // import {assert_eq} from "josh_js_util/dist/assert";
 
 

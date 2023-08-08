@@ -586,6 +586,10 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject): Promise<ObjectPr
             props[key] = obj.props[key]
             continue
         }
+        if (propSchema.base === 'boolean') {
+            props[key] = obj.props[key]
+            continue
+        }
         if (propSchema.base === 'list') {
             props[key] = []
             const vals = obj.props[key] as JSONObject[]
