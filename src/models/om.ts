@@ -564,6 +564,10 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
             json.props[prop.name] = obj.getPropValue(prop.name)
             return
         }
+        if(prop.base === 'boolean') {
+            json.props[prop.name] = obj.getPropValue(prop.name)
+            return
+        }
         throw new Error(`unhandled toJSON type ${prop.base}`)
     })
     return json

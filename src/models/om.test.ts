@@ -12,7 +12,7 @@ import {
     PageClass, RectClass,
     RectDef, CircleDef, CircleClass, RectType, PageType, CircleType
 } from "./om";
-import {assert_eq} from "josh_js_util/dist/assert";
+// import {assert_eq} from "josh_js_util/dist/assert";
 
 
 describe('model tests', () => {

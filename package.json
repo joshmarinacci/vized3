@@ -11,6 +11,7 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "crc-32": "^1.2.2",
+    "esbuild": "^0.18.19",
     "josh_js_util": "^0.1.11",
     "josh_react_util": "^1.0.18",
     "josh_web_util": "0.0.4",
@@ -24,8 +25,8 @@
   },
   "homepage": "./",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build --watch --serve --servedir=build",
+    "build": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
