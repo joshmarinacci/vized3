@@ -1,3 +1,4 @@
+import {expect, test, describe, it} from "vitest";
 import {Bounds, Point} from "josh_js_util";
 import assert from "assert";
 import {CircleDef, CircleType, PageDef, PageType, RectDef, RectType} from "./models/om";

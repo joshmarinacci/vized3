@@ -381,12 +381,14 @@ export class SimpleTextClass implements DrawableShape {
         this.name = 'unnamed'
         this.fontSize = opts.fontSize || 24
         this.center = opts.center || new Point(50,50)
-        this.can = document.createElement('canvas')
-        this.can.width = 100
-        this.can.height = 100
-        this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
-        this.ctx.font = this.calcFont()
-        this.metrics = this.ctx.measureText(this.text)
+        if (typeof document !== "undefined") {
+            this.can = document.createElement('canvas')
+            this.can.width = 100
+            this.can.height = 100
+            this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
+            this.ctx.font = this.calcFont()
+            this.metrics = this.ctx.measureText(this.text)
+        }
     }
     private calcHeight() {
         return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
