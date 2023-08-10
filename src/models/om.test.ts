@@ -1,5 +1,6 @@
 import {Bounds} from "josh_js_util";
 import assert from "assert";
+import {expect, test, describe, it} from "vitest";
 import {
     FamilyPropChanged,
     JSONObject,

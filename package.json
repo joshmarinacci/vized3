@@ -7,7 +7,6 @@
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
     "@types/node": "^16.18.36",
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
@@ -27,7 +26,7 @@
   "scripts": {
     "start": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build --watch --serve --servedir=build",
     "build": "mkdir -p build && cp public/* build && esbuild src/index.tsx --bundle --outdir=build",
-    "test": "esbuild src/*.ts src/*.tsx src/*/*.ts --outdir=build && NODE_OPTIONS=--experimental-vm-modules jest build/models/om.test.js",
+    "test": "vitest",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -52,9 +51,7 @@
     "node": "^18"
   },
   "devDependencies": {
-    "@types/react-color": "^3.0.6"
-  },
-  "jest": {
-    "transformIgnorePatterns": []
+    "@types/react-color": "^3.0.6",
+    "vitest": "^0.34.1"
   }
 }
