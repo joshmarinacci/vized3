@@ -17,7 +17,7 @@ const FillDef:PropSchema = {
     base: 'string',
     readonly: false,
     custom:'css-color',
-    defaultValue: 'red'
+    defaultValue: '#cccccc'
 }
 const StrokeFillDef:PropSchema = {
     name:'strokeFill',
@@ -67,10 +67,16 @@ export const PageDef: ObjectDef = {
         }
     }
 }
+export interface Handle {
+    getPosition(): Point;
+    setPosition(pos: Point): Promise<void>;
+    contains(pt: Point): boolean;
+}
 export interface DrawableShape {
     drawSelf(ctx:CanvasRenderingContext2D):void
     contains(pt:Point):boolean
     drawSelected(ctx:CanvasRenderingContext2D):void
+    getHandle():Handle|null
 }
 export const RectDef: ObjectDef = {
     name: 'rect',
@@ -218,7 +224,6 @@ export const SimpleTextDef: ObjectDef = {
     }
 }
 
-
 export const PropChanged = 'PropChanged'
 export const FamilyPropChanged = 'FamilyPropChanged'
 export type EventTypes = typeof PropChanged | typeof FamilyPropChanged
@@ -322,10 +327,61 @@ export class ObjectProxy<T extends ObjectDef> {
     refresh(prop:PropSchema){}
 }
 
+
+class RectResizeHandle implements Handle {
+    private obj: RectClass;
+    constructor(obj:RectClass) {
+        this.obj = obj
+    }
+    getPosition():Point {
+        return this.obj.getPropValue("bounds").bottom_right()
+    }
+    async setPosition(pos: Point) {
+        let old_bounds = this.obj.getPropValue('bounds')
+        const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
+        await this.obj.setPropValue("bounds", new_bounds)
+    }
+
+    contains(pt: Point) {
+        let pos = this.obj.getPropValue('bounds').bottom_right()
+        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        return b.contains(pt)
+    }
+}
+
+class CircleResizeHandle implements Handle{
+    private obj: CircleClass
+    constructor(obj:CircleClass) {
+        this.obj = obj
+    }
+
+    getPosition(): Point {
+        let center = this.obj.getPropValue("center")
+        let radius = this.obj.getPropValue('radius')
+        return center.add(new Point(radius, 0))
+    }
+
+    async setPosition(pos: Point) {
+        let center = this.obj.getPropValue("center")
+        let diff = pos.subtract(center)
+        let radius = diff.x
+        await this.obj.setPropValue('radius', radius)
+    }
+
+    contains(pt: Point) {
+        let center = this.obj.getPropValue("center")
+        let radius = this.obj.getPropValue('radius')
+        let pos = center.add(new Point(radius, 0))
+        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        return b.contains(pt)
+    }
+}
+
 export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> implements DrawableShape {
     abstract contains(pt: Point): boolean;
     abstract drawSelected(ctx: CanvasRenderingContext2D): void;
     abstract drawSelf(ctx: CanvasRenderingContext2D): void;
+    abstract getHandle(): Handle | null;
 }
 
 export class RectClass extends DrawableClass<typeof RectDef> {
@@ -362,6 +418,9 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     }
     drawSelected(ctx: CanvasRenderingContext2D): void {
         ctx.strokeRect(this.props.bounds.x,this.props.bounds.y,this.props.bounds.w,this.props.bounds.h)
+    }
+    getHandle(): Handle {
+        return new RectResizeHandle(this)
     }
 }
 
@@ -400,6 +459,9 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
         ctx.beginPath()
         ctx.arc(this.props.center.x,this.props.center.y,this.props.radius,0,toRadians(360))
         ctx.stroke()
+    }
+    getHandle(): Handle {
+        return new CircleResizeHandle(this)
     }
 }
 
@@ -447,6 +509,10 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef>{
 
     private calcFont() {
         return `${this.props.fontSize}pt sans-serif`
+    }
+
+    getHandle() {
+        return null;
     }
 }
 

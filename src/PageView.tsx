@@ -3,12 +3,12 @@ import {Bounds, Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "./models/state";
 import {
-    CircleClass,
+    DrawableClass,
     DrawableShape,
-    FamilyPropChanged,
+    FamilyPropChanged, Handle,
     ObjectDef,
-    ObjectProxy, PageClass,
-    RectClass} from "./models/om";
+    ObjectProxy, PageClass
+} from "./models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
 import {
     AddNewCircleAction,
@@ -28,16 +28,12 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: Glob
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
-    page.getListProp('children').forEach(shape => {
-        (shape as DrawableShape).drawSelf(ctx)
-    })
+    page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(ctx))
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)';
         ctx.lineWidth = 10;
-        if (Object.hasOwn(sel,'drawSelected')) {
-            (sel as unknown as DrawableShape).drawSelected(ctx);
-        }
+        if (sel instanceof DrawableClass) sel.drawSelected(ctx);
     }
     handler.drawOverlay(ctx,state)
     //draw the handles
@@ -48,11 +44,8 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: Glob
 }
 
 function handleForShape(obj:ObjectProxy<any>):Handle | null {
-    if(obj.def.name === 'rect') {
-        return new RectResizeHandle(obj as RectClass)
-    }
-    if(obj.def.name === 'circle') {
-        return new CircleResizeHandle(obj as CircleClass)
+    if (obj instanceof DrawableClass) {
+        return obj.getHandle()
     }
     return null
 }
@@ -73,61 +66,6 @@ function canvasToModel(e: React.MouseEvent<HTMLCanvasElement>) {
     pt = pt.subtract(new Point(rect.x, rect.y))
     pt = pt.scale(window.devicePixelRatio)
     return pt
-}
-
-interface Handle {
-    getPosition(): Point;
-    setPosition(pos: Point): Promise<void>;
-    contains(pt: Point): boolean;
-}
-
-class RectResizeHandle implements Handle {
-    private obj: RectClass;
-    constructor(obj:RectClass) {
-        this.obj = obj
-    }
-    getPosition():Point {
-        return this.obj.getPropValue("bounds").bottom_right()
-    }
-    async setPosition(pos: Point) {
-        let old_bounds = this.obj.getPropValue('bounds')
-        const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
-        await this.obj.setPropValue("bounds", new_bounds)
-    }
-
-    contains(pt: Point) {
-        let pos = this.obj.getPropValue('bounds').bottom_right()
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
-        return b.contains(pt)
-    }
-}
-
-class CircleResizeHandle implements Handle{
-    private obj: CircleClass
-    constructor(obj:CircleClass) {
-        this.obj = obj
-    }
-
-    getPosition(): Point {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
-        return center.add(new Point(radius, 0))
-    }
-
-    async setPosition(pos: Point) {
-        let center = this.obj.getPropValue("center")
-        let diff = pos.subtract(center)
-        let radius = diff.x
-        await this.obj.setPropValue('radius', radius)
-    }
-
-    contains(pt: Point) {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
-        let pos = center.add(new Point(radius, 0))
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
-        return b.contains(pt)
-    }
 }
 
 function findHandleInPage(page: PageClass, pt: Point, state:GlobalState):Handle|null {
