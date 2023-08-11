@@ -20,16 +20,16 @@ export async function stateToCanvas(state:GlobalState) {
             const doc = item.obj as DocClass
         }
         if (item.def.name === 'page') {
-            const page = item.obj as PageClass
+            const page = item as PageClass
             ctx.fillStyle = 'white'
             ctx.fillRect(0, 0, canvas.width, canvas.height)
         }
         if (item.def.name === 'rect') {
-            const sq = item.obj as RectClass
+            const sq = item as RectClass
             sq.drawSelf(ctx)
         }
         if (item.def.name === 'circle') {
-            const circle = item.obj as CircleClass
+            const circle = item as CircleClass
             circle.drawSelf(ctx)
         }
     })

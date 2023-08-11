@@ -4,11 +4,8 @@ import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
 import {readMetadata, writeMetadata} from "./vendor";
 import {DocClass, JSONDoc} from "../models/om";
 
-export async function saveJSON(state: GlobalState) {
-    console.log("exporting", state.getCurrentDocument())
-    let json_obj = await state.om.toJSON(state.getCurrentDocument())
-    console.log("json obj is",json_obj)
-    console.log(JSON.stringify(json_obj,null,'   '))
+export async function saveJSON(state: GlobalState):Promise<JSONDoc> {
+    return await state.om.toJSON(state.getCurrentDocument())
 }
 export async function savePNGJSON(state: GlobalState) {
     const canvas = await stateToCanvas(state)

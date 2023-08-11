@@ -1,7 +1,7 @@
 import {expect, describe, it} from "vitest";
 import {Bounds, Point} from "josh_js_util";
 import assert from "assert";
-import {CircleDef, PageDef, RectDef} from "./models/om";
+import {CircleDef, DocDef, PageDef, RectDef} from "./models/om";
 import {
     BottomAlignShapes,
     HCenterAlignShapes,
@@ -32,9 +32,12 @@ async function createThreeRectsDoc() {
     }
 }
 
-async function createThreeCirclesDoc() {
+export async function createThreeCirclesDoc() {
     const state = new GlobalState()
+    let doc = await state.om.make(DocDef, {})
+    state.swapDoc(doc)
     let page = await state.om.make(PageDef, {})
+    await doc.appendListProp('pages',page)
     let circ1 = await state.om.make(CircleDef, {
         center: new Point(100,100), radius: 10})
     await page.appendListProp('children',circ1)

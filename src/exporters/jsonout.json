@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "root": {
+    "name": "document",
+    "props": {
+      "name": "unnamed",
+      "pages": [
+        {
+          "name": "page",
+          "props": {
+            "name": "unnamed",
+            "children": [
+              {
+                "name": "circle",
+                "props": {
+                  "center": {
+                    "x": 100,
+                    "y": 100
+                  },
+                  "radius": 10,
+                  "fill": "red",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              },
+              {
+                "name": "circle",
+                "props": {
+                  "center": {
+                    "x": 200,
+                    "y": 200
+                  },
+                  "radius": 20,
+                  "fill": "red",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              },
+              {
+                "name": "circle",
+                "props": {
+                  "center": {
+                    "x": 300,
+                    "y": 300
+                  },
+                  "radius": 30,
+                  "fill": "red",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
