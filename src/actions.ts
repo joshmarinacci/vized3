@@ -1,5 +1,5 @@
 import {GlobalState} from "./models/state";
-import {CircleDef, ObjectProxy, PageType, RectDef, RectType} from "./models/om";
+import {CircleDef, ObjectProxy, RectDef} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 import {savePNGJSON} from "./exporters/json";
 import {exportPNG} from "./exporters/png";
@@ -60,7 +60,7 @@ export const AddNewRectAction:MenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const rect = state.om.make<RectType>(RectDef, {
+        const rect = state.om.make(RectDef, {
             bounds: new Bounds(100, 300, 100, 100)
         })
         page.appendListProp('children', rect)
@@ -89,7 +89,7 @@ export const DeleteSelection:MenuAction = {
         const objs = state.getSelectedObjects()
         for(let obj of objs) {
             if (obj && obj.parent) {
-                const parent = obj.parent as unknown as ObjectProxy<PageType>
+                const parent = obj.parent as unknown as any
                 await parent.removeListPropByValue('children', obj)
             }
         }

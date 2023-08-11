@@ -1,7 +1,7 @@
-import {expect, test, describe, it} from "vitest";
+import {expect, describe, it} from "vitest";
 import {Bounds, Point} from "josh_js_util";
 import assert from "assert";
-import {CircleDef, CircleType, PageDef, PageType, RectDef, RectType} from "./models/om";
+import {CircleDef, PageDef, RectDef} from "./models/om";
 import {
     BottomAlignShapes,
     HCenterAlignShapes,
@@ -14,14 +14,14 @@ import {GlobalState} from "./models/state";
 
 async function createThreeRectsDoc() {
     const state = new GlobalState()
-    let page = await state.om.make<PageType>(PageDef, {})
-    let rect1 = await state.om.make<RectType>(RectDef, {
+    let page = await state.om.make(PageDef, {})
+    let rect1 = await state.om.make(RectDef, {
         bounds: new Bounds(100,100,10,10*2), fill:'red' })
     await page.appendListProp('children',rect1)
-    let rect2 = await state.om.make<RectType>(RectDef, {
+    let rect2 = await state.om.make(RectDef, {
         bounds: new Bounds(200,200,20,20*2), fill:'green' })
     await page.appendListProp('children',rect2)
-    let rect3 = await state.om.make<RectType>(RectDef, {
+    let rect3 = await state.om.make(RectDef, {
         bounds: new Bounds(300,300,30,30*2), fill:'blue' })
     await page.appendListProp('children',rect3)
 
@@ -34,14 +34,14 @@ async function createThreeRectsDoc() {
 
 async function createThreeCirclesDoc() {
     const state = new GlobalState()
-    let page = await state.om.make<PageType>(PageDef, {})
-    let circ1 = await state.om.make<CircleType>(CircleDef, {
+    let page = await state.om.make(PageDef, {})
+    let circ1 = await state.om.make(CircleDef, {
         center: new Point(100,100), radius: 10})
     await page.appendListProp('children',circ1)
-    let circ2 = await state.om.make<CircleType>(CircleDef, {
+    let circ2 = await state.om.make(CircleDef, {
         center: new Point(200,200), radius: 20})
     await page.appendListProp('children',circ2)
-    let circ3 = await state.om.make<CircleType>(CircleDef, {
+    let circ3 = await state.om.make(CircleDef, {
         center: new Point(300,300), radius: 30})
     await page.appendListProp('children',circ3)
 

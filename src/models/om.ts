@@ -5,35 +5,39 @@ export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
 export type PropSchema = {
     name: string,
     base: 'number' | 'string' | 'object' | 'list' | 'boolean',
+    defaultValue:any,
     readonly:boolean,
     custom?:'css-color',
     subProps?:Record<string,PropSchema>,
     setter?:PropSetter,
 }
 
-const UUIDDef:PropSchema = {
-    name: 'uuid',
-    base: 'string',
-    readonly: true,
-}
 const FillDef:PropSchema = {
     name:'fill',
     base: 'string',
     readonly: false,
     custom:'css-color',
+    defaultValue: 'red'
 }
 const StrokeFillDef:PropSchema = {
     name:'strokeFill',
     base: 'string',
     readonly: false,
     custom:'css-color',
+    defaultValue: 'black'
 }
 const StrokeWidthDef:PropSchema = {
     name:'strokeWidth',
     base: 'number',
     readonly: false,
+    defaultValue:1,
 }
-
+const NameDef:PropSchema = {
+    name:'name',
+    base:'string',
+    readonly:false,
+    defaultValue: 'unnamed',
+}
 export type ObjectDef = {
     name: string,
     props: Record<string, PropSchema>,
@@ -42,87 +46,35 @@ export type ObjectDef = {
 export const DocDef:ObjectDef = {
     name:'document',
     props: {
-        uuid: UUIDDef,
-        name: {
-            name:'name',
-            base:"string",
-            readonly: false,
-        },
+        name: NameDef,
         pages: {
             name:'pages',
             base:'list',
             readonly: false,
+            defaultValue:()=>[],
         }
     }
 }
-export type DocType = {
-    pages:[]
-    name:string,
-}
-export class DocClass {
-    type:'document'
-    uuid: string
-    name: string
-    pages: []
-    private unit: string;
-    constructor(opts: Record<keyof typeof DocDef.props, any>) {
-        this.type = 'document'
-        this.name = 'unnamed'
-        this.pages = []
-        this.unit = "mm"
-        this.uuid = genId('document')
-    }
-}
-
 export const PageDef: ObjectDef = {
     name: 'page',
     props: {
-        uuid: UUIDDef,
-        name: {
-            name:'name',
-            base:"string",
-            readonly: false,
-        },
+        name: NameDef,
         children: {
             name: 'children',
             base: 'list',
             readonly: false,
+            defaultValue:()=>[],
         }
     }
 }
-export type  PageType = {
-    name:string,
-    children:any[]
-}
-export class PageClass {
-    type: 'page'
-    children: any[]
-    uuid: string
-    name: string
-
-    constructor(opts: Record<keyof typeof PageDef.props, any>) {
-        this.type = 'page'
-        this.name = 'unnamed'
-        this.uuid = genId('page')
-        this.children = []
-    }
-
-    hasChildren(): boolean {
-        return this.children.length > 0
-    }
-}
-
 export interface DrawableShape {
     drawSelf(ctx:CanvasRenderingContext2D):void
     contains(pt:Point):boolean
     drawSelected(ctx:CanvasRenderingContext2D):void
 }
-
-
 export const RectDef: ObjectDef = {
     name: 'rect',
     props: {
-        uuid: UUIDDef,
         bounds: {
             name: 'bounds',
             base: 'object',
@@ -139,23 +91,28 @@ export const RectDef: ObjectDef = {
                     name:'x',
                     base:'number',
                     readonly:false,
+                    defaultValue: 0
                 },
                 y:{
                     name:'y',
                     base:'number',
                     readonly:false,
+                    defaultValue: 0,
                 },
                 w:{
                     name:'w',
                     base:'number',
                     readonly:false,
+                    defaultValue: 100,
                 },
                 h:{
                     name:'h',
                     base:"number",
                     readonly:false,
+                    defaultValue: 100,
                 },
-            }
+            },
+            defaultValue: new Bounds(0,0,0,0),
         },
         fill: FillDef,
         strokeFill: StrokeFillDef,
@@ -164,80 +121,19 @@ export const RectDef: ObjectDef = {
             name:'roundedCornersEnabled',
             base:'boolean',
             readonly:false,
+            defaultValue: false,
         },
         roundedCornersRadius: {
             name:'roundedCornersRadius',
             base:'number',
             readonly:false,
+            defaultValue: 10,
         }
     }
 }
-export type RectType = {
-    bounds:Bounds,
-    fill:string,
-    strokeFill:string,
-    strokeWidth:number,
-    roundedCornersEnabled:boolean,
-    roundedCornersRadius:0,
-}
-export class RectClass implements DrawableShape {
-    type: 'square'
-    bounds: Bounds
-    uuid: string
-    name: string
-    fill: string
-    strokeWidth: number;
-    strokeFill: string;
-    private roundedCornersEnabled: boolean;
-    private roundedCornersRadius: number;
-    constructor(opts: Record<keyof typeof RectDef.props, any>) {
-        this.type = 'square'
-        this.uuid = genId('square')
-        this.name = 'unnamed'
-        this.bounds = opts.bounds || new Bounds(0, 0, 1, 1)
-        this.fill = opts.fill || "#888"
-        this.strokeWidth = 1
-        this.strokeFill = 'black'
-        this.roundedCornersEnabled = false
-        this.roundedCornersRadius = 0
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        if(this.roundedCornersEnabled) {
-            let b = this.bounds
-            let r = this.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.fill()
-        } else {
-            ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
-        }
-        ctx.strokeStyle = this.strokeFill
-        ctx.lineWidth = this.strokeWidth
-        if(this.roundedCornersEnabled) {
-            let b = this.bounds
-            let r = this.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.stroke()
-        } else {
-            ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
-        }
-    }
-    contains(pt: Point): boolean {
-        return this.bounds.contains(pt)
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
-    }
-}
-
 export const CircleDef: ObjectDef = {
     name: 'circle',
     props: {
-        uuid: UUIDDef,
         center: {
             name: 'center',
             base: 'object',
@@ -254,71 +150,31 @@ export const CircleDef: ObjectDef = {
                     name:'x',
                     base: "number",
                     readonly: false,
+                    defaultValue: 0,
                 },
                 y: {
                     name:'y',
                     base: 'number',
                     readonly: false,
+                    defaultValue: 0,
                 },
-            }
+            },
+            defaultValue: new Point(100,100)
         },
         radius: {
             name: 'radius',
             base: "number",
             readonly: false,
+            defaultValue: 20,
         },
         fill: FillDef,
         strokeFill: StrokeFillDef,
         strokeWidth: StrokeWidthDef,
     }
 }
-export type CircleType = {
-    center: Point,
-    radius:number,
-    fill:string,
-}
-export class CircleClass implements DrawableShape {
-    private type: string;
-    private uuid: string;
-    private name: string;
-    center: Point;
-    radius: number;
-    fill: string;
-    strokeWidth: number;
-    strokeFill: string;
-    constructor(opts: Record<keyof typeof CircleDef.props, any>) {
-        this.type = 'circle'
-        this.uuid = genId('circle')
-        this.name = 'unnamed'
-        this.center = opts.center || new Point(50,50)
-        this.radius = 20
-        this.fill = "#ccc"
-        this.strokeWidth = 1
-        this.strokeFill = 'black'
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        ctx.beginPath()
-        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
-        ctx.fill()
-        ctx.strokeStyle = this.strokeFill
-        ctx.lineWidth = this.strokeWidth
-        ctx.stroke()
-    }
-    contains(pt: Point): boolean {
-        return pt.subtract(this.center).magnitude() < this.radius
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.beginPath()
-        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
-        ctx.stroke()
-    }
-}
-
 export const SimpleTextDef: ObjectDef = {
     name:'simple-text',
     props: {
-        uuid:UUIDDef,
         center: {
             name: 'center',
             base: 'object',
@@ -335,90 +191,30 @@ export const SimpleTextDef: ObjectDef = {
                     name:'x',
                     base: "number",
                     readonly: false,
+                    defaultValue: 0,
                 },
                 y: {
                     name:'y',
                     base: 'number',
                     readonly: false,
+                    defaultValue: 0,
                 },
-            }
+            },
+            defaultValue: new Point(100,100),
         },
         text: {
             name:'text',
             readonly: false,
             base: 'string',
+            defaultValue: 'hello'
         },
         fontSize: {
             name:'fontSize',
             base: 'number',
-            readonly: false
+            readonly: false,
+            defaultValue: 26,
         },
         fill: FillDef,
-    }
-}
-export type SimpleTextType = {
-    center: Point,
-    text: string,
-    fill:string,
-    fontSize:number
-}
-export class SimpleTextClass implements DrawableShape {
-    private type: string;
-    private uuid: string;
-    private name: string;
-    private text: string;
-    private center: any;
-    private fill: string;
-    private metrics: TextMetrics;
-    private can: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private fontSize: number;
-    constructor(opts: Record<keyof typeof SimpleTextDef.props, any>) {
-        this.fill = opts.fill || "#888"
-        this.type = 'simple-text'
-        this.uuid = genId('simple-text')
-        this.text = opts.text || "no text"
-        this.name = 'unnamed'
-        this.fontSize = opts.fontSize || 24
-        this.center = opts.center || new Point(50,50)
-        if (typeof document !== "undefined") {
-            this.can = document.createElement('canvas')
-            this.can.width = 100
-            this.can.height = 100
-            this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
-            this.ctx.font = this.calcFont()
-            this.metrics = this.ctx.measureText(this.text)
-        }
-    }
-    private calcHeight() {
-        return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
-    }
-    contains(pt: Point): boolean {
-        let h = this.calcHeight()
-        let bds = new Bounds(this.center.x,this.center.y-h,this.metrics.width,h)
-        return bds.contains(pt)
-    }
-
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        let h = this.calcHeight()
-        ctx.strokeRect(this.center.x,this.center.y-h,this.metrics.width,h)
-    }
-
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        ctx.font = this.calcFont()
-        ctx.fillText(this.text, this.center.x,this.center.y)
-    }
-
-    refresh(prop:PropSchema) {
-        if(prop.name === 'text' || prop.name === 'fontSize') {
-            this.ctx.font = this.calcFont()
-            this.metrics = this.ctx.measureText(this.text)
-        }
-    }
-
-    private calcFont() {
-        return `${this.fontSize}pt sans-serif`
     }
 }
 
@@ -431,55 +227,59 @@ export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
 
-export class ObjectProxy<T> {
-    obj: any;
+export class ObjectProxy<T extends ObjectDef> {
     private listeners: Map<EventTypes, any[]>;
     parent: ObjectProxy<ObjectDef> | null
     def: ObjectDef;
     private uuid: string;
+    props:Record<keyof T['props'], any>;
 
-    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
-        this.uuid = genId('proxy')
-        let cons = om.lookupConstructor(def.name)
-        this.obj = new cons(props)
+    constructor(om: ObjectManager, def: T, opts: Record<keyof T['props'],any>) {
+        this.uuid = genId('object')
         this.def = def
-        Object.entries(props).forEach(([a, b], i) => {
-            this.obj[a] = b
-        })
         this.listeners = new Map<EventTypes, any[]>()
         this.parent = null
+        this.props = {} as Record<keyof T['props'], any>
+        Object.keys(def.props).forEach(name => {
+            let prop = def.props[name]
+            let val = prop.defaultValue
+            if(prop.defaultValue instanceof Function) val = val()
+            if(opts[prop.name]) val = opts[prop.name]
+            // @ts-ignore
+            this.props[prop.name] = val
+        })
     }
 
-    getPropValue<K extends keyof T>(key: K):T[K] {
-        return this.obj[key]
+    getPropValue<K extends keyof T['props']>(key: K) {
+        return this.props[key]
     }
 
-    async setPropValue<K extends keyof T>(prop: K, value: T[K]) {
+    async setPropValue<K extends keyof T['props']>(prop: K, value: any) {
         // @ts-ignore
         const evt = new PropChangeEvent<T>(this, this.def.props[prop], value)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
 
-    getListProp<K extends keyof T>(prop: K):any[] {
+    getListProp<K extends keyof T['props']>(prop: K):any[] {
         // @ts-ignore
         if(this.def.props[prop].base !== 'list') throw new Error(`prop not a list: ${prop.name}`)
-        return this.obj[prop]
+        return this.props[prop]
     }
-    appendListProp<K extends keyof T>(prop: K, obj: any) {
+    appendListProp<K extends keyof T['props']>(prop: K, obj: any) {
         // @ts-ignore
         const evt:AppendListEvent<T> = new AppendListEvent<T>(this, this.def.props[prop], obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
-    async removeListPropByValue<K extends keyof T>(prop: K, obj: any) {
+    async removeListPropByValue<K extends keyof T['props']>(prop: K, obj: any) {
         // @ts-ignore
         const evt:DeleteListEvent<T> = new DeleteListEvent<T>(this, this.def.props[prop], obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
-    getListPropAt<K extends keyof T>(prop: K, index: number) {
-        return this.obj[prop][index]
+    getListPropAt<K extends keyof T['props']>(prop: K, index: number) {
+        return this.props[prop][index]
     }
 
     private _get_listeners(type: EventTypes):EventHandler[] {
@@ -513,13 +313,143 @@ export class ObjectProxy<T> {
     }
 
     getPropNamed(name: string) {
-        return this.obj[this.def.props[name].name]
+        return this.props[this.def.props[name].name]
     }
 
     getUUID() {
         return this.uuid
     }
+    refresh(prop:PropSchema){}
 }
+
+export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> implements DrawableShape {
+    abstract contains(pt: Point): boolean;
+    abstract drawSelected(ctx: CanvasRenderingContext2D): void;
+    abstract drawSelf(ctx: CanvasRenderingContext2D): void;
+}
+
+export class RectClass extends DrawableClass<typeof RectDef> {
+    constructor(om:ObjectManager, opts: Record<keyof typeof RectDef.props, any>) {
+        super(om, RectDef, opts)
+    }
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = this.props.fill
+        if(this.props.roundedCornersEnabled) {
+            let b = this.props.bounds
+            let r = this.props.roundedCornersRadius
+            ctx.beginPath()
+            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
+            ctx.closePath()
+            ctx.fill()
+        } else {
+            ctx.fillRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
+        }
+        ctx.strokeStyle = this.props.strokeFill
+        ctx.lineWidth = this.props.strokeWidth
+        if(this.props.roundedCornersEnabled) {
+            let b = this.props.bounds
+            let r = this.props.roundedCornersRadius
+            ctx.beginPath()
+            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
+            ctx.closePath()
+            ctx.stroke()
+        } else {
+            ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
+        }
+    }
+    contains(pt: Point): boolean {
+        return this.props.bounds.contains(pt)
+    }
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.strokeRect(this.props.bounds.x,this.props.bounds.y,this.props.bounds.w,this.props.bounds.h)
+    }
+}
+
+export class PageClass extends ObjectProxy<typeof PageDef> {
+    constructor(om:ObjectManager, opts: Record<keyof typeof PageDef.props, any>) {
+        super(om, PageDef, opts)
+    }
+    hasChildren(): boolean {
+        return this.props.children.length > 0
+    }
+}
+
+export class DocClass extends ObjectProxy<typeof DocDef>{
+    constructor(om:ObjectManager, opts: Record<keyof typeof DocDef.props, any>) {
+        super(om, DocDef, opts)
+    }
+}
+
+export class CircleClass extends DrawableClass<typeof CircleDef> {
+    constructor(om:ObjectManager, opts: Record<keyof typeof CircleDef.props, any>) {
+        super(om,CircleDef,opts)
+    }
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = this.props.fill
+        ctx.beginPath()
+        ctx.arc(this.props.center.x,this.props.center.y,this.props.radius,0,toRadians(360))
+        ctx.fill()
+        ctx.strokeStyle = this.props.strokeFill
+        ctx.lineWidth = this.props.strokeWidth
+        ctx.stroke()
+    }
+    contains(pt: Point): boolean {
+        return pt.subtract(this.props.center).magnitude() < this.props.radius
+    }
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        ctx.beginPath()
+        ctx.arc(this.props.center.x,this.props.center.y,this.props.radius,0,toRadians(360))
+        ctx.stroke()
+    }
+}
+
+export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef>{
+    private metrics: TextMetrics;
+    private can: HTMLCanvasElement;
+    private ctx: CanvasRenderingContext2D;
+    constructor(om:ObjectManager, opts: Record<keyof typeof SimpleTextDef.props, any>) {
+        super(om,SimpleTextDef, opts)
+        if (typeof document !== "undefined") {
+            this.can = document.createElement('canvas')
+            this.can.width = 100
+            this.can.height = 100
+            this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
+            this.ctx.font = this.calcFont()
+            this.metrics = this.ctx.measureText(this.props.text)
+        }
+    }
+    private calcHeight() {
+        return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
+    }
+    contains(pt: Point): boolean {
+        let h = this.calcHeight()
+        let bds = new Bounds(this.props.center.x,this.props.center.y-h,this.metrics.width,h)
+        return bds.contains(pt)
+    }
+
+    drawSelected(ctx: CanvasRenderingContext2D): void {
+        let h = this.calcHeight()
+        ctx.strokeRect(this.props.center.x,this.props.center.y-h,this.metrics.width,h)
+    }
+
+    drawSelf(ctx: CanvasRenderingContext2D): void {
+        ctx.fillStyle = this.props.fill
+        ctx.font = this.calcFont()
+        ctx.fillText(this.props.text, this.props.center.x,this.props.center.y)
+    }
+
+    refresh(prop:PropSchema) {
+        if(prop.name === 'text' || prop.name === 'fontSize') {
+            this.ctx.font = this.calcFont()
+            this.metrics = this.ctx.measureText(this.props.text)
+        }
+    }
+
+    private calcFont() {
+        return `${this.props.fontSize}pt sans-serif`
+    }
+}
+
 
 export type JSONObject = {
     name: string
@@ -575,7 +505,7 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
     return json
 }
 
-async function fromJSON<T>(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy<T>> {
+async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
     const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, any> = {}
     for (let key of Object.keys(def.props)) {
@@ -613,7 +543,7 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject): Promise<ObjectPr
         }
         throw new Error(`cant restore property ${key}`)
     }
-    return await om.make<T>(def, props as Partial<T>)
+    return (await om.make(def, props)) as T
 }
 
 
@@ -642,7 +572,7 @@ class AppendListEvent<T> implements HistoryEvent {
         this.prop = prop
         this.obj = obj
 
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         const oldList = list.slice()
         list.push(this.obj)
         this.obj.setParent(this.target)
@@ -655,13 +585,13 @@ class AppendListEvent<T> implements HistoryEvent {
 
 
     async redo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getListProp(this.prop.name)
         list.push(this.obj)
         this.obj.setParent(this.target)
     }
 
     async undo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getListProp(this.prop.name)
         list.splice(list.length-1,1)
         this.obj.setParent(null)
     }
@@ -684,7 +614,7 @@ class DeleteListEvent<T> implements HistoryEvent {
         this.prop = prop
         this.desc = `deleted element`
 
-        const list = target.obj[prop.name]
+        const list = target.getPropValue(prop.name)
         const oldList = list.slice()
         this.obj = obj
         this.index = list.indexOf(this.obj)
@@ -699,31 +629,30 @@ class DeleteListEvent<T> implements HistoryEvent {
     }
 
     async redo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         list.splice(this.index,1)
         this.obj.setParent(null)
     }
 
     async undo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         list.splice(this.index,0,this.obj)
         this.obj.setParent(this.target)
     }
 }
-class CreateObjectEvent<T> implements HistoryEvent {
+class CreateObjectEvent<T extends ObjectDef> implements HistoryEvent {
     desc: string;
     uuid: string;
     target: ObjectProxy<T>;
     private om: ObjectManager;
     compressable: boolean;
 
-    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
+    constructor(om: ObjectManager, obj:ObjectProxy<any>) {
         this.om = om
-        let proxy:ObjectProxy<T> = new ObjectProxy<T>(om,def, props)
-        this.om.addObject(proxy)
+        this.om.addObject(obj)
         this.uuid = genId('event:createobject')
         this.desc = 'not implemented'
-        this.target = proxy
+        this.target = obj
         this.desc = `created object from def ${this.target.def.name}`
         this.compressable = false
     }
@@ -755,7 +684,7 @@ class DeleteObjectEvent<T> implements HistoryEvent {
     }
 
 }
-class PropChangeEvent<T> implements HistoryEvent {
+class PropChangeEvent<T extends ObjectDef> implements HistoryEvent {
     target: ObjectProxy<T>
     def: ObjectDef
     prop: PropSchema
@@ -769,20 +698,21 @@ class PropChangeEvent<T> implements HistoryEvent {
         this.target = target
         this.def = target.def
         this.prop = prop
-        this.oldValue = target.obj[prop.name]
+        this.oldValue = target.getPropValue(prop.name)
         this.newValue = value
-        this.desc = `${prop.name} ${target.obj[prop.name]} => ${value}`
-        this.target.obj[prop.name] = value
-        if(target.obj.refresh) target.obj.refresh(prop)
+        this.desc = `${prop.name} ${this.oldValue} => ${value}`
+        // @ts-ignore
+        this.target.props[prop.name] = value
+        if(target.refresh) target.refresh(prop)
         this.compressable = true
     }
 
     async redo(): Promise<void> {
-        await this.target.setPropValue(this.prop.name as keyof T, this.newValue)
+        await this.target.setPropValue(this.prop.name as keyof T['props'], this.newValue)
     }
 
     async undo(): Promise<void> {
-        await this.target.setPropValue(this.prop.name as keyof T, this.oldValue)
+        await this.target.setPropValue(this.prop.name as keyof T['props'], this.oldValue)
     }
 
     compressWithSelf(recent: PropChangeEvent<T>) {
@@ -835,8 +765,10 @@ export class ObjectManager {
         // @ts-ignore
         this.listeners.get(type).forEach(cb => cb(value))
     }
-    make<T>(def: ObjectDef, props: Partial<T>):ObjectProxy<T> {
-        const evt = new CreateObjectEvent<T>(this,def,props)
+    make(def: ObjectDef, props: any) {
+        let cons = this.lookupConstructor(def.name)
+        let obj:ObjectProxy<any> = new cons(def,props)
+        const evt = new CreateObjectEvent(this,obj)
         this.changes.push(evt)
         this.current_change_index++
         evt.target.addEventListener(PropChanged, this.global_prop_change_handler)
@@ -860,8 +792,8 @@ export class ObjectManager {
         return Promise.resolve(doc)
     }
 
-    async fromJSON<T>(json_obj: JSONDoc): Promise<ObjectProxy<T>> {
-        const root: ObjectProxy<T> = await fromJSON<T>(this, json_obj.root)
+    async fromJSON<T>(json_obj: JSONDoc): Promise<T> {
+        const root = await fromJSON<T>(this, json_obj.root)
         return root
     }
 

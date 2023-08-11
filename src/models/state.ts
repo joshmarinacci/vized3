@@ -2,23 +2,21 @@ import {Bounds, Point} from "josh_js_util";
 import {Observable } from "./model";
 import {
     CircleClass,
-    CircleDef, CircleType,
-    DocClass,
-    DocDef, DocType,
-    ObjectDef,
+    CircleDef, DocClass,
+    DocDef, ObjectDef,
     ObjectManager,
     ObjectProxy,
     PageClass,
-    PageDef, PageType, RectClass,
-    RectDef, RectType, SimpleTextClass, SimpleTextDef, SimpleTextType
+    PageDef, RectClass,
+    RectDef, SimpleTextClass, SimpleTextDef
 } from "./om";
 
 export class GlobalState extends Observable {
     om: ObjectManager;
-    private _doc: ObjectProxy<DocType>;
-    private current_page: ObjectProxy<PageType>;
+    private _doc: DocClass;
+    private current_page: PageClass
     private selected_objects: ObjectProxy<ObjectDef>[]
-    private selected_page: ObjectProxy<PageType> | null
+    private selected_page: PageClass | null
 
     constructor() {
         super()
@@ -29,20 +27,20 @@ export class GlobalState extends Observable {
         this.om.registerDef(CircleDef,CircleClass)
         this.om.registerDef(SimpleTextDef, SimpleTextClass)
         this._doc = this.om.make(DocDef,{})
-        let page = this.om.make<PageType>(PageDef, {})
+        let page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
-        let rect = this.om.make<RectType>(RectDef, { bounds: new Bounds(20,20,50,50)})
+        let rect = this.om.make(RectDef, { bounds: new Bounds(20,20,50,50)})
         page.appendListProp('children', rect)
-        let circ = this.om.make<CircleType>(CircleDef, { center: new Point(100,200), radius: 20})
+        let circ = this.om.make(CircleDef, { center: new Point(100,200), radius: 20})
         page.appendListProp("children", circ)
-        let text = this.om.make<SimpleTextType>(SimpleTextDef, {})
+        let text = this.om.make(SimpleTextDef, {})
         page.appendListProp("children", text)
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page
     }
 
-    getCurrentDocument(): ObjectProxy<DocType> {
+    getCurrentDocument(): DocClass {
         return this._doc
     }
 
@@ -76,7 +74,7 @@ export class GlobalState extends Observable {
         return this.selected_page
     }
 
-    swapDoc(doc:ObjectProxy<DocType>) {
+    swapDoc(doc:DocClass) {
         this._doc = doc
         this.clearSelectedObjects()
         this.setSelectedPage(this._doc.getListPropAt('pages',0))

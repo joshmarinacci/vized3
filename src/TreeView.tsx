@@ -2,20 +2,20 @@ import React, {useContext} from "react"
 import './TreeView.css'
 import {PopupContext, toClass,} from "josh_react_util";
 import {GlobalState} from "./models/state";
-import {ObjectDef, ObjectProxy, PageType} from "./models/om";
+import {ObjectDef, ObjectProxy, PageClass} from "./models/om";
 import {MenuActionButton, MenuBox, useObservableChange} from "./common";
 import {Point} from "josh_js_util";
 import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
-    const clsses = toClass({
+    const classes = toClass({
         'tree-item':true,
         'selectable':true,
         selected:props.selected.find(s => s === props.shape),
     })
     const pm = useContext(PopupContext)
-    return <div className={clsses}
+    return <div className={classes}
                 onClick={()=> props.state.setSelectedObjects([props.shape])}
                 onContextMenu={(e) => {
                     e.preventDefault()
@@ -31,9 +31,9 @@ function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, sele
     </div>
 }
 
-function TreePageItem(props: { page: ObjectProxy<PageType>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreePageItem(props: { page: PageClass, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const {page, state} = props
-    const clsses = toClass({
+    const classes = toClass({
         'selectable':true,
         selected:page === state.getSelectedPage(),
     })
@@ -42,7 +42,7 @@ function TreePageItem(props: { page: ObjectProxy<PageType>, state:GlobalState, s
         state.setSelectedObjects([page])
     }
     return <div className={'tree-item'}>
-        <b className={clsses} onClick={select_page}>page {props.page.getPropValue('name')}</b>
+        <b className={classes} onClick={select_page}>page {props.page.getPropValue('name')}</b>
         {
             page.getListProp('children').map((shape:ObjectProxy<ObjectDef>,i:number) =>
                 <TreeShapeItem key={i} shape={shape}

@@ -3,7 +3,6 @@ import {GlobalState} from "./models/state";
 import {ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
 import {TabbedPanel} from "josh_react_util";
 import {SwatchesPicker} from "react-color";
-import {Bounds} from "josh_js_util";
 import {useObjectProxyChange, useObservableChange} from "./common";
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
@@ -117,7 +116,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
 
 export function PropSheet(props:{state:GlobalState}) {
     const selected = props.state.getSelectedObjects()
-    if(selected.length == 0) {
+    if(selected.length === 0) {
         return <div>nothing selected</div>
     }
     if(selected.length > 1) {

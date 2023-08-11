@@ -3,14 +3,12 @@ import {Bounds, Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "./models/state";
 import {
-    CircleType,
+    CircleClass,
     DrawableShape,
     FamilyPropChanged,
     ObjectDef,
-    ObjectProxy,
-    PageType,
-    RectType
-} from "./models/om";
+    ObjectProxy, PageClass,
+    RectClass} from "./models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "./common";
 import {
     AddNewCircleAction,
@@ -26,19 +24,19 @@ function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillRect(p.x-10,p.y-10,20,20)
 }
 
-function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>, state: GlobalState, handler:DragHandler) {
+function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:DragHandler) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
     page.getListProp('children').forEach(shape => {
-        (shape.obj as DrawableShape).drawSelf(ctx)
+        (shape as DrawableShape).drawSelf(ctx)
     })
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)';
         ctx.lineWidth = 10;
-        if (sel.obj.drawSelected) {
-            (sel.obj as DrawableShape).drawSelected(ctx);
+        if (Object.hasOwn(sel,'drawSelected')) {
+            (sel as unknown as DrawableShape).drawSelected(ctx);
         }
     }
     handler.drawOverlay(ctx,state)
@@ -51,17 +49,17 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: ObjectProxy<PageType>,
 
 function handleForShape(obj:ObjectProxy<any>):Handle | null {
     if(obj.def.name === 'rect') {
-        return new RectResizeHandle(obj)
+        return new RectResizeHandle(obj as RectClass)
     }
     if(obj.def.name === 'circle') {
-        return new CircleResizeHandle(obj)
+        return new CircleResizeHandle(obj as CircleClass)
     }
     return null
 }
 
-function findShapeInPage(page: ObjectProxy<PageType>, pt: Point):ObjectProxy<ObjectDef>|undefined {
+function findShapeInPage(page: PageClass, pt: Point):ObjectProxy<ObjectDef>|undefined {
     let matching = page.getListProp('children').filter(shape => {
-        return (shape.obj as DrawableShape).contains(pt)
+        return (shape as DrawableShape).contains(pt)
     })
     if(matching.length > 0) {
         return matching.at(-1)
@@ -84,8 +82,8 @@ interface Handle {
 }
 
 class RectResizeHandle implements Handle {
-    private obj: ObjectProxy<RectType>;
-    constructor(obj:ObjectProxy<RectType>) {
+    private obj: RectClass;
+    constructor(obj:RectClass) {
         this.obj = obj
     }
     getPosition():Point {
@@ -105,8 +103,8 @@ class RectResizeHandle implements Handle {
 }
 
 class CircleResizeHandle implements Handle{
-    private obj: ObjectProxy<CircleType>;
-    constructor(obj:ObjectProxy<CircleType>) {
+    private obj: CircleClass
+    constructor(obj:CircleClass) {
         this.obj = obj
     }
 
@@ -118,9 +116,8 @@ class CircleResizeHandle implements Handle{
 
     async setPosition(pos: Point) {
         let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
         let diff = pos.subtract(center)
-        radius = diff.x
+        let radius = diff.x
         await this.obj.setPropValue('radius', radius)
     }
 
@@ -133,7 +130,7 @@ class CircleResizeHandle implements Handle{
     }
 }
 
-function findHandleInPage(page: ObjectProxy<PageType>, pt: Point, state:GlobalState):Handle|null {
+function findHandleInPage(page: PageClass, pt: Point, state:GlobalState):Handle|null {
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
         let h = handleForShape(sel)
@@ -293,18 +290,18 @@ class DragHandler {
             for(let shape of this.potentialShapes) {
                 ctx.strokeStyle = 'rgba(100,255,255,0.5)';
                 ctx.lineWidth = 10;
-                (shape.obj as DrawableShape).drawSelected(ctx);
+                (shape as unknown as DrawableShape).drawSelected(ctx);
             }
         }
     }
 
-    private findShapesInPageRect(page: ObjectProxy<PageType> | null, dragRect: Bounds) {
+    private findShapesInPageRect(page: PageClass | null, dragRect: Bounds) {
         if(!page) return []
         const included = []
         let chs = page.getListProp('children')
         for(let obj of chs) {
             let bds = calcObjIntersects(obj, dragRect)
-            if(bds)included.push(obj)
+            if(bds) included.push(obj)
         }
         return included
     }
