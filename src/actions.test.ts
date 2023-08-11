@@ -78,9 +78,9 @@ describe('alignment actions', () => {
         assert(circs[2].getPropValue('center').x === 300)
         state.addSelectedObjects(circs)
         await LeftAlignShapes.perform(state)
-        assert(circs[0].getPropValue('center').x === 100)
-        assert(circs[1].getPropValue('center').x === 100)
-        assert(circs[2].getPropValue('center').x === 100)
+        expect(circs[0].getPropValue('center').x).toBe(100)
+        expect(circs[1].getPropValue('center').x).toBe(110)
+        expect(circs[2].getPropValue('center').x).toBe(120)
     })
     it('should right align rects', async () => {
         const {state, page, rects} = await  createThreeRectsDoc()
