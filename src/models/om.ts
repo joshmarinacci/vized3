@@ -1,4 +1,4 @@
-import {Bounds, genId, Point, toRadians} from "josh_js_util";
+import {Bounds, genId, Point} from "josh_js_util";
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
 
@@ -12,21 +12,21 @@ export type PropSchema = {
     setter?:PropSetter,
 }
 
-const FillDef:PropSchema = {
+export const FillDef:PropSchema = {
     name:'fill',
     base: 'string',
     readonly: false,
     custom:'css-color',
     defaultValue: '#cccccc'
 }
-const StrokeFillDef:PropSchema = {
+export const StrokeFillDef:PropSchema = {
     name:'strokeFill',
     base: 'string',
     readonly: false,
     custom:'css-color',
     defaultValue: 'black'
 }
-const StrokeWidthDef:PropSchema = {
+export const StrokeWidthDef:PropSchema = {
     name:'strokeWidth',
     base: 'number',
     readonly: false,
@@ -80,151 +80,6 @@ export interface DrawableShape {
     intersects(bounds:Bounds):boolean
     getPosition():Point
     setPosition(pos:Point):Promise<void>
-}
-export const RectDef: ObjectDef = {
-    name: 'rect',
-    props: {
-        bounds: {
-            name: 'bounds',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let old_bounds = obj as Bounds;
-                let new_bounds = old_bounds.copy()
-                // @ts-ignore
-                new_bounds[name] = value
-                return new_bounds;
-            },
-            subProps:{
-                x:{
-                    name:'x',
-                    base:'number',
-                    readonly:false,
-                    defaultValue: 0
-                },
-                y:{
-                    name:'y',
-                    base:'number',
-                    readonly:false,
-                    defaultValue: 0,
-                },
-                w:{
-                    name:'w',
-                    base:'number',
-                    readonly:false,
-                    defaultValue: 100,
-                },
-                h:{
-                    name:'h',
-                    base:"number",
-                    readonly:false,
-                    defaultValue: 100,
-                },
-            },
-            defaultValue: new Bounds(0,0,0,0),
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-        roundedCornersEnabled: {
-            name:'roundedCornersEnabled',
-            base:'boolean',
-            readonly:false,
-            defaultValue: false,
-        },
-        roundedCornersRadius: {
-            name:'roundedCornersRadius',
-            base:'number',
-            readonly:false,
-            defaultValue: 10,
-        }
-    }
-}
-export const CircleDef: ObjectDef = {
-    name: 'circle',
-    props: {
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps:{
-                x: {
-                    name:'x',
-                    base: "number",
-                    readonly: false,
-                    defaultValue: 0,
-                },
-                y: {
-                    name:'y',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0,
-                },
-            },
-            defaultValue: new Point(100,100)
-        },
-        radius: {
-            name: 'radius',
-            base: "number",
-            readonly: false,
-            defaultValue: 20,
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-    }
-}
-export const SimpleTextDef: ObjectDef = {
-    name:'simple-text',
-    props: {
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps:{
-                x: {
-                    name:'x',
-                    base: "number",
-                    readonly: false,
-                    defaultValue: 0,
-                },
-                y: {
-                    name:'y',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0,
-                },
-            },
-            defaultValue: new Point(100,100),
-        },
-        text: {
-            name:'text',
-            readonly: false,
-            base: 'string',
-            defaultValue: 'hello'
-        },
-        fontSize: {
-            name:'fontSize',
-            base: 'number',
-            readonly: false,
-            defaultValue: 26,
-        },
-        fill: FillDef,
-    }
 }
 
 export const PropChanged = 'PropChanged'
@@ -331,54 +186,6 @@ export class ObjectProxy<T extends ObjectDef> {
 }
 
 
-class RectResizeHandle implements Handle {
-    private obj: RectClass;
-    constructor(obj:RectClass) {
-        this.obj = obj
-    }
-    getPosition():Point {
-        return this.obj.getPropValue("bounds").bottom_right()
-    }
-    async setPosition(pos: Point) {
-        let old_bounds = this.obj.getPropValue('bounds')
-        const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
-        await this.obj.setPropValue("bounds", new_bounds)
-    }
-    contains(pt: Point) {
-        let pos = this.obj.getPropValue('bounds').bottom_right()
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
-        return b.contains(pt)
-    }
-}
-
-class CircleResizeHandle implements Handle{
-    private obj: CircleClass
-    constructor(obj:CircleClass) {
-        this.obj = obj
-    }
-
-    getPosition(): Point {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
-        return center.add(new Point(radius, 0))
-    }
-
-    async setPosition(pos: Point) {
-        let center = this.obj.getPropValue("center")
-        let diff = pos.subtract(center)
-        let radius = diff.x
-        await this.obj.setPropValue('radius', radius)
-    }
-
-    contains(pt: Point) {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
-        let pos = center.add(new Point(radius, 0))
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
-        return b.contains(pt)
-    }
-}
-
 export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> implements DrawableShape {
     abstract contains(pt: Point): boolean;
     abstract drawSelected(ctx: CanvasRenderingContext2D): void;
@@ -387,56 +194,6 @@ export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> 
     abstract intersects(bounds: Bounds): boolean;
     abstract getPosition(): Point;
     abstract setPosition(pos: Point): Promise<void>;
-}
-
-export class RectClass extends DrawableClass<typeof RectDef> {
-    constructor(om:ObjectManager, opts: Record<keyof typeof RectDef.props, any>) {
-        super(om, RectDef, opts)
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
-        if(this.props.roundedCornersEnabled) {
-            let b = this.props.bounds
-            let r = this.props.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.fill()
-        } else {
-            ctx.fillRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
-        }
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        if(this.props.roundedCornersEnabled) {
-            let b = this.props.bounds
-            let r = this.props.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.stroke()
-        } else {
-            ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
-        }
-    }
-    contains(pt: Point): boolean {
-        return this.props.bounds.contains(pt)
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.props.bounds.x,this.props.bounds.y,this.props.bounds.w,this.props.bounds.h)
-    }
-    getHandle(): Handle {
-        return new RectResizeHandle(this)
-    }
-    intersects(bounds: Bounds): boolean {
-        return this.getPropValue('bounds').intersects(bounds)
-    }
-    getPosition(): Point {
-        return (this.getPropValue('bounds') as Bounds).position()
-    }
-    async setPosition(pos: Point): Promise<void> {
-        let bounds = this.getPropValue('bounds') as Bounds
-        await this.setPropValue('bounds', new Bounds(pos.x, pos.y, bounds.w, bounds.h))
-    }
 }
 
 export class PageClass extends ObjectProxy<typeof PageDef> {
@@ -453,107 +210,6 @@ export class DocClass extends ObjectProxy<typeof DocDef>{
         super(om, DocDef, opts)
     }
 }
-
-export class CircleClass extends DrawableClass<typeof CircleDef> {
-    constructor(om:ObjectManager, opts: Record<keyof typeof CircleDef.props, any>) {
-        super(om,CircleDef,opts)
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
-        ctx.beginPath()
-        ctx.arc(this.props.center.x,this.props.center.y,this.props.radius,0,toRadians(360))
-        ctx.fill()
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        ctx.stroke()
-    }
-    contains(pt: Point): boolean {
-        return pt.subtract(this.props.center).magnitude() < this.props.radius
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.beginPath()
-        ctx.arc(this.props.center.x,this.props.center.y,this.props.radius,0,toRadians(360))
-        ctx.stroke()
-    }
-    getHandle(): Handle {
-        return new CircleResizeHandle(this)
-    }
-    intersects(bounds: Bounds): boolean {
-        let center = this.getPropValue('center') as Point
-        let rad = this.getPropValue('radius') as number
-        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
-        return bds.intersects(bounds)
-    }
-    getPosition(): Point {
-        return this.getPropValue('center')
-    }
-    async setPosition(pos: Point): Promise<void> {
-        await this.setPropValue('center', pos)
-    }
-}
-
-export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef>{
-    private metrics: TextMetrics;
-    private can: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    constructor(om:ObjectManager, opts: Record<keyof typeof SimpleTextDef.props, any>) {
-        super(om,SimpleTextDef, opts)
-        if (typeof document !== "undefined") {
-            this.can = document.createElement('canvas')
-            this.can.width = 100
-            this.can.height = 100
-            this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
-            this.ctx.font = this.calcFont()
-            this.metrics = this.ctx.measureText(this.props.text)
-        }
-    }
-    private calcHeight() {
-        return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
-    }
-    contains(pt: Point): boolean {
-        let h = this.calcHeight()
-        let bds = new Bounds(this.props.center.x,this.props.center.y-h,this.metrics.width,h)
-        return bds.contains(pt)
-    }
-
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        let h = this.calcHeight()
-        ctx.strokeRect(this.props.center.x,this.props.center.y-h,this.metrics.width,h)
-    }
-
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
-        ctx.font = this.calcFont()
-        ctx.fillText(this.props.text, this.props.center.x,this.props.center.y)
-    }
-
-    refresh(prop:PropSchema) {
-        if(prop.name === 'text' || prop.name === 'fontSize') {
-            this.ctx.font = this.calcFont()
-            this.metrics = this.ctx.measureText(this.props.text)
-        }
-    }
-
-    private calcFont() {
-        return `${this.props.fontSize}pt sans-serif`
-    }
-
-    getHandle() {
-        return null;
-    }
-    intersects(bounds: Bounds): boolean {
-        let center = this.getPropValue('center') as Point
-        let bds = new Bounds(center.x,center.y-50,100,50)
-        return bds.intersects(bounds)
-    }
-    getPosition(): Point {
-        return this.getPropValue('center')
-    }
-    async setPosition(pos: Point): Promise<void> {
-        await this.setPropValue('center', pos)
-    }
-}
-
 
 export type JSONObject = {
     name: string

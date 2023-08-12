@@ -1,7 +1,9 @@
 import {forceDownloadBlob} from "josh_web_util";
 import {traverse} from "./common";
 import {GlobalState} from "../models/state";
-import {CircleClass, DocClass, ObjectDef, ObjectProxy, PageClass, RectClass} from "../models/om";
+import {DocClass, ObjectDef, ObjectProxy, PageClass} from "../models/om";
+import {RectClass} from "../models/rect";
+import {CircleClass} from "../models/circle";
 
 function splat_SVG(name: string, opts: Record<string,any>) {
     let atts = Object.keys(opts).map(key => `${key}="${opts[key]}"`)

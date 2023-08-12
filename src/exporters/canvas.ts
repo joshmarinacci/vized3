@@ -1,8 +1,9 @@
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
 import {traverse} from "./common";
-import {toRadians} from "josh_js_util";
 import {GlobalState} from "../models/state";
-import {CircleClass, DocClass, ObjectDef, ObjectProxy, PageClass, RectClass} from "../models/om";
+import {DocClass, ObjectDef, ObjectProxy, PageClass} from "../models/om";
+import {RectClass} from "../models/rect";
+import {CircleClass} from "../models/circle";
 
 export async function exportCanvasJS(state: GlobalState) {
     const before:string[] = []

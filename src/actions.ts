@@ -1,11 +1,13 @@
 import {GlobalState} from "./models/state";
-import {CircleDef, ObjectProxy, RectDef} from "./models/om";
+import {ObjectProxy} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 import {savePNGJSON} from "./exporters/json";
 import {exportPNG} from "./exporters/png";
 import {exportSVG} from "./exporters/svg";
 import {exportCanvasJS} from "./exporters/canvas";
 import {SupportedIcons} from "./icons";
+import {RectDef} from "./models/rect";
+import {CircleDef} from "./models/circle";
 
 export type MenuAction = {
     title:string

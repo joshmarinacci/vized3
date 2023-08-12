@@ -1,7 +1,9 @@
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
 import {traverse} from "./common";
 import {GlobalState} from "../models/state";
-import {CircleClass, DocClass, PageClass, RectClass} from "../models/om";
+import {DocClass, PageClass} from "../models/om";
+import {RectClass} from "../models/rect";
+import {CircleClass} from "../models/circle";
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())

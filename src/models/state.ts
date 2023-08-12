@@ -1,15 +1,16 @@
 import {Bounds, Point} from "josh_js_util";
 import {Observable } from "./model";
 import {
-    CircleClass,
-    CircleDef, DocClass,
+    DocClass,
     DocDef, ObjectDef,
     ObjectManager,
     ObjectProxy,
     PageClass,
-    PageDef, RectClass,
-    RectDef, SimpleTextClass, SimpleTextDef
+    PageDef
 } from "./om";
+import {RectClass, RectDef} from "./rect";
+import {CircleClass, CircleDef} from "./circle";
+import {SimpleTextClass, SimpleTextDef} from "./simpletext";
 
 export class GlobalState extends Observable {
     om: ObjectManager;

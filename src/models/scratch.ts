@@ -1,4 +1,5 @@
-import {EventTypes, RectDef} from "./om";
+import {EventTypes} from "./om";
+import {RectDef} from "./rect";
 
 type PropSchema<Value> = {
     name: string,

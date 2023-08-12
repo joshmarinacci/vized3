@@ -9,9 +9,10 @@ import {
     PageDef,
     PropChanged,
     PropSchema,
-    PageClass, RectClass,
-    RectDef, CircleDef, CircleClass
+    PageClass
 } from "./om.js";
+import {RectClass, RectDef} from "./rect";
+import {CircleClass, CircleDef} from "./circle";
 
 
 describe('model tests', () => {
