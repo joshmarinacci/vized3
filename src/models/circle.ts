@@ -1,8 +1,10 @@
 import {Bounds, Point, toRadians} from "josh_js_util";
 import {
+    CenterPositionDef,
     DrawableClass,
     FillDef,
     Handle,
+    NameDef,
     ObjectDef,
     ObjectManager,
     StrokeFillDef,
@@ -12,33 +14,8 @@ import {
 export const CircleDef: ObjectDef = {
     name: 'circle',
     props: {
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj, name, value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps: {
-                x: {
-                    name: 'x',
-                    base: "number",
-                    readonly: false,
-                    defaultValue: 0,
-                },
-                y: {
-                    name: 'y',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0,
-                },
-            },
-            defaultValue: new Point(100, 100)
-        },
+        name: NameDef,
+        center: CenterPositionDef,
         radius: {
             name: 'radius',
             base: "number",

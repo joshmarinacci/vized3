@@ -3,6 +3,7 @@ import {
     DrawableClass,
     FillDef,
     Handle,
+    NameDef,
     ObjectDef,
     ObjectManager,
     StrokeFillDef,
@@ -12,6 +13,7 @@ import {
 export const RectDef: ObjectDef = {
     name: 'rect',
     props: {
+        name: NameDef,
         bounds: {
             name: 'bounds',
             base: 'object',

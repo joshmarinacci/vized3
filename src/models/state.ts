@@ -11,6 +11,7 @@ import {
 import {RectClass, RectDef} from "./rect";
 import {CircleClass, CircleDef} from "./circle";
 import {SimpleTextClass, SimpleTextDef} from "./simpletext";
+import {PathShapeClass, PathShapeDef} from "./pathshape";
 
 export class GlobalState extends Observable {
     om: ObjectManager;
@@ -27,15 +28,14 @@ export class GlobalState extends Observable {
         this.om.registerDef(RectDef,RectClass)
         this.om.registerDef(CircleDef,CircleClass)
         this.om.registerDef(SimpleTextDef, SimpleTextClass)
+        this.om.registerDef(PathShapeDef, PathShapeClass)
         this._doc = this.om.make(DocDef,{})
         let page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
-        let rect = this.om.make(RectDef, { bounds: new Bounds(20,20,50,50)})
-        page.appendListProp('children', rect)
-        let circ = this.om.make(CircleDef, { center: new Point(100,200), radius: 20})
-        page.appendListProp("children", circ)
-        let text = this.om.make(SimpleTextDef, {})
-        page.appendListProp("children", text)
+        page.appendListProp('children',this.om.make(RectDef, { bounds: new Bounds(20,20,50,50)}))
+        page.appendListProp('children',this.om.make(CircleDef, { center: new Point(100,200), radius: 20}))
+        page.appendListProp("children", this.om.make(SimpleTextDef,{}))
+        page.appendListProp("children",this.om.make(PathShapeDef, {}))
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

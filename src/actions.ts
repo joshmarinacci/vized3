@@ -8,6 +8,7 @@ import {exportCanvasJS} from "./exporters/canvas";
 import {SupportedIcons} from "./icons";
 import {RectDef} from "./models/rect";
 import {CircleDef} from "./models/circle";
+import {PathShapeDef} from "./models/pathshape";
 
 export type MenuAction = {
     title:string
@@ -72,7 +73,7 @@ export const AddNewRectAction:MenuAction = {
 export const AddNewCircleAction:MenuAction = {
     title: 'new circle',
     icon: SupportedIcons.Add,
-    tags:['add','shape','circle','circle'],
+    tags:['add','shape','circle'],
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
@@ -80,6 +81,18 @@ export const AddNewCircleAction:MenuAction = {
             center: new Point(200, 200),
         })
         await page.appendListProp('children', circle)
+    }
+}
+
+export const AddNewPathShapeAction:MenuAction = {
+    title: 'new path shape',
+    icon: SupportedIcons.Add,
+    tags:['add','shape','curve','path'],
+    perform: async (state:GlobalState) => {
+        const page = state.getSelectedPage()
+        if (!page) return console.warn("no page selected")
+        const shape = state.om.make(PathShapeDef, {})
+        await page.appendListProp('children', shape)
     }
 }
 

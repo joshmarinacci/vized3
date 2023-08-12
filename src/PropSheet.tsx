@@ -106,7 +106,7 @@ function BooleanEditor(props: { schema: PropSchema, target: ObjectProxy<any> }) 
 function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
     const { prop, target } = props
     if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
-    if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)}</b></>
+    if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)+""}</b></>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
     if(prop.base === 'number') return <NumberEditor schema={prop} target={target}/>
     if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>

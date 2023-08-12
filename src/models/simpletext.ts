@@ -1,36 +1,17 @@
 import {Bounds, Point} from "josh_js_util";
-import {DrawableClass, FillDef, ObjectDef, ObjectManager, PropSchema} from "./om";
+import {
+    CenterPositionDef,
+    DrawableClass,
+    FillDef,
+    ObjectDef,
+    ObjectManager,
+    PropSchema
+} from "./om";
 
 export const SimpleTextDef: ObjectDef = {
     name: 'simple-text',
     props: {
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj, name, value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps: {
-                x: {
-                    name: 'x',
-                    base: "number",
-                    readonly: false,
-                    defaultValue: 0,
-                },
-                y: {
-                    name: 'y',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0,
-                },
-            },
-            defaultValue: new Point(100, 100),
-        },
+        center: CenterPositionDef,
         text: {
             name: 'text',
             readonly: false,

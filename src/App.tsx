@@ -27,6 +27,7 @@ import {GlobalState} from "./models/state";
 import {HistoryChanged} from "./models/om";
 import {
     AddNewCircleAction,
+    AddNewPathShapeAction,
     AddNewRectAction,
     DownloadPNGAction,
     DownloadSVGAction,
@@ -62,6 +63,7 @@ function Main() {
         const menu = <MenuBox>
             <MenuActionButton action={AddNewRectAction} state={state} />
             <MenuActionButton action={AddNewCircleAction} state={state}/>
+            <MenuActionButton action={AddNewPathShapeAction} state={state}/>
         </MenuBox>
         pm.show_at(menu, e.target, "left", new Point(0,0))
     }

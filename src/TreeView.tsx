@@ -27,7 +27,7 @@ function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, sele
                     pm.show_at(menu, e.target, "left", new Point(0,0))
                 }}
     >
-        <b>{shape.hasPropNamed('uuid')?shape.getPropNamed("uuid"):"no uuid"}</b>
+        <b>{shape.hasPropNamed('name')?shape.getPropNamed("name"):"no name"}</b>
     </div>
 }
 

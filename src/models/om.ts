@@ -12,6 +12,34 @@ export type PropSchema = {
     setter?:PropSetter,
 }
 
+export const CenterPositionDef:PropSchema = {
+    name:'center',
+    base: 'object',
+    readonly: false,
+    setter: (obj, name, value) => {
+        let pt = obj as Point;
+        let pt2 = pt.clone()
+        // @ts-ignore
+        pt2[name] = value
+        return pt2;
+    },
+    subProps: {
+        x: {
+            name: 'x',
+            base: "number",
+            readonly: false,
+            defaultValue: 0,
+        },
+        y: {
+            name: 'y',
+            base: 'number',
+            readonly: false,
+            defaultValue: 0,
+        },
+    },
+    defaultValue: new Point(0, 0)
+}
+
 export const FillDef:PropSchema = {
     name:'fill',
     base: 'string',
@@ -32,7 +60,7 @@ export const StrokeWidthDef:PropSchema = {
     readonly: false,
     defaultValue:1,
 }
-const NameDef:PropSchema = {
+export const NameDef:PropSchema = {
     name:'name',
     base:'string',
     readonly:false,
