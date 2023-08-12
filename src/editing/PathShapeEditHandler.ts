@@ -47,14 +47,17 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     private target_handle: EditHandle | null;
     private pressed: boolean;
     private hover_handle: EditHandle | undefined;
+    private hover_line: LineSegment | undefined;
 
     constructor(shape: PathShapeClass) {
         super()
         this.shape = shape
-        this.handles = (this.shape.props.points as Point[]).map((pt, i) => new EditHandle(this.shape, i))
+        this.handles = []
         this.target_handle = null
         this.pressed = false
+        this.rebuild_handles()
     }
+
 
     drawOverlay(ctx: CanvasRenderingContext2D, state: GlobalState): void {
         ctx.fillStyle = 'black'
@@ -64,6 +67,18 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         for (let hand of this.handles) {
             hand.draw(ctx)
         }
+        for(let line of this.findLines()) {
+            let mp = line.midpoint()
+            ctx.fillStyle = 'green'
+            ctx.fillRect(mp.x-5,mp.y-5,10,10)
+        }
+
+        if(this.hover_line) {
+            ctx.fillStyle = 'orange'
+            let mp = this.hover_line.midpoint()
+            ctx.fillRect(mp.x-5,mp.y-5,10,10)
+        }
+
         ctx.restore()
     }
 
@@ -72,6 +87,11 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         if (hand) {
             this.pressed = true
             this.target_handle = hand
+            return
+        }
+        if (this.hover_line) {
+            console.log("inserting a point")
+            await this.insertPoint(this.hover_line)
         } else {
             this.fire('done', {})
         }
@@ -86,6 +106,11 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
                 if(this.hover_handle) this.hover_handle.hover = true
                 this.fire('redraw',{})
             }
+            let line = this.findLines().find(l => l.midpoint().distance(pt) < 10)
+            if (line !== this.hover_line) {
+                this.hover_line = line
+                this.fire('redraw',{})
+            }
         }
         if (this.pressed && this.target_handle) {
             await this.target_handle.setPosition(pt)
@@ -97,4 +122,41 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         this.target_handle = null
     }
 
+    private findLines() {
+        let offset = this.shape.props.center
+        let points = this.shape.props.points as Point[]
+        let lines:LineSegment[] = []
+        for(let i=0; i<points.length-1; i++) {
+            lines.push(new LineSegment(points.at(i) as Point, points.at(i+1) as Point, i))
+        }
+        lines.push(new LineSegment(points.at(-1) as Point, points.at(0) as Point, points.length-1))
+        return lines.map(l => l.add(offset))
+    }
+
+    private async insertPoint(hover_line: LineSegment) {
+        await this.shape.insertListPropAt('points', hover_line.index+1, hover_line.midpoint().subtract(this.shape.props.center))
+        this.rebuild_handles()
+        this.fire('redraw',{})
+    }
+
+    private rebuild_handles() {
+        this.handles = (this.shape.props.points as Point[]).map((pt, i) => new EditHandle(this.shape, i))
+    }
+}
+
+class LineSegment {
+    start:Point
+    end:Point
+    index: number;
+    constructor(start:Point, end:Point, index:number) {
+        this.start = start
+        this.end = end
+        this.index = index
+    }
+    add(offset:Point) {
+        return new LineSegment(this.start.add(offset), this.end.add(offset), this.index)
+    }
+    midpoint():Point {
+        return this.start.add(this.end).scale(0.5)
+    }
 }
