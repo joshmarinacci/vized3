@@ -51,15 +51,22 @@ export function PageView(props:{page:any, state:GlobalState}) {
     const [size, setSize] = useState(() => new Size(800, 600));
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
-    useEffect(() => {
+
+    const redraw = () => {
         if(canvasRef.current) drawCanvas(canvasRef.current, props.page, props.state, handler)
-    })
+    }
+    useEffect(() => redraw())
     useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
     useEffect(() => {
         const hand = () => setHandler(new DragHandler())
         handler.addEventListener('done', hand)
         return () => handler.removeEventListener('done', hand)
+    }, [handler])
+    useEffect(() => {
+        const hand = () => redraw()
+        handler.addEventListener('redraw', hand)
+        return () => handler.removeEventListener('redraw', hand)
     }, [handler])
     const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)

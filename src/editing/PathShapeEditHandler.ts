@@ -11,12 +11,14 @@ class EditHandle implements Handle {
     private shape: PathShapeClass;
     private rad: number;
     private index: number;
+    hover: boolean;
 
     constructor(shape: PathShapeClass, index: number) {
         this.shape = shape
         this.index = index
         this.pt = (this.shape.getListPropAt('points', index) as Point).add(shape.getPosition())
         this.rad = 10
+        this.hover = false
     }
 
     contains(pt: Point): boolean {
@@ -34,7 +36,7 @@ class EditHandle implements Handle {
     }
 
     draw(ctx: CanvasRenderingContext2D) {
-        ctx.fillStyle = 'red'
+        ctx.fillStyle = this.hover?'red':'blue'
         ctx.fillRect(this.pt.x - this.rad, this.pt.y - this.rad, this.rad * 2, this.rad * 2)
     }
 }
@@ -44,6 +46,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     private handles: EditHandle[];
     private target_handle: EditHandle | null;
     private pressed: boolean;
+    private hover_handle: EditHandle | undefined;
 
     constructor(shape: PathShapeClass) {
         super()
@@ -70,12 +73,20 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             this.pressed = true
             this.target_handle = hand
         } else {
-            console.log("not on a handle. bailing")
             this.fire('done', {})
         }
     }
 
     async mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
+        if (!this.pressed) {
+            let hand = this.handles.find(h => h.contains(pt))
+            if(hand !== this.hover_handle) {
+                if(this.hover_handle) this.hover_handle.hover = false
+                this.hover_handle = hand
+                if(this.hover_handle) this.hover_handle.hover = true
+                this.fire('redraw',{})
+            }
+        }
         if (this.pressed && this.target_handle) {
             await this.target_handle.setPosition(pt)
         }
