@@ -1,7 +1,12 @@
 export type OEvent = string
 type ObservableListener = (type: OEvent) => void
 
-export class Observable {
+export interface Observable {
+    addEventListener(type: OEvent, cb: ObservableListener):void
+    removeEventListener(type: OEvent, cb: ObservableListener):void
+}
+
+export class ObservableBase implements Observable {
     private listeners: Map<OEvent, Array<ObservableListener>>
 
     constructor() {

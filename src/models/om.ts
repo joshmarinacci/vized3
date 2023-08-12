@@ -172,6 +172,11 @@ export class ObjectProxy<T extends ObjectDef> {
     getListPropAt<K extends keyof T['props']>(prop: K, index: number) {
         return this.props[prop][index]
     }
+    async setListPropAt<K extends keyof T['props']>(prop: K, index: number, value:any) {
+        const evt:SetListItemEvent<T> = new SetListItemEvent<T>(this, this.def.props[prop], index, value)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
 
     private _get_listeners(type: EventTypes):EventHandler[] {
         if(!this.listeners.has(type)) this.listeners.set(type,[])
@@ -382,6 +387,32 @@ class AppendListEvent<T> implements HistoryEvent {
         const list = this.target.getListProp(this.prop.name)
         list.splice(list.length-1,1)
         this.obj.setParent(null)
+    }
+}
+class SetListItemEvent<T> implements HistoryEvent {
+    uuid: string;
+    private target: ObjectProxy<ObjectDef>;
+    private prop: PropSchema;
+    compressable: boolean;
+    desc: string;
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number, value:ObjectProxy<ObjectDef>) {
+        this.uuid = genId('event:setlistelement')
+        this.target = target
+        this.prop = prop
+        const list = this.target.getPropValue(this.prop.name)
+        const oldList = list.slice()
+        const newList = list.slice()
+        list[index] = value
+        this.desc = `set element`
+        this.compressable = false
+    }
+
+    redo(): Promise<void> {
+        return Promise.resolve(undefined);
+    }
+
+    undo(): Promise<void> {
+        return Promise.resolve(undefined);
     }
 }
 class DeleteListEvent<T> implements HistoryEvent {

@@ -1,5 +1,5 @@
 import {Bounds, Point} from "josh_js_util";
-import {Observable } from "./model";
+import {ObservableBase } from "./model";
 import {
     DocClass,
     DocDef, ObjectDef,
@@ -13,7 +13,7 @@ import {CircleClass, CircleDef} from "./circle";
 import {SimpleTextClass, SimpleTextDef} from "./simpletext";
 import {PathShapeClass, PathShapeDef} from "./pathshape";
 
-export class GlobalState extends Observable {
+export class GlobalState extends ObservableBase {
     om: ObjectManager;
     private _doc: DocClass;
     private current_page: PageClass
@@ -34,8 +34,8 @@ export class GlobalState extends Observable {
         this._doc.appendListProp('pages',page)
         page.appendListProp('children',this.om.make(RectDef, { bounds: new Bounds(20,20,50,50)}))
         page.appendListProp('children',this.om.make(CircleDef, { center: new Point(100,200), radius: 20}))
-        page.appendListProp("children", this.om.make(SimpleTextDef,{}))
-        page.appendListProp("children",this.om.make(PathShapeDef, {}))
+        page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(200,100)}))
+        page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(100,300)}))
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

@@ -17,6 +17,8 @@ import {
     LeftAlignShapes,
     RightAlignShapes, TopAlignShapes, VCenterAlignShapes
 } from "./actions";
+import {PathShapeClass} from "./models/pathshape";
+import {ObservableBase, Observable} from "./models/model";
 
 function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillStyle = 'red'
@@ -24,7 +26,7 @@ function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillRect(p.x-10,p.y-10,20,20)
 }
 
-function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:DragHandler) {
+function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:MouseHandlerProtocol) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
@@ -78,7 +80,13 @@ function calcObjPos(target: ObjectProxy<any>) {
     if(target instanceof DrawableClass) return target.getPosition()
     return new Point(-1,-1)
 }
-class DragHandler {
+interface MouseHandlerProtocol extends Observable{
+    drawOverlay(ctx: CanvasRenderingContext2D, state: GlobalState): void
+    mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
+    mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
+    mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
+}
+class DragHandler extends ObservableBase implements MouseHandlerProtocol{
     private pressed: boolean;
     private originalPositions: Map<ObjectProxy<ObjectDef>, Point>;
     private dragStartPoint: Point;
@@ -88,6 +96,7 @@ class DragHandler {
     private draggingHandle: boolean;
     private dragHandle: Handle | null;
     constructor() {
+        super()
         this.pressed = false
         this.originalPositions = new Map()
         this.dragStartPoint = new Point(-99,-99)
@@ -97,7 +106,6 @@ class DragHandler {
         this.dragRect = new Bounds(0,0,50,50)
         this.potentialShapes = []
     }
-
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
         const page = state.getSelectedPage();
@@ -198,18 +206,106 @@ class DragHandler {
         let chs = page.getListProp('children') as DrawableClass<any>[]
         return chs.filter(obj => obj.intersects(dragRect))
     }
+}
+
+class EditHandle implements Handle {
+    private pt: Point;
+    private shape: PathShapeClass;
+    private rad: number;
+    private index: number;
+    constructor(shape:PathShapeClass, index:number) {
+        this.shape = shape
+        this.index = index
+        this.pt = (this.shape.getListPropAt('points',index) as Point).add(shape.getPosition())
+        this.rad = 10
+    }
+
+    contains(pt: Point): boolean {
+        let b = new Bounds(this.pt.x - this.rad, this.pt.y - this.rad, this.rad*2, this.rad*2)
+        return b.contains(pt)
+    }
+
+    getPosition(): Point {
+        return this.pt
+    }
+
+    async setPosition(pos: Point): Promise<void> {
+        this.pt = pos
+        await this.shape.setListPropAt('points',this.index,pos.subtract(this.shape.getPosition()))
+    }
+
+    draw(ctx: CanvasRenderingContext2D) {
+        ctx.fillStyle = 'red'
+        ctx.fillRect(this.pt.x-this.rad,this.pt.y-this.rad,this.rad*2,this.rad*2)
+    }
+}
+
+class PathShapeEditHandler extends ObservableBase implements MouseHandlerProtocol {
+    private shape: PathShapeClass;
+    private handles: EditHandle[];
+    private target_handle: EditHandle | null;
+    private pressed: boolean;
+    constructor(shape:PathShapeClass) {
+        super()
+        this.shape = shape
+        this.handles = (this.shape.props.points as Point[]).map((pt,i) => new EditHandle(this.shape,i))
+        this.target_handle = null
+        this.pressed = false
+    }
+    drawOverlay(ctx: CanvasRenderingContext2D, state: GlobalState): void {
+        ctx.fillStyle = 'black'
+        ctx.fillText('editing shape',100,100)
+        // draw the handles for each point in the shape
+        ctx.save()
+        for(let hand of this.handles) {
+            hand.draw(ctx)
+        }
+        ctx.restore()
+    }
+
+    async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
+        let hand = this.handles.find(h => h.contains(pt))
+        if(hand) {
+            this.pressed = true
+            this.target_handle = hand
+        } else {
+            console.log("not on a handle. bailing")
+            this.fire('done',{})
+        }
+    }
+
+    async mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
+        if(this.pressed && this.target_handle) {
+            await this.target_handle.setPosition(pt)
+        }
+    }
+
+    async mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
+        this.pressed = false
+        this.target_handle = null
+    }
 
 }
 
 export function PageView(props:{page:any, state:GlobalState}) {
     const [size, setSize] = useState(() => new Size(800, 600));
     const canvasRef = useRef<HTMLCanvasElement>();
-    const [handler, setHandler] = useState(new DragHandler())
+    const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     useEffect(() => {
         if(canvasRef.current) drawCanvasState(canvasRef.current, props.page, props.state, handler)
     })
     useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
+    useEffect(() => {
+        const hand = () => {
+            console.log("mouse handler is done")
+            setHandler(new DragHandler())
+        }
+        handler.addEventListener('done', hand)
+        return () => {
+            handler.removeEventListener('done', hand)
+        }
+    }, [handler])
     const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
         let pt = canvasToModel(e)
         await handler.mouseDown(pt, e, props.state)
@@ -248,6 +344,17 @@ export function PageView(props:{page:any, state:GlobalState}) {
         let dim = new Size(elem.clientWidth,elem.clientHeight)
         pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
     }
+    const onDoubleClick = (e:MouseEvent<HTMLCanvasElement>) => {
+        let pt = canvasToModel(e)
+        const page = props.state.getSelectedPage();
+        if(!page) return
+        let shape = findShapeInPage(page,pt)
+        if(shape) {
+            if (shape instanceof PathShapeClass) {
+                setHandler(new PathShapeEditHandler(shape as PathShapeClass))
+            }
+        }
+    }
 
     const dom_size = size.scale(1/window.devicePixelRatio)
     return <div className={'panel page-view'}>
@@ -260,6 +367,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
             onMouseMove={onMouseMove}
             onMouseUp={onMouseUp}
             // onWheelCapture={onWheel}
+            onDoubleClick={onDoubleClick}
             onContextMenuCapture={showContextMenu}
             style={{
                 border: '1px solid black',
