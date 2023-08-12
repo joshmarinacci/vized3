@@ -12,7 +12,7 @@ import {
 } from "josh_react_util"
 import './App.css';
 import {TreeView} from "./TreeView";
-import {PageView,} from "./PageView";
+import {PageView,} from "./editing/PageView";
 import {PropSheet} from "./PropSheet";
 import {
     IconButton,
