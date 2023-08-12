@@ -38,16 +38,11 @@ function drawCanvasState(canvas: HTMLCanvasElement, page: PageClass, state: Glob
     handler.drawOverlay(ctx,state)
     //draw the handles
     for(let sel of selected) {
-        let h = handleForShape(sel)
-        if(h) drawHandle(ctx,h)
+        if (sel instanceof DrawableClass) {
+            let h = sel.getHandle()
+            if(h) drawHandle(ctx,h)
+        }
     }
-}
-
-function handleForShape(obj:ObjectProxy<any>):Handle | null {
-    if (obj instanceof DrawableClass) {
-        return obj.getHandle()
-    }
-    return null
 }
 
 function findShapeInPage(page: PageClass, pt: Point):ObjectProxy<ObjectDef>|undefined {
@@ -71,62 +66,25 @@ function canvasToModel(e: React.MouseEvent<HTMLCanvasElement>) {
 function findHandleInPage(page: PageClass, pt: Point, state:GlobalState):Handle|null {
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
-        let h = handleForShape(sel)
-        if (h && h.contains(pt)) return h
+        if (sel instanceof DrawableClass) {
+            let h = sel.getHandle()
+            if (h && h.contains(pt)) return h
+        }
     }
     return null
 }
 
 function calcObjPos(target: ObjectProxy<any>) {
-    if(!target) return new Point(-1,-1)
-    if(target.def.name === 'rect') {
-        return (target.getPropValue('bounds') as Bounds).position()
-    }
-    if(target.def.name === 'circle') {
-        return target.getPropValue('center')
-    }
-    if(target.def.name === 'simple-text') {
-        return target.getPropValue('center')
-    }
+    if(target instanceof DrawableClass) return target.getPosition()
     return new Point(-1,-1)
 }
-function calcObjIntersects(obj: ObjectProxy<any>, bounds:Bounds):boolean {
-    if(obj.def.name === 'rect') {
-        return ((obj.getPropValue('bounds')) as Bounds).intersects(bounds)
-    }
-    if(obj.def.name === 'circle') {
-        let center = obj.getPropValue('center') as Point
-        let rad = obj.getPropValue('radius') as number
-        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
-        return bds.intersects(bounds)
-    }
-    if(obj.def.name === 'simple-text') {
-        let center = obj.getPropValue('center') as Point
-        let bds = new Bounds(center.x,center.y-50,100,50)
-        return bds.intersects(bounds)
-    }
-    return false
-}
-async function setObjPos(target: ObjectProxy<any>, new_pos: Point) {
-    if (target.def.name === 'rect') {
-        let bounds = target.getPropValue('bounds') as Bounds
-        await target.setPropValue('bounds', new Bounds(new_pos.x, new_pos.y, bounds.w, bounds.h))
-    }
-    if (target.def.name === 'circle') {
-        await target.setPropValue('center', new_pos)
-    }
-    if (target.def.name === 'simple-text') {
-        await target.setPropValue('center', new_pos)
-    }
-}
-
 class DragHandler {
     private pressed: boolean;
     private originalPositions: Map<ObjectProxy<ObjectDef>, Point>;
     private dragStartPoint: Point;
     private draggingRect: boolean;
     private dragRect: Bounds;
-    private potentialShapes: ObjectProxy<ObjectDef>[];
+    private potentialShapes: DrawableClass<any>[];
     private draggingHandle: boolean;
     private dragHandle: Handle | null;
     constructor() {
@@ -198,7 +156,9 @@ class DragHandler {
                 }
                 let original_pos = this.originalPositions.get(sel) as Point
                 let new_pos = original_pos.add(diff)
-                await setObjPos(sel, new_pos)
+                if (sel instanceof DrawableClass) {
+                    await sel.setPosition(new_pos)
+                }
             }
         }
     }
@@ -226,22 +186,17 @@ class DragHandler {
             ctx.lineWidth = 1
             ctx.strokeRect(this.dragRect.x,this.dragRect.y,this.dragRect.w,this.dragRect.h)
             for(let shape of this.potentialShapes) {
-                ctx.strokeStyle = 'rgba(100,255,255,0.5)';
-                ctx.lineWidth = 10;
-                (shape as unknown as DrawableShape).drawSelected(ctx);
+                ctx.strokeStyle = 'rgba(100,255,255,0.5)'
+                ctx.lineWidth = 10
+                shape.drawSelected(ctx);
             }
         }
     }
 
-    private findShapesInPageRect(page: PageClass | null, dragRect: Bounds) {
+    private findShapesInPageRect(page: PageClass | null, dragRect: Bounds):DrawableClass<any>[] {
         if(!page) return []
-        const included = []
-        let chs = page.getListProp('children')
-        for(let obj of chs) {
-            let bds = calcObjIntersects(obj, dragRect)
-            if(bds) included.push(obj)
-        }
-        return included
+        let chs = page.getListProp('children') as DrawableClass<any>[]
+        return chs.filter(obj => obj.intersects(dragRect))
     }
 
 }

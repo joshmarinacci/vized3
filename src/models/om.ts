@@ -77,6 +77,9 @@ export interface DrawableShape {
     contains(pt:Point):boolean
     drawSelected(ctx:CanvasRenderingContext2D):void
     getHandle():Handle|null
+    intersects(bounds:Bounds):boolean
+    getPosition():Point
+    setPosition(pos:Point):Promise<void>
 }
 export const RectDef: ObjectDef = {
     name: 'rect',
@@ -341,7 +344,6 @@ class RectResizeHandle implements Handle {
         const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
         await this.obj.setPropValue("bounds", new_bounds)
     }
-
     contains(pt: Point) {
         let pos = this.obj.getPropValue('bounds').bottom_right()
         let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
@@ -382,6 +384,9 @@ export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> 
     abstract drawSelected(ctx: CanvasRenderingContext2D): void;
     abstract drawSelf(ctx: CanvasRenderingContext2D): void;
     abstract getHandle(): Handle | null;
+    abstract intersects(bounds: Bounds): boolean;
+    abstract getPosition(): Point;
+    abstract setPosition(pos: Point): Promise<void>;
 }
 
 export class RectClass extends DrawableClass<typeof RectDef> {
@@ -421,6 +426,16 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     }
     getHandle(): Handle {
         return new RectResizeHandle(this)
+    }
+    intersects(bounds: Bounds): boolean {
+        return this.getPropValue('bounds').intersects(bounds)
+    }
+    getPosition(): Point {
+        return (this.getPropValue('bounds') as Bounds).position()
+    }
+    async setPosition(pos: Point): Promise<void> {
+        let bounds = this.getPropValue('bounds') as Bounds
+        await this.setPropValue('bounds', new Bounds(pos.x, pos.y, bounds.w, bounds.h))
     }
 }
 
@@ -462,6 +477,18 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     }
     getHandle(): Handle {
         return new CircleResizeHandle(this)
+    }
+    intersects(bounds: Bounds): boolean {
+        let center = this.getPropValue('center') as Point
+        let rad = this.getPropValue('radius') as number
+        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
+        return bds.intersects(bounds)
+    }
+    getPosition(): Point {
+        return this.getPropValue('center')
+    }
+    async setPosition(pos: Point): Promise<void> {
+        await this.setPropValue('center', pos)
     }
 }
 
@@ -513,6 +540,17 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef>{
 
     getHandle() {
         return null;
+    }
+    intersects(bounds: Bounds): boolean {
+        let center = this.getPropValue('center') as Point
+        let bds = new Bounds(center.x,center.y-50,100,50)
+        return bds.intersects(bounds)
+    }
+    getPosition(): Point {
+        return this.getPropValue('center')
+    }
+    async setPosition(pos: Point): Promise<void> {
+        await this.setPropValue('center', pos)
     }
 }
 
