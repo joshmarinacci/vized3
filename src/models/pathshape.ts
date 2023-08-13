@@ -13,6 +13,12 @@ export const PathShapeDef: ObjectDef = {
     props: {
         name: NameDef,
         center: CenterPositionDef,
+        filled: {
+            name:"filled",
+            base: 'boolean',
+            readonly: false,
+            defaultValue: false
+        },
         fill: FillDef,
         strokeFill: StrokeFillDef,
         strokeWidth: StrokeWidthDef,
@@ -24,8 +30,15 @@ export const PathShapeDef: ObjectDef = {
                 new Point(50,50),
                 new Point(100,80),
                 new Point(80,100),
-            ]
-        }
+            ],
+            hidden:true
+        },
+        closed: {
+            name:"closed",
+            base: 'boolean',
+            readonly: false,
+            defaultValue: false
+        },
     }
 }
 
@@ -35,9 +48,10 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
     }
 
     drawSelf(ctx: CanvasRenderingContext2D): void {
+        if(this.props.points.length < 2) return
         ctx.fillStyle = this.props.fill
         this.drawPath(ctx)
-        ctx.fill()
+        if(this.props.filled) ctx.fill()
         ctx.strokeStyle = this.props.strokeFill
         ctx.lineWidth = this.props.strokeWidth
         ctx.stroke()
@@ -73,10 +87,8 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
         ctx.translate(this.getPosition().x,this.getPosition().y)
         ctx.beginPath()
         ctx.moveTo(this.props.points[0].x,this.props.points[0].y)
-        for (let pt of this.props.points) {
-            ctx.lineTo(pt.x,pt.y)
-        }
-        ctx.closePath()
+        for (let pt of this.props.points) ctx.lineTo(pt.x, pt.y)
+        if(this.props.closed) ctx.closePath()
         ctx.restore()
     }
 

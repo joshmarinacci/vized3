@@ -183,6 +183,11 @@ export class ObjectProxy<T extends ObjectDef> {
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
+    async removeListPropAt<K extends keyof T['props']>(prop: K, index: number) {
+        const evt:RemoveListItemEvent<T> = new RemoveListItemEvent<T>(this, this.def.props[prop], index)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
 
     private _get_listeners(type: EventTypes):EventHandler[] {
         if(!this.listeners.has(type)) this.listeners.set(type,[])
@@ -440,6 +445,31 @@ class InsertListItemEvent<T> implements HistoryEvent {
         this.desc = `set element`
         this.compressable = false
     }
+    redo(): Promise<void> {
+        return Promise.resolve(undefined);
+    }
+    undo(): Promise<void> {
+        return Promise.resolve(undefined);
+    }
+}
+class RemoveListItemEvent<T> implements HistoryEvent {
+    uuid: string;
+    private target: ObjectProxy<ObjectDef>;
+    private prop: PropSchema;
+    compressable: boolean;
+    desc: string;
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number) {
+        this.uuid = genId('event:dellistelement')
+        this.target = target
+        this.prop = prop
+        const list = this.target.getPropValue(this.prop.name)
+        console.log("deleting at", index)
+        const oldList = list.slice()
+        const newList = list.slice()
+        list.splice(index,1)
+        this.desc = `del element`
+        this.compressable = false
+    }
 
     redo(): Promise<void> {
         return Promise.resolve(undefined);
@@ -478,7 +508,7 @@ class DeleteListEvent<T> implements HistoryEvent {
         const newList = list.slice()
         this.oldValue = oldList
         this.newValue = newList
-        this.obj.setParent(null)
+        if(this.obj.setParent) this.obj.setParent(null)
         this.compressable = false
     }
 

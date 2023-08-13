@@ -15,9 +15,9 @@ import {
     TopAlignShapes,
     VCenterAlignShapes
 } from "../actions";
-import {PathShapeClass} from "../models/pathshape";
+import {PathShapeClass, PathShapeDef} from "../models/pathshape";
 import {canvasToModel, findShapeInPage, MouseHandlerProtocol} from "./editing";
-import {PathShapeEditHandler} from "./PathShapeEditHandler";
+import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler";
 import {DragHandler} from "./DragHandler";
 
 function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
@@ -48,6 +48,7 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalSta
 }
 
 export function PageView(props:{page:any, state:GlobalState}) {
+    const {page, state} = props
     const [size, setSize] = useState(() => new Size(800, 600));
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
@@ -113,14 +114,36 @@ export function PageView(props:{page:any, state:GlobalState}) {
         let shape = findShapeInPage(page,pt)
         if(shape) {
             if (shape instanceof PathShapeClass) {
-                setHandler(new PathShapeEditHandler(shape as PathShapeClass))
+                setHandler(new PathShapeEditHandler(shape as PathShapeClass, EditState.Existing))
             }
+        }
+    }
+
+    const startNewPath = () => {
+        const shape = state.om.make(PathShapeDef,{points:[]}) as PathShapeClass
+        const page = state.getCurrentPage()
+        page.appendListProp('children',shape)
+        setHandler(new PathShapeEditHandler(shape, EditState.New))
+    }
+    const finishNewPath = () => {
+        if(handler instanceof PathShapeEditHandler) {
+            setHandler(new DragHandler())
+        }
+    }
+    const enterDeleteMode = () => {
+        if(handler instanceof PathShapeEditHandler) {
+            handler.enterDeleteMode()
         }
     }
 
     const dom_size = size.scale(1/window.devicePixelRatio)
     return <div className={'panel page-view'}>
-        <HBox>size = {size.w} x {size.h}</HBox>
+        <HBox>
+            <label>{size.w} x {size.h}</label>
+            <button onClick={startNewPath}>draw path</button>
+            <button onClick={finishNewPath}>done</button>
+            <button onClick={enterDeleteMode}>delete</button>
+        </HBox>
         <canvas
             ref={canvasRef as any}
             width={size.w}
