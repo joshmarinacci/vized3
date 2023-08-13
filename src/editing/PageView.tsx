@@ -6,6 +6,7 @@ import {DrawableClass, DrawableShape, FamilyPropChanged, Handle, PageClass} from
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common";
 import {
     AddNewCircleAction,
+    AddNewNGonAction,
     AddNewRectAction,
     BottomAlignShapes,
     DeleteSelection,
@@ -129,6 +130,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
         const menu = <MenuBox>
             <MenuActionButton state={props.state} action={AddNewRectAction}/>
             <MenuActionButton state={props.state} action={AddNewCircleAction}/>
+            <MenuActionButton state={props.state} action={AddNewNGonAction}/>
             <MenuActionButton state={props.state} action={DeleteSelection}/>
             {extras}
         </MenuBox>

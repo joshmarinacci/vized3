@@ -3,6 +3,7 @@ import {
     CenterPositionDef,
     DrawableClass,
     FillDef,
+    NameDef,
     ObjectDef,
     ObjectManager,
     PropSchema
@@ -11,6 +12,7 @@ import {
 export const SimpleTextDef: ObjectDef = {
     name: 'simple-text',
     props: {
+        name: NameDef,
         center: CenterPositionDef,
         text: {
             name: 'text',
@@ -93,5 +95,14 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
 
     async setPosition(pos: Point): Promise<void> {
         await this.setPropValue('center', pos)
+    }
+    getAlignmentBounds(): Bounds {
+        let center = this.getPropValue('center') as Point
+        return new Bounds(center.x, center.y - 50, 100, 50)
+    }
+
+    async translateBy(offset: Point): Promise<void> {
+        let center = this.getPropValue('center') as Point
+        await this.setPropValue('center', center.add(offset))
     }
 }

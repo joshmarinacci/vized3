@@ -100,4 +100,16 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     async setPosition(pos: Point): Promise<void> {
         await this.setPropValue('center', pos)
     }
+
+    getAlignmentBounds() {
+        let center = this.getPropValue('center') as Point
+        let rad = this.getPropValue('radius') as number
+        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
+        return bds
+    }
+
+    async translateBy(offset: Point): Promise<void> {
+        let center = this.getPropValue('center') as Point
+        await this.setPropValue('center', center.add(offset))
+    }
 }

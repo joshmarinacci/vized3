@@ -95,6 +95,15 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
     private calcBounds() {
         return calcBounds(this.getListProp('points')).add(this.getPosition())
     }
+
+    getAlignmentBounds(): Bounds {
+        return this.calcBounds()
+    }
+
+    async translateBy(offset: Point): Promise<void> {
+        let center = this.getPropValue('center') as Point
+        await this.setPropValue('center', center.add(offset))
+    }
 }
 
 export function calcBounds(pts:Point[]) {

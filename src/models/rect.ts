@@ -150,4 +150,13 @@ export class RectClass extends DrawableClass<typeof RectDef> {
         let bounds = this.getPropValue('bounds') as Bounds
         await this.setPropValue('bounds', new Bounds(pos.x, pos.y, bounds.w, bounds.h))
     }
+
+    getAlignmentBounds():Bounds {
+        return this.getPropValue('bounds') as Bounds
+    }
+
+    async translateBy(offset: Point): Promise<void> {
+        let bds = this.getPropValue('bounds') as Bounds
+        await this.setPropValue('bounds', bds.add(offset))
+    }
 }

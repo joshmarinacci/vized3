@@ -1,5 +1,5 @@
 import {GlobalState} from "./models/state";
-import {DocClass, DocDef, ObjectProxy, PageDef} from "./models/om";
+import {DocClass, DocDef, DrawableClass, ObjectProxy, PageDef} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 import {savePNGJSON} from "./exporters/json";
 import {exportPNG} from "./exporters/png";
@@ -128,27 +128,15 @@ export const DeleteSelection:MenuAction = {
 }
 
 function calcObjectBounds(obj: ObjectProxy<any>) {
-    if (obj.def.name === 'rect') {
-        return obj.getPropValue('bounds') as Bounds
-    }
-    if (obj.def.name === 'circle') {
-        let center = obj.getPropValue('center') as Point
-        let rad = obj.getPropValue('radius') as number
-        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
-        return bds
+    if (obj instanceof DrawableClass) {
+        return obj.getAlignmentBounds()
     }
     throw new Error("object has no bounds")
 }
 
 async function moveObjBy(obj: ObjectProxy<any>, diff: Point) {
-    if (obj.def.name === 'rect') {
-        let bds = obj.getPropValue('bounds') as Bounds
-        await obj.setPropValue('bounds', bds.add(diff))
-        return
-    }
-    if (obj.def.name === 'circle') {
-        let center = obj.getPropValue('center') as Point
-        await obj.setPropValue('center', center.add(diff))
+    if (obj instanceof DrawableClass) {
+        await obj.translateBy(diff)
         return
     }
     throw new Error("object has no bounds to move ")

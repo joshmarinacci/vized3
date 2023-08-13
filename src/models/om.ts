@@ -238,6 +238,8 @@ export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> 
     abstract intersects(bounds: Bounds): boolean;
     abstract getPosition(): Point;
     abstract setPosition(pos: Point): Promise<void>;
+    abstract getAlignmentBounds():Bounds;
+    abstract translateBy(offset: Point): Promise<void>
 }
 
 export class PageClass extends ObjectProxy<typeof PageDef> {

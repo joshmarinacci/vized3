@@ -1,9 +1,11 @@
 import {
     CenterPositionDef,
     DrawableClass,
-    FillDef, Handle,
+    FillDef,
+    Handle,
     NameDef,
-    ObjectDef, ObjectManager,
+    ObjectDef,
+    ObjectManager,
     StrokeFillDef,
     StrokeWidthDef
 } from "./om";
@@ -147,5 +149,16 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
             }
         }
         ctx.closePath()
+    }
+
+    getAlignmentBounds(): Bounds {
+        let center = this.getPropValue('center') as Point
+        let rad = this.getPropValue('radius') as number
+        return new Bounds(center.x - rad, center.y - rad, rad * 2, rad * 2)
+    }
+
+    async translateBy(offset: Point): Promise<void> {
+        let center = this.getPropValue('center') as Point
+        await this.setPropValue('center', center.add(offset))
     }
 }
