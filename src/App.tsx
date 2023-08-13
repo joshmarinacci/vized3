@@ -26,6 +26,7 @@ import {GlobalState} from "./models/state";
 import {HistoryChanged} from "./models/om";
 import {
     AddNewCircleAction,
+    AddNewNGonAction,
     AddNewPathShapeAction,
     AddNewRectAction,
     DownloadPNGAction,
@@ -74,7 +75,8 @@ function Main() {
             <DropdownMenuButton title={'Add'} state={state} items={[
                 AddNewRectAction,
                 AddNewCircleAction,
-                AddNewPathShapeAction
+                AddNewPathShapeAction,
+                AddNewNGonAction,
             ]}/>
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>

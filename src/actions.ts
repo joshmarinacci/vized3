@@ -9,6 +9,7 @@ import {SupportedIcons} from "./icons";
 import {RectDef} from "./models/rect";
 import {CircleDef} from "./models/circle";
 import {PathShapeDef} from "./models/pathshape";
+import {NGonDef} from "./models/ngon";
 
 export type MenuAction = {
     title:string
@@ -92,6 +93,20 @@ export const AddNewPathShapeAction:MenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const shape = state.om.make(PathShapeDef, {})
+        await page.appendListProp('children', shape)
+    }
+}
+
+export const AddNewNGonAction:MenuAction = {
+    title: 'new N-gon',
+    icon: SupportedIcons.Add,
+    tags:['add','shape','polygon','ngon','n-gon'],
+    perform: async (state: GlobalState) => {
+        const page = state.getSelectedPage()
+        if (!page) return console.warn("no page selected")
+        const shape = state.om.make(NGonDef, {
+            center: new Point(200, 200),
+        })
         await page.appendListProp('children', shape)
     }
 }
@@ -233,6 +248,8 @@ export const ALL_ACTIONS: MenuAction[] = [
     ExportCanvasJSAction,
     AddNewRectAction,
     AddNewCircleAction,
+    AddNewNGonAction,
+    AddNewPathShapeAction,
     DeleteSelection,
     RightAlignShapes,
     LeftAlignShapes,

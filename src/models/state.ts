@@ -12,6 +12,7 @@ import {RectClass, RectDef} from "./rect";
 import {CircleClass, CircleDef} from "./circle";
 import {SimpleTextClass, SimpleTextDef} from "./simpletext";
 import {PathShapeClass, PathShapeDef} from "./pathshape";
+import {NGonClass, NGonDef} from "./ngon";
 
 export class GlobalState extends ObservableBase {
     om: ObjectManager;
@@ -29,6 +30,7 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(CircleDef,CircleClass)
         this.om.registerDef(SimpleTextDef, SimpleTextClass)
         this.om.registerDef(PathShapeDef, PathShapeClass)
+        this.om.registerDef(NGonDef, NGonClass)
         this._doc = this.om.make(DocDef,{})
         let page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
