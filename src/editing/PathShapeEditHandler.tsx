@@ -228,6 +228,21 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         this.state = EditState.Delete
         this.repaint()
     }
+
+    getPaletteCommands(): any {
+        const finishNewPath = () => {
+            this.fire('done',{})
+        }
+        const enterDeleteMode = () => {
+            this.enterDeleteMode()
+        }
+
+
+        return <div>
+            <button onClick={enterDeleteMode}>delete</button>
+            <button onClick={finishNewPath}>done</button>
+        </div>
+    }
 }
 
 class LineSegment {

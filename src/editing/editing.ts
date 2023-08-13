@@ -19,6 +19,8 @@ export interface MouseHandlerProtocol extends Observable {
     mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
 
     mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
+
+    getPaletteCommands():any
 }
 
 export function findHandleInPage(page: PageClass, pt: Point, state: GlobalState): Handle | null {

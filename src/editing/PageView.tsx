@@ -1,4 +1,4 @@
-import React, {MouseEvent, useContext, useEffect, useRef, useState} from "react";
+import React, {MouseEvent, ReactNode, useContext, useEffect, useRef, useState} from "react";
 import {Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "../models/state";
@@ -15,10 +15,11 @@ import {
     TopAlignShapes,
     VCenterAlignShapes
 } from "../actions";
-import {PathShapeClass, PathShapeDef} from "../models/pathshape";
-import {canvasToModel, findShapeInPage, MouseHandlerProtocol} from "./editing";
-import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler";
-import {DragHandler} from "./DragHandler";
+import {PathShapeClass, PathShapeDef} from "../models/pathshape"
+import {canvasToModel, findShapeInPage, MouseHandlerProtocol} from "./editing"
+import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
+import {DragHandler} from "./DragHandler"
+import "./PageView.css"
 
 function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillStyle = 'red'
@@ -45,6 +46,34 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalSta
             if(h) drawHandle(ctx,h)
         }
     }
+}
+
+function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
+    const [position, setPosition] = useState(new Point(0,0))
+    const style = {
+        top: `${position.y}px`,
+        left: `${position.x}px`,
+        visibility: props.visible?'visible':'hidden',
+    }
+    const mouseDown = (e:MouseEvent<HTMLDivElement>) => {
+        let pos = position
+        const dragger = (e) => {
+            let trans = new Point(e.movementX,e.movementY)
+            pos = pos.add(trans)
+            setPosition(pos)
+        }
+        const upper = (e) => {
+            window.removeEventListener('mousemove',dragger)
+            window.removeEventListener('mouseup',upper)
+        }
+        window.addEventListener('mousemove', dragger)
+        window.addEventListener('mouseup',upper)
+    }
+    return <div className={'floating-palette'} style={style}
+                onMouseDown={mouseDown}>
+        <header>tools</header>
+        {props.children}
+    </div>
 }
 
 export function PageView(props:{page:any, state:GlobalState}) {
@@ -119,31 +148,25 @@ export function PageView(props:{page:any, state:GlobalState}) {
         }
     }
 
+    let pal_vis = false
+    const handler_commands = handler.getPaletteCommands()
+    if(handler_commands) {
+        pal_vis = true
+    }
+
     const startNewPath = () => {
         const shape = state.om.make(PathShapeDef,{points:[]}) as PathShapeClass
         const page = state.getCurrentPage()
         page.appendListProp('children',shape)
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }
-    const finishNewPath = () => {
-        if(handler instanceof PathShapeEditHandler) {
-            setHandler(new DragHandler())
-        }
-    }
-    const enterDeleteMode = () => {
-        if(handler instanceof PathShapeEditHandler) {
-            handler.enterDeleteMode()
-        }
-    }
-
     const dom_size = size.scale(1/window.devicePixelRatio)
     return <div className={'panel page-view'}>
         <HBox>
             <label>{size.w} x {size.h}</label>
             <button onClick={startNewPath}>draw path</button>
-            <button onClick={finishNewPath}>done</button>
-            <button onClick={enterDeleteMode}>delete</button>
         </HBox>
+        <FloatingPalette visible={pal_vis}>{handler_commands}</FloatingPalette>
         <canvas
             ref={canvasRef as any}
             width={size.w}

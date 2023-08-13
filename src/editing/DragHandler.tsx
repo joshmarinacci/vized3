@@ -131,4 +131,8 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
         let chs = page.getListProp('children') as DrawableClass<any>[]
         return chs.filter(obj => obj.intersects(dragRect))
     }
+
+    getPaletteCommands(): any {
+        return null
+    }
 }
