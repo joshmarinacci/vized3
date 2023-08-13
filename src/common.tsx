@@ -1,11 +1,20 @@
-import React, {CSSProperties, JSX, ReactNode, useEffect, useState} from "react";
-import {toClass} from "josh_react_util";
+import React, {
+    CSSProperties,
+    JSX,
+    MouseEvent,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState
+} from "react";
+import {PopupContext, toClass} from "josh_react_util";
 import {Observable} from "./models/model";
 import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
 import {MenuAction} from "./actions";
 import {GlobalState} from "./models/state";
 import './common.css';
 import {SupportedIcons} from "./icons";
+import {Point} from "josh_js_util";
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -117,4 +126,19 @@ export function MenuActionButton(props: { action: MenuAction, state: GlobalState
     }
     return <MenuButton
         onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>
+}
+
+export function DropdownMenuButton(props: {
+    title: string,
+    items: MenuAction[],
+    state: GlobalState
+}) {
+    const {title, items, state} = props
+    const pm = useContext(PopupContext)
+    const showMenu = (e: MouseEvent<HTMLButtonElement>) => {
+        const menu = <MenuBox>{items.map((m, i) => <MenuActionButton key={i} action={m}
+                                                                     state={state}/>)}</MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0, 0))
+    }
+    return <button onClick={showMenu}>{title}</button>
 }

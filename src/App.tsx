@@ -1,4 +1,4 @@
-import React, {MouseEvent, useContext, useState} from 'react';
+import React, {useContext, useState} from 'react';
 import {
     DialogContainer,
     DialogContext,
@@ -15,10 +15,9 @@ import {TreeView} from "./TreeView";
 import {PageView,} from "./editing/PageView";
 import {PropSheet} from "./PropSheet";
 import {
+    DropdownMenuButton,
     IconButton,
     MainLayout,
-    MenuActionButton,
-    MenuBox,
     ToggleIconButton,
     useObjectManagerChange,
     useObservableChange
@@ -32,15 +31,27 @@ import {
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
+    MenuAction,
+    NewDocumentAction,
     SavePNGJSONAction
 } from "./actions";
 import {LoadFileDialog} from "./LoadFileDialog";
 import {SettingsDialog} from "./SettingsDialog";
-import {Point} from "josh_js_util";
 import {SupportedIcons} from "./icons";
 import {ActionSearchBox} from "./actionsearch";
 
 const state = new GlobalState()
+
+const UploadDocumentAction:MenuAction = {
+    title:"Upload Document",
+    icon:SupportedIcons.UploadDocument,
+    tags:['upload','document'],
+    description: "upload document from disk in JSON or PNG JSON form",
+    perform: async (state) => {
+        const dialog = <LoadFileDialog state={state}/>
+        console.log("made dialog",dialog)
+    }
+}
 
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
@@ -50,28 +61,21 @@ function Main() {
     const dm = useContext(DialogContext)
     const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
     const pm = useContext(PopupContext)
-    const showFileMenu = (e:MouseEvent<HTMLButtonElement>) => {
-        const menu = <MenuBox>
-            <MenuActionButton state={state} action={SavePNGJSONAction}/>
-            <MenuActionButton state={state} action={DownloadPNGAction}/>
-            <MenuActionButton state={state} action={DownloadSVGAction}/>
-            <MenuActionButton state={state} action={ExportCanvasJSAction}/>
-        </MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0,0))
-    }
-    const showAddMenu = (e:MouseEvent<HTMLButtonElement>) => {
-        const menu = <MenuBox>
-            <MenuActionButton action={AddNewRectAction} state={state} />
-            <MenuActionButton action={AddNewCircleAction} state={state}/>
-            <MenuActionButton action={AddNewPathShapeAction} state={state}/>
-        </MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0,0))
-    }
     return (<FillPage>
         <HBox className={'toolbar'}>
-            <button onClick={showFileMenu}>File</button>
-            <button onClick={showAddMenu}>Add</button>
-            <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{  console.log("pretending to make new document");  }}>new</IconButton>
+            <DropdownMenuButton title={'File'} state={state} items={[
+                NewDocumentAction,
+                // UploadDocumentAction,
+                SavePNGJSONAction,
+                DownloadPNGAction,
+                DownloadSVGAction,
+                ExportCanvasJSAction
+            ]}/>
+            <DropdownMenuButton title={'Add'} state={state} items={[
+                AddNewRectAction,
+                AddNewCircleAction,
+                AddNewPathShapeAction
+            ]}/>
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
@@ -95,8 +99,6 @@ function Main() {
                 selected={!leftVisible}
             />
             <Spacer/>
-            {/*<IconButton name={SupportedIcons.RightPanelCloseIcon}*/}
-            {/*            onClick={() => setRightVisible(!rightVisible)}/>*/}
             <ToggleIconButton
                 regularIcon={SupportedIcons.RightPanelCloseIcon}
                 selectedIcon={SupportedIcons.RightPanelOpenIcon}

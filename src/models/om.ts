@@ -10,6 +10,7 @@ export type PropSchema = {
     custom?:'css-color',
     subProps?:Record<string,PropSchema>,
     setter?:PropSetter,
+    hidden?:boolean,
 }
 
 export const CenterPositionDef:PropSchema = {
@@ -373,7 +374,7 @@ class AppendListEvent<T> implements HistoryEvent {
         const list = this.target.getPropValue(this.prop.name)
         const oldList = list.slice()
         list.push(this.obj)
-        this.obj.setParent(this.target)
+        if(this.obj.setParent) this.obj.setParent(this.target)
         const newList = list.slice()
         this.oldValue = oldList
         this.newValue = newList

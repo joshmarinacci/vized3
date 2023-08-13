@@ -1,5 +1,5 @@
 import {GlobalState} from "./models/state";
-import {ObjectProxy} from "./models/om";
+import {DocClass, DocDef, ObjectProxy, PageDef} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 import {savePNGJSON} from "./exporters/json";
 import {exportPNG} from "./exporters/png";
@@ -213,8 +213,21 @@ export const VCenterAlignShapes: MenuAction = {
     }
 }
 
+export const NewDocumentAction: MenuAction = {
+    title: 'New Document',
+    icon: SupportedIcons.NewDocument,
+    tags: ['new', 'document'],
+    description: 'create a new empty document',
+    perform: async (state) => {
+        const doc = state.om.make(DocDef, {}) as DocClass
+        const page = state.om.make(PageDef, {})
+        doc.appendListProp('pages', page)
+        state.swapDoc(doc)
+    }
+}
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,
+    NewDocumentAction,
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
