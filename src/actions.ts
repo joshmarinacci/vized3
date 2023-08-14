@@ -9,7 +9,7 @@ import {SupportedIcons} from "./icons";
 import {RectDef} from "./models/rect";
 import {CircleDef} from "./models/circle";
 import {PathShapeDef} from "./models/pathshape";
-import {NGonDef} from "./models/ngon";
+import {NGonClass, NGonDef} from "./models/ngon";
 
 export type MenuAction = {
     title:string
@@ -228,6 +228,27 @@ export const NewDocumentAction: MenuAction = {
         state.swapDoc(doc)
     }
 }
+
+export const ConvertNGonToPath:MenuAction = {
+    title:'Convert to Path',
+    icon:SupportedIcons.Settings,
+    tags:['path','convert','ngon'],
+    description:"convert an N-gon shape to an editable path",
+    perform: async (state) => {
+        const page = state.getSelectedPage()
+        if (!page) return console.warn("no page selected")
+        let ngon = state.getSelectedObjects()[0] as NGonClass
+        let line_path = ngon.toSinglePath()
+        const parent = ngon.parent as unknown as any
+        await parent.removeListPropByValue('children', ngon)
+        let path = state.om.make(PathShapeDef,{
+            points:line_path.points,
+            closed: line_path.closed
+        })
+        page.appendListProp('children', path)
+    }
+};
+
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,
     NewDocumentAction,

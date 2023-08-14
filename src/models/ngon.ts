@@ -161,4 +161,46 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
         let center = this.getPropValue('center') as Point
         await this.setPropValue('center', center.add(offset))
     }
+
+    toSinglePath():LinePath {
+        let path = new LinePath()
+        let n = this.getPropValue('sides') as number
+        let r = this.getPropValue('radius') as number
+        let c = this.getPropValue('center') as Point
+        let r2 = this.getPropValue('starRadius') as number
+        if(this.getPropValue('star')) {
+            for (let i = 0; i < n*2; i++) {
+                let theta = i * Math.PI * 2 / (n*2)
+                let x = Math.sin(theta)
+                let y = Math.cos(theta)
+                let rr = (i%2 === 0)?r:r2
+                path.addPoint(new Point(x*rr + c.x, y*rr + c.y))
+            }
+        } else {
+            for (let i = 0; i < n; i++) {
+                let theta = i * Math.PI * 2 / n
+                let x = Math.sin(theta) * r
+                let y = Math.cos(theta) * r
+                path.addPoint(new Point(x + c.x, y + c.y))
+            }
+        }
+        path.close()
+        return path
+    }
+}
+
+export class LinePath {
+    points: Point[];
+    closed:boolean
+    constructor() {
+        this.points = []
+        this.closed = false
+    }
+    addPoint(point: Point) {
+        this.points.push(point)
+    }
+
+    close() {
+        this.closed = true
+    }
 }

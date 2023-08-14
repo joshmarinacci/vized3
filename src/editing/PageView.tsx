@@ -9,9 +9,11 @@ import {
     AddNewNGonAction,
     AddNewRectAction,
     BottomAlignShapes,
+    ConvertNGonToPath,
     DeleteSelection,
     HCenterAlignShapes,
     LeftAlignShapes,
+    MenuAction,
     RightAlignShapes,
     TopAlignShapes,
     VCenterAlignShapes
@@ -21,6 +23,7 @@ import {canvasToModel, findShapeInPage, MouseHandlerProtocol} from "./editing"
 import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
 import {DragHandler} from "./DragHandler"
 import "./PageView.css"
+import {NGonClass} from "../models/ngon";
 
 function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillStyle = 'red'
@@ -58,12 +61,12 @@ function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
     }
     const mouseDown = (e:MouseEvent<HTMLDivElement>) => {
         let pos = position
-        const dragger = (e) => {
+        const dragger = (e:any) => {
             let trans = new Point(e.movementX,e.movementY)
             pos = pos.add(trans)
             setPosition(pos)
         }
-        const upper = (e) => {
+        const upper = (e:any) => {
             window.removeEventListener('mousemove',dragger)
             window.removeEventListener('mouseup',upper)
         }
@@ -116,24 +119,35 @@ export function PageView(props:{page:any, state:GlobalState}) {
         let pt = canvasToModel(e)
         await handler.mouseUp(pt, e, props.state)
         e.preventDefault()
-        let extras = <></>
+        let items:MenuAction[] = []
         if(props.state.getSelectedObjects().length > 1) {
-            extras = <>
-                <MenuActionButton action={LeftAlignShapes} state={props.state}/>
-                <MenuActionButton action={RightAlignShapes} state={props.state}/>
-                <MenuActionButton action={TopAlignShapes} state={props.state}/>
-                <MenuActionButton action={BottomAlignShapes} state={props.state}/>
-                <MenuActionButton action={VCenterAlignShapes} state={props.state}/>
-                <MenuActionButton action={HCenterAlignShapes} state={props.state}/>
-            </>
+            items = items.concat([
+                LeftAlignShapes,
+                RightAlignShapes,
+                TopAlignShapes,
+                BottomAlignShapes,
+                VCenterAlignShapes,
+                HCenterAlignShapes,
+            ])
         }
-        const menu = <MenuBox>
-            <MenuActionButton state={props.state} action={AddNewRectAction}/>
-            <MenuActionButton state={props.state} action={AddNewCircleAction}/>
-            <MenuActionButton state={props.state} action={AddNewNGonAction}/>
-            <MenuActionButton state={props.state} action={DeleteSelection}/>
-            {extras}
-        </MenuBox>
+
+        if(props.state.getSelectedObjects().length === 1) {
+            let sel = props.state.getSelectedObjects()[0]
+            if(sel instanceof NGonClass) {
+                items.push(ConvertNGonToPath)
+            }
+        }
+
+        items = items.concat([
+            AddNewRectAction,
+            AddNewCircleAction,
+            AddNewNGonAction,
+            DeleteSelection
+        ])
+
+        const menu = <MenuBox>{items.map((act,i) => {
+                    return <MenuActionButton action={act} state={props.state}/>
+                })}</MenuBox>
         let elem = e.target as HTMLElement
         let dim = new Size(elem.clientWidth,elem.clientHeight)
         pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
