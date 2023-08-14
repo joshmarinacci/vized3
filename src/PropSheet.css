@@ -1,0 +1,17 @@
+.color-picker {
+    border: 1px solid red;
+    background-color: white;
+    display: flex;
+    flex-direction: row;
+    max-width: 200px;
+    flex-wrap: wrap;
+}
+.color-picker button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid black;
+    margin: 0;
+}
+.color-picker button.selected {
+    border: 1px solid white;
+}

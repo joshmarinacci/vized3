@@ -1,9 +1,10 @@
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import {GlobalState} from "./models/state";
 import {ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
-import {TabbedPanel} from "josh_react_util";
-import {SwatchesPicker} from "react-color";
+import {PopupContext, toClass} from "josh_react_util";
 import {useObjectProxyChange, useObservableChange} from "./common";
+import "./PropSheet.css"
+import {MINECRAFT} from "./exporters/common";
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
     const value = props.target.getPropValue(props.schema.name)
@@ -53,43 +54,46 @@ function SubPropEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
     </>
 }
 
-type CB = () => any
-function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<any>, onClick:CB}) {
+function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<any>, onClick:any}) {
     return <div className={'color-swatch-button'}>
         <button
             className={'color-swatch-button'}
             style={{backgroundColor:props.target.getPropValue(props.schema.name) as string}}
             onClick={props.onClick}
-        >&nbsp;</button>
-        {/*<label>{objToHsla(props.color)}</label>*/}
+        />
     </div>
 }
 
+
+
+export function SwatchColorPicker(props:{colors:string[], selected:string, onSelect:(hex:string)=>void}) {
+    return <div className={'color-picker'}>
+        {props.colors.map((color,i) => {
+            return <button className={toClass({
+                selected:props.selected === color
+            })} key={i} style={{
+                backgroundColor:color,
+            }} onClick={() => {
+                props.onSelect(color)
+            }}/>
+        })}
+    </div>
+}
 
 function FillInput(props:{ schema: PropSchema, target:ObjectProxy<any>}) {
     const { schema, target } = props
     const value = props.target.getPropValue(props.schema.name)
     const [visible, setVisible] = useState(false)
-    const show:CB = () => setVisible((!visible))
+    const show = () => setVisible((!visible))
+    const pm = useContext(PopupContext)
     return <>
         <label>{props.schema.name}</label>
-        <div className={'color-picker-wrapper'}>
-        <FillSwatchButton schema={props.schema} target={target} onClick={show}/>
-        {visible && (
-        <div className={'popover'}>
-        <TabbedPanel titles={['swatches','other']}>
-            <SwatchesPicker color={value} onChange={async (e) => {
-                await target.setPropValue(props.schema.name, e.hex)
-            }}/>
-            <button>Hello</button>
-        </TabbedPanel>
-        <button style={{
-            position:'absolute',
-            top:'0',
-            right:'0',
-        }} onClick={show}>x</button>
-    </div>)}
-        </div>
+        {/*<div className={'color-picker-wrapper'}>*/}
+        <FillSwatchButton schema={props.schema} target={target} onClick={(e:MouseEvent) => {
+            pm.show_at(<SwatchColorPicker colors={MINECRAFT} selected={value} onSelect={async (hex: string) => {
+                await target.setPropValue(props.schema.name, hex)
+            }}/>,e.target, "below")
+        }}/>
     </>
 }
 
