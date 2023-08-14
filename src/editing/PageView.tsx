@@ -31,8 +31,10 @@ function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillRect(p.x-10,p.y-10,20,20)
 }
 
-function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:MouseHandlerProtocol) {
+function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:MouseHandlerProtocol, scale:number) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.save()
+    ctx.scale(scale,scale)
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,canvas.width,canvas.height)
     page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(ctx))
@@ -50,6 +52,7 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalSta
             if(h) drawHandle(ctx,h)
         }
     }
+    ctx.restore()
 }
 
 function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
@@ -82,12 +85,14 @@ function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
 
 export function PageView(props:{page:any, state:GlobalState}) {
     const {page, state} = props
-    const [size, setSize] = useState(() => new Size(800, 600));
+    const [size, setSize] = useState(() => new Size(1200, 800));
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
+    const [zoomLevel, setZoomLevel ] = useState(0)
+    const scale = Math.pow(2,zoomLevel)
 
     const redraw = () => {
-        if(canvasRef.current) drawCanvas(canvasRef.current, props.page, props.state, handler)
+        if(canvasRef.current) drawCanvas(canvasRef.current, props.page, props.state, handler, scale)
     }
     useEffect(() => redraw())
     useObjectProxyChange(props.page,FamilyPropChanged)
@@ -103,20 +108,20 @@ export function PageView(props:{page:any, state:GlobalState}) {
         return () => handler.removeEventListener('redraw', hand)
     }, [handler])
     const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        let pt = canvasToModel(e).scale(1/scale)
         await handler.mouseDown(pt, e, props.state)
     }
     const onMouseMove = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        let pt = canvasToModel(e).scale(1/scale)
         await handler.mouseMove(pt,e,props.state)
     }
     const onMouseUp = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        let pt = canvasToModel(e).scale(1/scale)
         await handler.mouseUp(pt, e, props.state)
     }
     const pm = useContext(PopupContext)
     const showContextMenu = async (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        let pt = canvasToModel(e).scale(1/scale)
         await handler.mouseUp(pt, e, props.state)
         e.preventDefault()
         let items:MenuAction[] = []
@@ -153,7 +158,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
         pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
     }
     const onDoubleClick = (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        let pt = canvasToModel(e).scale(1/scale)
         const page = props.state.getSelectedPage();
         if(!page) return
         let shape = findShapeInPage(page,pt)
@@ -177,10 +182,15 @@ export function PageView(props:{page:any, state:GlobalState}) {
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }
     const dom_size = size.scale(1/window.devicePixelRatio)
+    const zoomIn = () => setZoomLevel(zoomLevel - 1)
+    const zoomOut = () => setZoomLevel(zoomLevel + 1)
     return <div className={'panel page-view'}>
         <HBox>
             <label>{size.w} x {size.h}</label>
             <button onClick={startNewPath}>draw path</button>
+            <button onClick={zoomIn}>-</button>
+            <label>{zoomLevel}</label>
+            <button onClick={zoomOut}>+</button>
         </HBox>
         <FloatingPalette visible={pal_vis}>{handler_commands}</FloatingPalette>
         <canvas
