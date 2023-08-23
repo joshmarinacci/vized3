@@ -61,6 +61,14 @@ class ScaledDrawingSurface implements ScaledSurface {
     strokeRect(bounds: Bounds) {
         this.ctx.strokeRect(bounds.x*this.scale, bounds.y*this.scale, bounds.w*this.scale, bounds.h*this.scale)
     }
+    fillRoundRect(bounds: Bounds, radius: number, fill: any) {
+        this.ctx.fillStyle = fill
+        this.ctx.beginPath()
+        this.ctx.roundRect(bounds.left()*this.scale, bounds.top()*this.scale, bounds.w*this.scale, bounds.h*this.scale, radius*this.scale)
+        this.ctx.closePath()
+        this.ctx.fill()
+    }
+
     fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
         this.ctx.fillStyle = fill
         this.ctx.beginPath()

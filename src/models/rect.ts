@@ -6,6 +6,7 @@ import {
     NameDef,
     ObjectDef,
     ObjectManager,
+    ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
 } from "./om";
@@ -100,38 +101,32 @@ export class RectClass extends DrawableClass<typeof RectDef> {
         super(om, RectDef, opts)
     }
 
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
+    drawSelf(ctx: ScaledSurface): void {
         if (this.props.roundedCornersEnabled) {
-            let b = this.props.bounds
-            let r = this.props.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(), b.top(), b.w, b.h, r)
-            ctx.closePath()
-            ctx.fill()
+            ctx.fillRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.fill)
         } else {
-            ctx.fillRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
+            ctx.fillRect(this.props.bounds, this.props.fill)
         }
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        if (this.props.roundedCornersEnabled) {
-            let b = this.props.bounds
-            let r = this.props.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(), b.top(), b.w, b.h, r)
-            ctx.closePath()
-            ctx.stroke()
-        } else {
-            ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
-        }
+        // ctx.strokeStyle = this.props.strokeFill
+        // ctx.lineWidth = this.props.strokeWidth
+        // if (this.props.roundedCornersEnabled) {
+        //     let b = this.props.bounds
+        //     let r = this.props.roundedCornersRadius
+        //     ctx.beginPath()
+        //     ctx.roundRect(b.left(), b.top(), b.w, b.h, r)
+        //     ctx.closePath()
+        //     ctx.stroke()
+        // } else {
+        //     ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
+        // }
     }
 
     contains(pt: Point): boolean {
         return this.props.bounds.contains(pt)
     }
 
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
+    drawSelected(ctx: ScaledSurface): void {
+        ctx.strokeRect(this.props.bounds)
     }
 
     getHandle(): Handle {
