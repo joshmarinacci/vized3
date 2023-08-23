@@ -1,6 +1,6 @@
 import React, {useContext, useState} from "react";
 import {GlobalState} from "./models/state";
-import {ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
+import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
 import {PopupContext, toClass} from "josh_react_util";
 import {useObjectProxyChange, useObservableChange} from "./common";
 import "./PropSheet.css"
@@ -65,7 +65,6 @@ function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<any>, on
 }
 
 
-
 export function SwatchColorPicker(props:{colors:string[], selected:string, onSelect:(hex:string)=>void}) {
     return <div className={'color-picker'}>
         {props.colors.map((color,i) => {
@@ -107,11 +106,29 @@ function BooleanEditor(props: { schema: PropSchema, target: ObjectProxy<any> }) 
     </>
 }
 
+function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<any> }) {
+    const value = props.target.getPropValue(props.schema.name)
+    const sch = props.schema as EnumSchema
+    const set_value = async (e:React.ChangeEvent<HTMLSelectElement>) => {
+        await props.target.setPropValue(props.schema.name, e.target.value)
+    }
+    return <>
+        <label>{sch.name}</label>
+        <select value={value} onChange={set_value}>
+            {sch.possibleValues.map(val => {
+                return <option key={val} value={val}>{sch.renderer(props.target, sch.name, val)}</option>
+            })}
+        </select>
+    </>
+
+}
+
 function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
     const { prop, target } = props
     if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
     if(prop.hidden) return <></>
     if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)+""}</b></>
+    if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
     if(prop.base === 'number') return <NumberEditor schema={prop} target={target}/>
     if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>

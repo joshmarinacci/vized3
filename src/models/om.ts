@@ -1,16 +1,26 @@
-import {Bounds, genId, Point} from "josh_js_util";
+import {Bounds, genId, Point, Size} from "josh_js_util";
+import {lookup_name, Unit} from "./unit";
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
+export type PropRenderer = (oldObj:any, propname:string, propvalue:any) => any
+export type PropLoader = (obj:JSONObject, propname:string, propvalue:any) => any
 
 export type PropSchema = {
     name: string,
-    base: 'number' | 'string' | 'object' | 'list' | 'boolean',
+    base: 'number' | 'string' | 'object' | 'list' | 'boolean' | 'enum',
     defaultValue:any,
     readonly:boolean,
     custom?:'css-color',
     subProps?:Record<string,PropSchema>,
     setter?:PropSetter,
     hidden?:boolean,
+}
+
+export type EnumSchema = PropSchema & {
+    base:'enum'
+    possibleValues:any[]
+    renderer:PropRenderer,
+    fromJSONValue:PropLoader,
 }
 
 export const CenterPositionDef:PropSchema = {
@@ -41,6 +51,34 @@ export const CenterPositionDef:PropSchema = {
     defaultValue: new Point(0, 0)
 }
 
+export const SizeDef:PropSchema = {
+    name:'size',
+    base:'object',
+    readonly:false,
+    subProps: {
+        w: {
+            name:'w',
+            base:'number',
+            readonly:false,
+            defaultValue: 8.5,
+        },
+        h: {
+            name:'h',
+            base:"number",
+            readonly:false,
+            defaultValue: 11,
+        }
+    },
+    setter: (obj, name, value) => {
+        let s_old =obj as Size
+        let snew = new Size(s_old.w,s_old.h)
+        // @ts-ignore
+        snew[name] = value
+        return snew
+    },
+    defaultValue: new Size(8.5,11)
+}
+
 export const FillDef:PropSchema = {
     name:'fill',
     base: 'string',
@@ -67,6 +105,20 @@ export const NameDef:PropSchema = {
     readonly:false,
     defaultValue: 'unnamed',
 }
+export const UnitDef:EnumSchema = {
+    name:'unit',
+    base:'enum',
+    readonly: false,
+    possibleValues: Object.keys(Unit),
+    defaultValue: Unit.Inch,
+    renderer: (target, name, value:keyof typeof Unit) => {
+        return Unit[value] + "o"
+    },
+    fromJSONValue: (o,n,v) => {
+        return lookup_name(v)
+    }
+}
+
 export type ObjectDef = {
     name: string,
     props: Record<string, PropSchema>,
@@ -76,6 +128,7 @@ export const DocDef:ObjectDef = {
     name:'document',
     props: {
         name: NameDef,
+        unit: UnitDef,
         pages: {
             name:'pages',
             base:'list',
@@ -88,6 +141,7 @@ export const PageDef: ObjectDef = {
     name: 'page',
     props: {
         name: NameDef,
+        size: SizeDef,
         children: {
             name: 'children',
             base: 'list',
@@ -296,6 +350,10 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
                 json.props[prop.name] = val.toJSON()
                 return
             }
+            if (val instanceof Size) {
+                json.props[prop.name] = { w: val.w, h: val.h}
+                return
+            }
             throw new Error(`unhandled toJSON object type ${prop.name}`)
         }
         if(prop.base === 'number') {
@@ -303,6 +361,10 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
             return
         }
         if(prop.base === 'boolean') {
+            json.props[prop.name] = obj.getPropValue(prop.name)
+            return
+        }
+        if(prop.base === 'enum') {
             json.props[prop.name] = obj.getPropValue(prop.name)
             return
         }
@@ -316,6 +378,12 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
     const props: Record<string, any> = {}
     for (let key of Object.keys(def.props)) {
         const propSchema = def.props[key]
+        if (propSchema.base === 'enum') {
+            const schema = propSchema as EnumSchema
+            const nv = schema.fromJSONValue(obj,key,obj.props[key])
+            props[key] = nv
+            continue
+        }
         if (propSchema.base === 'string') {
             props[key] = obj.props[key]
             continue
@@ -344,6 +412,11 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
             }
             if (key === 'center') {
                 props[key] = Point.fromJSON(obj.props[key])
+                continue
+            }
+            if (key === 'size') {
+                let v = obj.props[key]
+                props[key] = new Size(v.w,v.h)
                 continue
             }
         }
@@ -428,7 +501,6 @@ class SetListItemEvent<T> implements HistoryEvent {
         return Promise.resolve(undefined);
     }
 }
-
 class InsertListItemEvent<T> implements HistoryEvent {
     uuid: string;
     private target: ObjectProxy<ObjectDef>;
@@ -481,7 +553,6 @@ class RemoveListItemEvent<T> implements HistoryEvent {
         return Promise.resolve(undefined);
     }
 }
-
 class DeleteListEvent<T> implements HistoryEvent {
     target: ObjectProxy<any>
     def: ObjectDef
@@ -550,7 +621,6 @@ class CreateObjectEvent<T extends ObjectDef> implements HistoryEvent {
         await this.om.removeObject(this.target)
     }
 }
-
 class DeleteObjectEvent<T> implements HistoryEvent {
     desc: string;
     uuid: string;
