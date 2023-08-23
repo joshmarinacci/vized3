@@ -1,8 +1,24 @@
-import React, {MouseEvent, ReactNode, useContext, useEffect, useRef, useState} from "react";
+import React, {
+    CSSProperties,
+    MouseEvent,
+    ReactNode,
+    useContext,
+    useEffect,
+    useRef,
+    useState
+} from "react";
 import {Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "../models/state";
-import {DrawableClass, DrawableShape, FamilyPropChanged, Handle, PageClass} from "../models/om";
+import {
+    DocClass,
+    DrawableClass,
+    DrawableShape,
+    FamilyPropChanged,
+    Handle,
+    PageClass,
+    PropChanged
+} from "../models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common";
 import {
     AddNewCircleAction,
@@ -24,6 +40,7 @@ import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
 import {DragHandler} from "./DragHandler"
 import "./PageView.css"
 import {NGonClass} from "../models/ngon";
+import {size_to_pixels, Unit} from "../models/unit";
 
 function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
     ctx.fillStyle = 'red'
@@ -57,7 +74,7 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalSta
 
 function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
     const [position, setPosition] = useState(new Point(0,0))
-    const style = {
+    const style:CSSProperties = {
         top: `${position.y}px`,
         left: `${position.x}px`,
         visibility: props.visible?'visible':'hidden',
@@ -83,9 +100,10 @@ function FloatingPalette(props: { children: ReactNode, visible:boolean }) {
     </div>
 }
 
-export function PageView(props:{page:any, state:GlobalState}) {
-    const {page, state} = props
-    const [size, setSize] = useState(() => new Size(1200, 800));
+export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}) {
+    const {doc, page, state} = props
+    const pageSize:Size = page.getPropValue('size')
+    const docUnit:Unit = doc.getPropValue('unit')
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     const [zoomLevel, setZoomLevel ] = useState(0)
@@ -97,6 +115,7 @@ export function PageView(props:{page:any, state:GlobalState}) {
     useEffect(() => redraw())
     useObjectProxyChange(props.page,FamilyPropChanged)
     useObservableChange(props.state,'selection')
+    useObjectProxyChange(props.doc,PropChanged)
     useEffect(() => {
         const hand = () => setHandler(new DragHandler())
         handler.addEventListener('done', hand)
@@ -181,12 +200,13 @@ export function PageView(props:{page:any, state:GlobalState}) {
         page.appendListProp('children',shape)
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }
+    const size = size_to_pixels(page.getPropValue('size'),doc.getPropValue('unit'))
     const dom_size = size.scale(1/window.devicePixelRatio)
     const zoomIn = () => setZoomLevel(zoomLevel - 1)
     const zoomOut = () => setZoomLevel(zoomLevel + 1)
     return <div className={'panel page-view'}>
         <HBox>
-            <label>{size.w} x {size.h}</label>
+            <label>{pageSize.w} {docUnit} x {pageSize.h} {docUnit}</label>
             <button onClick={startNewPath}>draw path</button>
             <button onClick={zoomIn}>-</button>
             <label>{zoomLevel}</label>

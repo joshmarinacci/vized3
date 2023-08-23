@@ -47,7 +47,7 @@ export class GlobalState extends ObservableBase {
         return this._doc
     }
 
-    getCurrentPage() {
+    getCurrentPage():PageClass {
         return this.current_page
     }
 

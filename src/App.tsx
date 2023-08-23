@@ -90,7 +90,7 @@ function Main() {
             rightVisible={rightVisible}
             leftVisible={leftVisible}
             left={<TreeView state={state}/>}
-            center={<PageView page={state.getCurrentPage()} state={state}/>}
+            center={<PageView doc={state.getCurrentDocument()} page={state.getCurrentPage()} state={state}/>}
             right={<PropSheet state={state}/>}
         />
         <HBox>
