@@ -112,7 +112,7 @@ export const UnitDef:EnumSchema = {
     possibleValues: Object.keys(Unit),
     defaultValue: Unit.Inch,
     renderer: (target, name, value:keyof typeof Unit) => {
-        return Unit[value] + "o"
+        return Unit[value]
     },
     fromJSONValue: (o,n,v) => {
         return lookup_name(v)
@@ -155,10 +155,21 @@ export interface Handle {
     setPosition(pos: Point): Promise<void>;
     contains(pt: Point): boolean;
 }
+
+export interface ScaledSurface {
+    fillRect(bounds: Bounds, fill: "string"): void;
+    strokeRect(bounds: Bounds): void;
+    fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+    fillText(text: string, center: Point, fill: string, fontSize: number): void;
+    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string): void;
+    strokeLinePath(position: Point, points: Point[], closed: boolean): void;
+}
+
 export interface DrawableShape {
-    drawSelf(ctx:CanvasRenderingContext2D):void
+    drawSelf(ctx:ScaledSurface):void
     contains(pt:Point):boolean
-    drawSelected(ctx:CanvasRenderingContext2D):void
+    drawSelected(ctx:ScaledSurface):void
     getHandle():Handle|null
     intersects(bounds:Bounds):boolean
     getPosition():Point
@@ -286,8 +297,8 @@ export class ObjectProxy<T extends ObjectDef> {
 
 export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> implements DrawableShape {
     abstract contains(pt: Point): boolean;
-    abstract drawSelected(ctx: CanvasRenderingContext2D): void;
-    abstract drawSelf(ctx: CanvasRenderingContext2D): void;
+    abstract drawSelected(ctx: ScaledSurface): void;
+    abstract drawSelf(ctx: ScaledSurface): void;
     abstract getHandle(): Handle | null;
     abstract intersects(bounds: Bounds): boolean;
     abstract getPosition(): Point;

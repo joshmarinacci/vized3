@@ -7,6 +7,7 @@ import {
     NameDef,
     ObjectDef,
     ObjectManager,
+    ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
 } from "./om";
@@ -62,24 +63,16 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
         super(om, CircleDef, opts)
     }
 
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
-        ctx.beginPath()
-        ctx.arc(this.props.center.x, this.props.center.y, this.props.radius, 0, toRadians(360))
-        ctx.fill()
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        ctx.stroke()
+    drawSelf(ctx: ScaledSurface): void {
+        ctx.fillArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
     }
 
     contains(pt: Point): boolean {
         return pt.subtract(this.props.center).magnitude() < this.props.radius
     }
 
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.beginPath()
-        ctx.arc(this.props.center.x, this.props.center.y, this.props.radius, 0, toRadians(360))
-        ctx.stroke()
+    drawSelected(ctx: ScaledSurface): void {
+        ctx.strokeArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
     }
 
     getHandle(): Handle {

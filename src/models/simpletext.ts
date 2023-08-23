@@ -6,7 +6,8 @@ import {
     NameDef,
     ObjectDef,
     ObjectManager,
-    PropSchema
+    PropSchema,
+    ScaledSurface
 } from "./om";
 
 export const SimpleTextDef: ObjectDef = {
@@ -57,15 +58,14 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
         return bds.contains(pt)
     }
 
-    drawSelected(ctx: CanvasRenderingContext2D): void {
+    drawSelected(ctx: ScaledSurface): void {
         let h = this.calcHeight()
-        ctx.strokeRect(this.props.center.x, this.props.center.y - h, this.metrics.width, h)
+        let bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width,h)
+        ctx.strokeRect(bds)
     }
 
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.props.fill
-        ctx.font = this.calcFont()
-        ctx.fillText(this.props.text, this.props.center.x, this.props.center.y)
+    drawSelf(ctx: ScaledSurface): void {
+        ctx.fillText(this.props.text,this.props.center,this.props.fill,this.props.fontSize)
     }
 
     refresh(prop: PropSchema) {

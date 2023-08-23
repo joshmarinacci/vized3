@@ -3,6 +3,7 @@ import {
     DrawableClass,
     FillDef, Handle, NameDef,
     ObjectDef, ObjectManager,
+    ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
 } from "./om";
@@ -27,9 +28,9 @@ export const PathShapeDef: ObjectDef = {
             base:'list',
             readonly: true,
             defaultValue:() => [
-                new Point(50,50),
-                new Point(100,80),
-                new Point(80,100),
+                new Point(0,0),
+                new Point(3,2),
+                new Point(1,4),
             ],
             hidden:true
         },
@@ -47,23 +48,18 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
         super(om, PathShapeDef, opts)
     }
 
-    drawSelf(ctx: CanvasRenderingContext2D): void {
+    drawSelf(ctx: ScaledSurface): void {
         if(this.props.points.length < 2) return
-        ctx.fillStyle = this.props.fill
-        this.drawPath(ctx)
-        if(this.props.filled) ctx.fill()
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        ctx.stroke()
+        ctx.fillLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.filled,this.props.fill)
     }
 
     contains(pt: Point): boolean {
         return this.calcBounds().contains(pt)
     }
 
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        this.drawPath(ctx)
-        ctx.stroke()
+    drawSelected(ctx: ScaledSurface): void {
+        if(this.props.points.length < 2) return
+        ctx.strokeLinePath(this.getPosition(),this.props.points,this.props.closed)
     }
 
     getHandle(): Handle | null {

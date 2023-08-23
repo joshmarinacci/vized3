@@ -8,11 +8,13 @@ import {
     Handle,
     ObjectDef,
     ObjectProxy,
-    PageClass
+    PageClass,
+    ScaledSurface
 } from "../models/om";
+import {distance_to_pixels, Unit} from "../models/unit";
 
 export interface MouseHandlerProtocol extends Observable {
-    drawOverlay(ctx: CanvasRenderingContext2D, state: GlobalState): void
+    drawOverlay(ctx: ScaledSurface, state: GlobalState): void
 
     mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void>
 
@@ -28,7 +30,12 @@ export function findHandleInPage(page: PageClass, pt: Point, state: GlobalState)
     for (let sel of selected) {
         if (sel instanceof DrawableClass) {
             let h = sel.getHandle()
-            if (h && h.contains(pt)) return h
+            if (h) {
+                let dist = h.getPosition().distance(pt)
+                let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+                const v = distance_to_pixels(dist,unit)
+                if(v < 10) return h
+            }
         }
     }
     return null
