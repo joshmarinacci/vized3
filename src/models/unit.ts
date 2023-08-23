@@ -40,3 +40,12 @@ export function distance_to_pixels(value:number, unit:Unit):number {
     }
     throw new Error(`cannot convert unit ${unit}`)
 }
+export function lookup_dpi(unit: Unit) {
+    if(unit === Unit.Inch) {
+        return 96
+    }
+    if(unit === Unit.Centimeter) {
+        return 40
+    }
+    throw new Error(`cannot convert unit ${unit}`)
+}

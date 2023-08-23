@@ -164,6 +164,7 @@ export interface ScaledSurface {
     fillText(text: string, center: Point, fill: string, fontSize: number): void;
     fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string): void;
     strokeLinePath(position: Point, points: Point[], closed: boolean): void;
+    dragRect(dragRect: Bounds): void;
 }
 
 export interface DrawableShape {

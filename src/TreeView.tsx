@@ -20,9 +20,9 @@ function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, sele
                 onContextMenu={(e) => {
                     e.preventDefault()
                     const menu = <MenuBox>
-                        <MenuActionButton state={props.state} action={AddNewRectAction}/>
-                        <MenuActionButton state={props.state} action={AddNewCircleAction}/>
-                        <MenuActionButton state={props.state} action={DeleteSelection}/>
+                        <MenuActionButton key={'rect'} state={props.state} action={AddNewRectAction}/>
+                        <MenuActionButton key='circle' state={props.state} action={AddNewCircleAction}/>
+                        <MenuActionButton key='delete' state={props.state} action={DeleteSelection}/>
                     </MenuBox>
                     pm.show_at(menu, e.target, "left", new Point(0,0))
                 }}

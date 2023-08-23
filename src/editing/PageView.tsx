@@ -7,7 +7,7 @@ import React, {
     useRef,
     useState
 } from "react";
-import {Point, Size} from "josh_js_util";
+import {Bounds, Point, Size} from "josh_js_util";
 import {HBox, PopupContext} from "josh_react_util";
 import {GlobalState} from "../models/state";
 import {
@@ -17,7 +17,8 @@ import {
     FamilyPropChanged,
     Handle,
     PageClass,
-    PropChanged
+    PropChanged,
+    ScaledSurface
 } from "../models/om";
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common";
 import {
@@ -40,33 +41,103 @@ import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
 import {DragHandler} from "./DragHandler"
 import "./PageView.css"
 import {NGonClass} from "../models/ngon";
-import {size_to_pixels, Unit} from "../models/unit";
+import {lookup_dpi, point_to_pixels, Unit} from "../models/unit";
 
-function drawHandle(ctx: CanvasRenderingContext2D, h: Handle) {
-    ctx.fillStyle = 'red'
-    let p = h.getPosition()
-    ctx.fillRect(p.x-10,p.y-10,20,20)
+
+class ScaledDrawingSurface implements ScaledSurface {
+    private ctx: CanvasRenderingContext2D;
+    private scale: number;
+    private unit: Unit;
+
+    constructor(ctx: CanvasRenderingContext2D, scale: number, unit: Unit) {
+        this.ctx = ctx
+        this.scale = scale
+        this.unit = unit
+    }
+    fillRect(bounds: Bounds, fill: "string") {
+        this.ctx.fillStyle = fill
+        this.ctx.fillRect(bounds.x*this.scale,bounds.y*this.scale,bounds.w*this.scale,bounds.h*this.scale)
+    }
+    strokeRect(bounds: Bounds) {
+        this.ctx.strokeRect(bounds.x*this.scale, bounds.y*this.scale, bounds.w*this.scale, bounds.h*this.scale)
+    }
+    fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
+        this.ctx.fillStyle = fill
+        this.ctx.beginPath()
+        this.ctx.arc(center.x*this.scale, center.y*this.scale, radius*this.scale, startAngle, endAngle)
+        this.ctx.fill()
+    }
+    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
+        this.ctx.beginPath()
+        this.ctx.arc(center.x*this.scale, center.y*this.scale, radius*this.scale, startAngle, endAngle)
+        this.ctx.stroke()
+    }
+    private calcFont(fontSize:number) {
+        return `${fontSize}pt sans-serif`
+    }
+    fillText(text: string, center: Point, fill: string, fontSize: number) {
+        this.ctx.fillStyle = fill
+        this.ctx.font = this.calcFont(fontSize)
+        this.ctx.fillText(text, center.x*this.scale, center.y*this.scale)
+    }
+    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string) {
+        if(points.length < 3) return
+        this.ctx.save()
+        this.ctx.fillStyle = fill
+        this.ctx.translate(position.x*this.scale, position.y*this.scale)
+        this.ctx.beginPath()
+        this.ctx.moveTo(points[0].x*this.scale,points[0].y*this.scale)
+        for (let pt of points) this.ctx.lineTo(pt.x*this.scale, pt.y*this.scale)
+        if(closed) this.ctx.closePath()
+        this.ctx.fill()
+        this.ctx.restore()
+    }
+    strokeLinePath(position: Point, points: Point[]) {
+        if(points.length < 3) return
+        this.ctx.save()
+        this.ctx.translate(position.x*this.scale, position.y*this.scale)
+        this.ctx.beginPath()
+        this.ctx.moveTo(points[0].x*this.scale,points[0].y*this.scale)
+        for (let pt of points) this.ctx.lineTo(pt.x*this.scale, pt.y*this.scale)
+        this.ctx.closePath()
+        this.ctx.stroke()
+        this.ctx.restore()
+    }
+
+    drawHandle(h: Handle) {
+        this.ctx.fillStyle = 'red'
+        let p = point_to_pixels(h.getPosition(),this.unit)
+        this.ctx.fillRect(p.x-10,p.y-10,20,20)
+    }
+    dragRect(dragRect: Bounds) {
+        this.ctx.strokeStyle = 'cyan'
+        this.ctx.lineWidth = 1
+        this.ctx.strokeRect(dragRect.x*this.scale, dragRect.y*this.scale, dragRect.w*this.scale, dragRect.h*this.scale)
+    }
 }
 
-function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, state: GlobalState, handler:MouseHandlerProtocol, scale:number) {
+function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, state: GlobalState, handler:MouseHandlerProtocol, scale:number) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     ctx.save()
-    ctx.scale(scale,scale)
-    ctx.fillStyle = 'white'
+    ctx.fillStyle = '#be2424'
     ctx.fillRect(0,0,canvas.width,canvas.height)
-    page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(ctx))
+    const pageSize = page.getPropValue('size') as Size
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0,0,pageSize.w*scale,pageSize.h*scale)
+    let surf = new ScaledDrawingSurface(ctx,scale,doc.getPropValue('unit'))
+    page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(surf))
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)';
         ctx.lineWidth = 10;
-        if (sel instanceof DrawableClass) sel.drawSelected(ctx);
+        if (sel instanceof DrawableClass) sel.drawSelected(surf);
     }
-    handler.drawOverlay(ctx,state)
+    handler.drawOverlay(surf,state)
     //draw the handles
     for(let sel of selected) {
         if (sel instanceof DrawableClass) {
             let h = sel.getHandle()
-            if(h) drawHandle(ctx,h)
+            if(h) surf.drawHandle(h)
         }
     }
     ctx.restore()
@@ -107,10 +178,10 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     const [zoomLevel, setZoomLevel ] = useState(0)
-    const scale = Math.pow(2,zoomLevel)
+    const scale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
 
     const redraw = () => {
-        if(canvasRef.current) drawCanvas(canvasRef.current, props.page, props.state, handler, scale)
+        if(canvasRef.current) drawCanvas(canvasRef.current, page, doc, state, handler, scale)
     }
     useEffect(() => redraw())
     useObjectProxyChange(props.page,FamilyPropChanged)
@@ -140,7 +211,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     }
     const pm = useContext(PopupContext)
     const showContextMenu = async (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e).scale(1/scale)
+        let pt = canvasToModel(e)
         await handler.mouseUp(pt, e, props.state)
         e.preventDefault()
         let items:MenuAction[] = []
@@ -170,7 +241,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         ])
 
         const menu = <MenuBox>{items.map((act,i) => {
-                    return <MenuActionButton action={act} state={props.state}/>
+                    return <MenuActionButton key={`action${i}`} action={act} state={props.state}/>
                 })}</MenuBox>
         let elem = e.target as HTMLElement
         let dim = new Size(elem.clientWidth,elem.clientHeight)
@@ -200,7 +271,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         page.appendListProp('children',shape)
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }
-    const size = size_to_pixels(page.getPropValue('size'),doc.getPropValue('unit'))
+    const size = new Size(1200,800)
     const dom_size = size.scale(1/window.devicePixelRatio)
     const zoomIn = () => setZoomLevel(zoomLevel - 1)
     const zoomOut = () => setZoomLevel(zoomLevel + 1)

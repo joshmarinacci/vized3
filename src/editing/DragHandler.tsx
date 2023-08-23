@@ -1,4 +1,11 @@
-import {DrawableClass, Handle, ObjectDef, ObjectProxy, PageClass} from "../models/om";
+import {
+    DrawableClass,
+    Handle,
+    ObjectDef,
+    ObjectProxy,
+    PageClass,
+    ScaledSurface
+} from "../models/om";
 import {Bounds, Point} from "josh_js_util";
 import {ObservableBase} from "../models/model";
 import {findHandleInPage, findShapeInPage, MouseHandlerProtocol} from "./editing";
@@ -113,14 +120,10 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
         state.om.setCompressingHistory(false)
     }
 
-    drawOverlay(ctx: CanvasRenderingContext2D, state: GlobalState) {
+    drawOverlay(ctx: ScaledSurface, state: GlobalState) {
         if (this.draggingRect) {
-            ctx.strokeStyle = 'cyan'
-            ctx.lineWidth = 1
-            ctx.strokeRect(this.dragRect.x, this.dragRect.y, this.dragRect.w, this.dragRect.h)
+            ctx.dragRect(this.dragRect)
             for (let shape of this.potentialShapes) {
-                ctx.strokeStyle = 'rgba(100,255,255,0.5)'
-                ctx.lineWidth = 10
                 shape.drawSelected(ctx);
             }
         }
