@@ -34,10 +34,10 @@ export class GlobalState extends ObservableBase {
         this._doc = this.om.make(DocDef,{})
         let page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
-        page.appendListProp('children',this.om.make(RectDef, { bounds: new Bounds(1,1,2,3), name:'rect', fill:'red'}))
-        page.appendListProp('children',this.om.make(CircleDef, { center: new Point(1,3), radius: 1, name:'circle', fill:'green'}))
-        page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(1,5), name:'text', fill:'black'}))
-        page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(1,3), name:'path', fill:'blue'}))
+        page.appendListProp('children',this.om.make(RectDef, { bounds: new Bounds(1,1,2,3), name:'rect', fill:'#ff0000'}))
+        page.appendListProp('children',this.om.make(CircleDef, { center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'}))
+        page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(1,5), name:'text', fill:'#000000'}))
+        page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(1,3), name:'path', fill:'#0000ff'}))
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

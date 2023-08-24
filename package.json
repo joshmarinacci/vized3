@@ -14,6 +14,7 @@
     "josh_js_util": "^0.1.11",
     "josh_react_util": "^1.0.19",
     "josh_web_util": "0.0.5",
+    "pdf-lib": "^1.17.1",
     "react": "^18.2.0",
     "react-color": "^2.19.3",
     "react-dom": "^18.2.0",

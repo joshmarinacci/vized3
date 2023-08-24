@@ -10,6 +10,7 @@ import {RectDef} from "./models/rect";
 import {CircleDef} from "./models/circle";
 import {PathShapeDef} from "./models/pathshape";
 import {NGonClass, NGonDef} from "./models/ngon";
+import {exportPDF} from "./exporters/pdf";
 
 export type MenuAction = {
     title:string
@@ -44,6 +45,15 @@ export const DownloadSVGAction:MenuAction = {
     description:'Export the document as an SVG file',
     perform:async (state) => {
         await exportSVG(state)
+    }
+}
+export const DownloadPDFAction:MenuAction = {
+    title:'PDF',
+    tags:['save','export','download','pdf'],
+    icon:SupportedIcons.Download,
+    description:'Export the document as a PDF file',
+    perform:async (state) => {
+        await exportPDF(state)
     }
 }
 
@@ -254,6 +264,7 @@ export const ALL_ACTIONS: MenuAction[] = [
     NewDocumentAction,
     DownloadPNGAction,
     DownloadSVGAction,
+    DownloadPDFAction,
     ExportCanvasJSAction,
     AddNewRectAction,
     AddNewCircleAction,

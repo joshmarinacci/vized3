@@ -29,6 +29,7 @@ import {
     AddNewNGonAction,
     AddNewPathShapeAction,
     AddNewRectAction,
+    DownloadPDFAction,
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
@@ -70,6 +71,7 @@ function Main() {
                 SavePNGJSONAction,
                 DownloadPNGAction,
                 DownloadSVGAction,
+                DownloadPDFAction,
                 ExportCanvasJSAction
             ]}/>
             <DropdownMenuButton title={'Add'} state={state} items={[
