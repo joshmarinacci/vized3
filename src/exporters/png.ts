@@ -4,6 +4,8 @@ import {GlobalState} from "../models/state";
 import {DocClass, PageClass} from "../models/om";
 import {RectClass} from "../models/rect";
 import {CircleClass} from "../models/circle";
+import {lookup_dpi, size_to_pixels} from "../models/unit";
+import {ScaledDrawingSurface} from "../editing/PageView";
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
@@ -14,9 +16,15 @@ export async function exportPNG(state: GlobalState) {
 
 export async function stateToCanvas(state:GlobalState) {
     const canvas = document.createElement('canvas')
-    canvas.width = 800
-    canvas.height = 600
+    let doc = state.getCurrentDocument()
+    let unit = doc.getPropValue('unit')
+    let page = doc.getListPropAt('pages',0) as PageClass
+    let size = size_to_pixels(page.getPropValue('size'),unit)
+    console.log("pixel size is",size)
+    canvas.width = size.w
+    canvas.height = size.h
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    let surf = new ScaledDrawingSurface(ctx,lookup_dpi(unit),unit)
     traverse(state.getCurrentDocument(), (item: any) => {
         if (item.def.name === 'document') {
             const doc = item.obj as DocClass
@@ -28,11 +36,11 @@ export async function stateToCanvas(state:GlobalState) {
         }
         if (item.def.name === 'rect') {
             const sq = item as RectClass
-            sq.drawSelf(ctx)
+            sq.drawSelf(surf)
         }
         if (item.def.name === 'circle') {
             const circle = item as CircleClass
-            circle.drawSelf(ctx)
+            circle.drawSelf(surf)
         }
     })
     return Promise.resolve(canvas)

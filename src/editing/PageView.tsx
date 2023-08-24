@@ -44,7 +44,7 @@ import {NGonClass} from "../models/ngon";
 import {lookup_dpi, point_to_pixels, Unit} from "../models/unit";
 
 
-class ScaledDrawingSurface implements ScaledSurface {
+export class ScaledDrawingSurface implements ScaledSurface {
     private ctx: CanvasRenderingContext2D;
     private scale: number;
     private unit: Unit;
@@ -127,7 +127,7 @@ class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.restore()
     }
 
-    drawHandle(h: Handle) {
+    overlayHandle(h: Handle) {
         this.ctx.fillStyle = 'red'
         let p = point_to_pixels(h.getPosition(),this.unit)
         this.ctx.fillRect(p.x-10,p.y-10,20,20)
@@ -136,6 +136,17 @@ class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.strokeStyle = 'cyan'
         this.ctx.lineWidth = 1
         this.ctx.strokeRect(dragRect.x*this.scale, dragRect.y*this.scale, dragRect.w*this.scale, dragRect.h*this.scale)
+    }
+
+    overlayFillText(s: string, point: Point) {
+        this.ctx.fillStyle = 'black'
+        this.ctx.font = '20pt sans-serif'
+        this.ctx.fillText(s, point.x, point.y)
+    }
+    overlayPoint(point: Point, green: string) {
+        this.ctx.fillStyle = green
+        let r = 5
+        this.ctx.fillRect(point.x*this.scale-r, point.y*this.scale-r, r*2, r*2)
     }
 }
 
@@ -160,7 +171,7 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, s
     for(let sel of selected) {
         if (sel instanceof DrawableClass) {
             let h = sel.getHandle()
-            if(h) surf.drawHandle(h)
+            if(h) surf.overlayHandle(h)
         }
     }
     ctx.restore()
