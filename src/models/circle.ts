@@ -72,7 +72,7 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.strokeArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
+        ctx.outlineArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
     }
 
     getHandle(): Handle {

@@ -59,7 +59,7 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
 
     drawSelected(ctx: ScaledSurface): void {
         if(this.props.points.length < 2) return
-        ctx.strokeLinePath(this.getPosition(),this.props.points,this.props.closed)
+        ctx.outlineLinePath(this.getPosition(),this.props.points,this.props.closed)
     }
 
     getHandle(): Handle | null {

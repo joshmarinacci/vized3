@@ -104,21 +104,11 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     drawSelf(ctx: ScaledSurface): void {
         if (this.props.roundedCornersEnabled) {
             ctx.fillRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.fill)
+            ctx.strokeRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.strokeFill, this.props.strokeWidth)
         } else {
             ctx.fillRect(this.props.bounds, this.props.fill)
+            ctx.strokeRect(this.props.bounds, this.props.strokeFill, this.props.strokeWidth)
         }
-        // ctx.strokeStyle = this.props.strokeFill
-        // ctx.lineWidth = this.props.strokeWidth
-        // if (this.props.roundedCornersEnabled) {
-        //     let b = this.props.bounds
-        //     let r = this.props.roundedCornersRadius
-        //     ctx.beginPath()
-        //     ctx.roundRect(b.left(), b.top(), b.w, b.h, r)
-        //     ctx.closePath()
-        //     ctx.stroke()
-        // } else {
-        //     ctx.strokeRect(this.props.bounds.x, this.props.bounds.y, this.props.bounds.w, this.props.bounds.h)
-        // }
     }
 
     contains(pt: Point): boolean {
@@ -126,7 +116,7 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.strokeRect(this.props.bounds)
+        ctx.outlineRect(this.props.bounds)
     }
 
     getHandle(): Handle {

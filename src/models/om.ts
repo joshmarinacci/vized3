@@ -158,14 +158,21 @@ export interface Handle {
 
 export interface ScaledSurface {
     fillRect(bounds: Bounds, fill: "string"): void;
-    strokeRect(bounds: Bounds): void;
-    fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
-    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
-    fillText(text: string, center: Point, fill: string, fontSize: number): void;
-    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string): void;
-    strokeLinePath(position: Point, points: Point[], closed: boolean): void;
-    dragRect(dragRect: Bounds): void;
+    strokeRect(bounds: Bounds, strokeFill: string, strokeWidth: number): void;
+    outlineRect(bounds: Bounds): void;
+
     fillRoundRect(bounds: Bounds, roundedCornersRadius: number, fill: any): void;
+    strokeRoundRect(bounds: Bounds, roundedCornersRadius: number, strokeFill: string, strokeWidth: number): void;
+
+    fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+    outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+
+    fillText(text: string, center: Point, fill: string, fontSize: number): void;
+
+    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string): void;
+    outlineLinePath(position: Point, points: Point[], closed: boolean): void;
+
+    dragRect(dragRect: Bounds): void;
 }
 
 export interface DrawableShape {

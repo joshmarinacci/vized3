@@ -61,7 +61,7 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
     drawSelected(ctx: ScaledSurface): void {
         let h = this.calcHeight()
         let bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width,h)
-        ctx.strokeRect(bds)
+        ctx.outlineRect(bds)
     }
 
     drawSelf(ctx: ScaledSurface): void {

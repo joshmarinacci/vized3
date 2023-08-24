@@ -58,15 +58,29 @@ class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.fillStyle = fill
         this.ctx.fillRect(bounds.x*this.scale,bounds.y*this.scale,bounds.w*this.scale,bounds.h*this.scale)
     }
-    strokeRect(bounds: Bounds) {
+    outlineRect(bounds: Bounds) {
         this.ctx.strokeRect(bounds.x*this.scale, bounds.y*this.scale, bounds.w*this.scale, bounds.h*this.scale)
     }
+    strokeRect(bounds: Bounds, strokeFill: string, strokeWidth: number) {
+        this.ctx.strokeStyle = strokeFill
+        this.ctx.lineWidth = strokeWidth
+        this.ctx.strokeRect(bounds.x*this.scale, bounds.y*this.scale, bounds.w*this.scale, bounds.h*this.scale)
+    }
+
     fillRoundRect(bounds: Bounds, radius: number, fill: any) {
         this.ctx.fillStyle = fill
         this.ctx.beginPath()
-        this.ctx.roundRect(bounds.left()*this.scale, bounds.top()*this.scale, bounds.w*this.scale, bounds.h*this.scale, radius*this.scale)
+        this.ctx.roundRect(bounds.left()*this.scale, bounds.top()*this.scale, bounds.w*this.scale, bounds.h*this.scale, radius)
         this.ctx.closePath()
         this.ctx.fill()
+    }
+    strokeRoundRect(bounds: Bounds, radius: number, strokeFill: string, strokeWidth: number) {
+        this.ctx.strokeStyle = strokeFill
+        this.ctx.lineWidth = strokeWidth
+        this.ctx.beginPath()
+        this.ctx.roundRect(bounds.left()*this.scale, bounds.top()*this.scale, bounds.w*this.scale, bounds.h*this.scale, radius)
+        this.ctx.closePath()
+        this.ctx.stroke()
     }
 
     fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
@@ -75,11 +89,12 @@ class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.arc(center.x*this.scale, center.y*this.scale, radius*this.scale, startAngle, endAngle)
         this.ctx.fill()
     }
-    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
+    outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
         this.ctx.beginPath()
         this.ctx.arc(center.x*this.scale, center.y*this.scale, radius*this.scale, startAngle, endAngle)
         this.ctx.stroke()
     }
+
     private calcFont(fontSize:number) {
         return `${fontSize}pt sans-serif`
     }
@@ -100,7 +115,7 @@ class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.fill()
         this.ctx.restore()
     }
-    strokeLinePath(position: Point, points: Point[]) {
+    outlineLinePath(position: Point, points: Point[]) {
         if(points.length < 3) return
         this.ctx.save()
         this.ctx.translate(position.x*this.scale, position.y*this.scale)
