@@ -49,3 +49,12 @@ export function lookup_dpi(unit: Unit) {
     }
     throw new Error(`cannot convert unit ${unit}`)
 }
+export function lookup_pdf_dpi(unit:Unit) {
+    if(unit === Unit.Inch) {
+        return 72
+    }
+    if(unit === Unit.Centimeter) {
+        return 72.0/2.54
+    }
+    throw new Error(`cannot convert unit ${unit}`)
+}

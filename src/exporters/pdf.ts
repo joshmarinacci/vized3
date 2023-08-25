@@ -1,6 +1,5 @@
 import {GlobalState} from "../models/state";
-import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
-import {stateToCanvas} from "./png";
+import {forceDownloadBlob} from "josh_web_util";
 import {PageClass} from "../models/om";
 import {
     PDFDocument,
@@ -10,7 +9,7 @@ import {
     translate,
     rgb,
 } from "pdf-lib";
-import {lookup_dpi, Unit} from "../models/unit";
+import {lookup_pdf_dpi, Unit} from "../models/unit";
 import {Point} from "josh_js_util";
 
 function hex_to_pdfrgbf(fill: string) {
@@ -23,7 +22,7 @@ function hex_to_pdfrgbf(fill: string) {
 
 function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
     let size = page1.getPropValue('size')
-    let dpi = lookup_dpi(unit)
+    let dpi = lookup_pdf_dpi(unit)
     let pdfPage = doc.addPage([size.w*dpi,size.h*dpi])
     pdfPage.pushOperators(
         pushGraphicsState(),
@@ -53,6 +52,20 @@ function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
                 size: radius*dpi,
                 color: hex_to_pdfrgbf(fill)
             })
+        }
+        if(ch.def.name === 'path-shape') {
+            let pos = ch.getPropValue('center')
+            let points = ch.getListProp('points')
+            let fill = ch.getPropValue('fill') as string
+            for(let i=0; i<points.length; i++) {
+                let start = points[i]
+                let end = points[(i+1)%points.length]
+                pdfPage.drawLine({
+                    start:start.add(pos).scale(dpi),
+                    end:end.add(pos).scale(dpi),
+                    color:hex_to_pdfrgbf(fill)
+                })
+            }
         }
     })
 
