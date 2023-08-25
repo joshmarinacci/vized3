@@ -169,7 +169,8 @@ export interface ScaledSurface {
 
     fillText(text: string, center: Point, fill: string, fontSize: number): void;
 
-    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string): void;
+    fillLinePath(position: Point, points: Point[], closed: boolean, fill: string): void;
+    strokeLinePath(position: Point, points: Point[], closed: boolean, fill: string): void;
     outlineLinePath(position: Point, points: Point[], closed: boolean): void;
 
     dragRect(dragRect: Bounds): void;
@@ -179,6 +180,8 @@ export interface ScaledSurface {
     overlayHandle(hand: Handle, color:string): void;
 
     overlayPoint(point: Point, green: string): void;
+
+    overlayLine(startPoint: Point, endPoint: Point, color: string): void;
 }
 
 export interface DrawableShape {

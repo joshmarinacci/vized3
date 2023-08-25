@@ -5,6 +5,7 @@ import {ObservableBase} from "../models/model";
 import {MouseHandlerProtocol} from "./editing";
 import {GlobalState} from "../models/state";
 import React from "react";
+import {distance_to_pixels, Unit} from "../models/unit";
 
 class EditHandle implements Handle {
     private pt: Point;
@@ -94,19 +95,18 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
 
 
     drawOverlay(ctx: ScaledSurface, state: GlobalState): void {
-        console.log("point count",this.shape.getListProp('points').length,'state',this.state)
-        // ctx.fillStyle = 'black'
-        ctx.overlayFillText(`state: ${this.state}`, new Point(50,500))
-        ctx.overlayFillText(`mouse: ${this.hover_point.x.toFixed(0)} , ${this.hover_point.y.toFixed(0)}`, new Point(50, 500+30))
+        ctx.overlayFillText(`state: ${this.state}`, new Point(50,150))
+        ctx.overlayFillText(`mouse: ${this.hover_point.x.toFixed(0)} , ${this.hover_point.y.toFixed(0)}`, new Point(50, 100))
 
         // // draw the handles for each point in the shape
-        for (let hand of this.handles) ctx.overlayHandle(hand)
+        for (let hand of this.handles) ctx.overlayHandle(hand,'green')
         if(this.state === EditState.Existing) {
             for (let line of this.findLines()) ctx.overlayPoint(line.midpoint(),'green')
         }
-        // if(this.hover_line) draw_point(ctx, 'orange', this.hover_line.midpoint())
-        // if(this.drag_line) draw_line(ctx, 'blue', this.drag_line)
-        // if(this.hover_closed) draw_point(ctx, 'blue', this.shape.getListPropAt('points', 0))
+        if(this.hover_handle) ctx.overlayHandle(this.hover_handle,'yellow')
+        if(this.hover_line) ctx.overlayPoint(this.hover_line.midpoint(), 'orange')
+        if(this.drag_line) ctx.overlayLine(this.drag_line.start, this.drag_line.end,'blue')
+        if(this.hover_closed) ctx.overlayPoint(this.shape.getListPropAt('points',0), 'blue')
     }
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
@@ -126,9 +126,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             this.repaint()
             return
         }
-        let hand = this.handles.find(h => {
-            return h.contains(pt)
-        })
+        let hand = this.findHandleAt(state,pt)
         if (hand) {
             this.pressed = true
             if(this.state === EditState.Delete) {
@@ -151,14 +149,14 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     async mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
         this.hover_point = pt
         if (!this.pressed) {
-            let hand = this.handles.find(h => h.contains(pt))
+            let hand = this.findHandleAt(state,pt)
             if(hand !== this.hover_handle) {
                 if(this.hover_handle) this.hover_handle.hover = false
                 this.hover_handle = hand
                 if(this.hover_handle) this.hover_handle.hover = true
                 this.repaint()
             }
-            let line = this.findLines().find(l => l.midpoint().distance(pt) < 10)
+            let line = this.findLineAt(state,pt)
             if (line !== this.hover_line) {
                 this.hover_line = line
                 this.repaint()
@@ -169,7 +167,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             this.drag_line.end = pt
             //if pt is near the start point of the shape, show a hover handle at the start point
             let first_pt:Point = this.shape.getListPropAt('points',0)
-            if(first_pt.distance(pt) < 10) {
+            if(this.calc_distance(state,first_pt,pt) < 10) {
                 this.hover_closed = true
             } else {
                 this.hover_closed = false
@@ -184,8 +182,10 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     async mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
         if(this.pressed && this.state === EditState.DraggingLine) {
             let first_pt:Point = this.shape.getListPropAt('points',0)
-            if(first_pt.distance(pt) < 10) {
+            let dist = this.calc_distance(state, first_pt,pt)
+            if(dist < 10) {
                 await this.shape.setPropValue('filled',true)
+                await this.shape.setPropValue('closed',true)
                 this.state = EditState.Existing
             } else {
                 // @ts-ignore
@@ -243,6 +243,31 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             <button onClick={enterDeleteMode}>delete</button>
             <button onClick={finishNewPath}>done</button>
         </div>
+    }
+
+    private findHandleAt(state:GlobalState,pt: Point) {
+        return this.handles.find(h => {
+            let dist = h.getPosition().distance(pt)
+            let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+            const v = distance_to_pixels(dist,unit)
+            return v < 10
+        })
+    }
+
+    private findLineAt(state:GlobalState, pt: Point) {
+        return this.findLines().find(l => {
+            let dist = l.midpoint().distance(pt)
+            let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+            const v = distance_to_pixels(dist,unit)
+            return v < 10
+        })
+    }
+
+    private calc_distance(state:GlobalState, first_pt: Point, pt: Point) {
+        let dist = first_pt.distance(pt)
+        let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+        const v = distance_to_pixels(dist,unit)
+        return v
     }
 }
 

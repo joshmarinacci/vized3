@@ -70,7 +70,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.fillText(text, center.x * this.scale, center.y * this.scale)
     }
 
-    fillLinePath(position: Point, points: Point[], closed: boolean, filled: boolean, fill: string) {
+    fillLinePath(position: Point, points: Point[], closed: boolean, fill: string) {
         if (points.length < 3) return
         this.ctx.save()
         this.ctx.fillStyle = fill
@@ -80,6 +80,18 @@ export class ScaledDrawingSurface implements ScaledSurface {
         for (let pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
         if (closed) this.ctx.closePath()
         this.ctx.fill()
+        this.ctx.restore()
+    }
+    strokeLinePath(position: Point, points: Point[], closed: boolean, fill: string) {
+        this.ctx.save()
+        this.ctx.strokeStyle = fill
+        this.ctx.lineWidth = 1
+        this.ctx.translate(position.x * this.scale, position.y * this.scale)
+        this.ctx.beginPath()
+        this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
+        for (let pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
+        if (closed) this.ctx.closePath()
+        this.ctx.stroke()
         this.ctx.restore()
     }
 
@@ -116,9 +128,19 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.fillText(s, point.x, point.y)
     }
 
-    overlayPoint(point: Point, green: string) {
-        this.ctx.fillStyle = green
+    overlayPoint(point: Point, color: string) {
+        this.ctx.fillStyle = color
         let r = 5
         this.ctx.fillRect(point.x * this.scale - r, point.y * this.scale - r, r * 2, r * 2)
+    }
+
+    overlayLine(startPoint: Point, endPoint: Point, color: string) {
+        startPoint = startPoint.scale(this.scale)
+        endPoint = endPoint.scale(this.scale)
+        this.ctx.beginPath()
+        this.ctx.moveTo(startPoint.x,startPoint.y)
+        this.ctx.lineTo(endPoint.x, endPoint.y)
+        this.ctx.strokeStyle = color
+        this.ctx.stroke()
     }
 }

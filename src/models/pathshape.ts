@@ -50,7 +50,8 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
 
     drawSelf(ctx: ScaledSurface): void {
         if(this.props.points.length < 2) return
-        ctx.fillLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.filled,this.props.fill)
+        ctx.fillLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.fill)
+        ctx.strokeLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.strokeFill)
     }
 
     contains(pt: Point): boolean {
