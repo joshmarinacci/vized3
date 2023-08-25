@@ -1,15 +1,17 @@
 import {Handle, ScaledSurface} from "../models/om";
-import {point_to_pixels, Unit} from "../models/unit";
+import {lookup_dpi, point_to_pixels, Unit} from "../models/unit";
 import {Bounds, Point} from "josh_js_util";
 
 export class ScaledDrawingSurface implements ScaledSurface {
     private ctx: CanvasRenderingContext2D;
     private scale: number;
     private unit: Unit;
+    private zoomLevel: number;
 
-    constructor(ctx: CanvasRenderingContext2D, scale: number, unit: Unit) {
+    constructor(ctx: CanvasRenderingContext2D, zoomLevel: number, unit: Unit) {
         this.ctx = ctx
-        this.scale = scale
+        this.zoomLevel = zoomLevel
+        this.scale = Math.pow(2,zoomLevel) * lookup_dpi(unit)
         this.unit = unit
     }
 
@@ -95,7 +97,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
 
     overlayHandle(h: Handle, color='red') {
         this.ctx.fillStyle = color
-        let p = point_to_pixels(h.getPosition(), this.unit)
+        let p = point_to_pixels(h.getPosition(), this.unit).scale(Math.pow(2,this.zoomLevel))
         this.ctx.fillRect(p.x - 10, p.y - 10, 20, 20)
         this.ctx.strokeStyle = 'black'
         this.ctx.lineWidth = 1

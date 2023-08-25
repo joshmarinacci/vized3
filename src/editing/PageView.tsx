@@ -36,15 +36,16 @@ import {ScaledDrawingSurface} from "./scaled_drawing";
 import {FloatingPalette} from "./FloatingPalette";
 
 
-function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, state: GlobalState, handler:MouseHandlerProtocol, scale:number) {
+function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, state: GlobalState, handler:MouseHandlerProtocol, zoomLevel:number, docUnit:Unit) {
     let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    let can_scale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
     ctx.save()
     ctx.fillStyle = '#be2424'
     ctx.fillRect(0,0,canvas.width,canvas.height)
     const pageSize = page.getPropValue('size') as Size
     ctx.fillStyle = 'white'
-    ctx.fillRect(0,0,pageSize.w*scale,pageSize.h*scale)
-    let surf = new ScaledDrawingSurface(ctx,scale,doc.getPropValue('unit'))
+    ctx.fillRect(0,0,pageSize.w*can_scale,pageSize.h*can_scale)
+    let surf = new ScaledDrawingSurface(ctx,zoomLevel,docUnit)
     page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(surf))
     let selected = state.getSelectedObjects()
     for(let sel of selected) {
@@ -70,10 +71,20 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     const canvasRef = useRef<HTMLCanvasElement>();
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     const [zoomLevel, setZoomLevel ] = useState(0)
-    const scale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
+
+    const drawScale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
+    const canvasToModel = (e: React.MouseEvent<HTMLCanvasElement>) => {
+        let ept = new Point(e.clientX, e.clientY)
+        let rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
+        let cpt = ept.subtract(new Point(rect.x, rect.y))
+        let pt = cpt.scale(window.devicePixelRatio)
+        pt = pt.scale(1/Math.pow(2,zoomLevel))
+        pt = pt.scale(1/lookup_dpi(docUnit))
+        return pt
+    };
 
     const redraw = () => {
-        if(canvasRef.current) drawCanvas(canvasRef.current, page, doc, state, handler, scale)
+        if(canvasRef.current) drawCanvas(canvasRef.current, page, doc, state, handler, zoomLevel, docUnit)
     }
     useEffect(() => redraw())
     useObjectProxyChange(props.page,FamilyPropChanged)
@@ -90,15 +101,15 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         return () => handler.removeEventListener('redraw', hand)
     }, [handler])
     const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e).scale(1/scale)
+        let pt = canvasToModel(e)
         await handler.mouseDown(pt, e, props.state)
     }
     const onMouseMove = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e).scale(1/scale)
+        let pt = canvasToModel(e)
         await handler.mouseMove(pt,e,props.state)
     }
     const onMouseUp = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e).scale(1/scale)
+        let pt = canvasToModel(e)
         await handler.mouseUp(pt, e, props.state)
     }
     const pm = useContext(PopupContext)
@@ -140,7 +151,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
     }
     const onDoubleClick = (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e).scale(1/scale)
+        let pt = canvasToModel(e)
         const page = props.state.getSelectedPage();
         if(!page) return
         let shape = findShapeInPage(page,pt)

@@ -51,10 +51,3 @@ export function findShapeInPage(page: PageClass, pt: Point): ObjectProxy<ObjectD
     return undefined
 }
 
-export function canvasToModel(e: React.MouseEvent<HTMLCanvasElement>) {
-    let pt = new Point(e.clientX, e.clientY)
-    let rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
-    pt = pt.subtract(new Point(rect.x, rect.y))
-    pt = pt.scale(window.devicePixelRatio)
-    return pt
-}
