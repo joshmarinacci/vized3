@@ -26,6 +26,7 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
     private potentialShapes: DrawableClass<any>[];
     private draggingHandle: boolean;
     private dragHandle: Handle | null;
+    private hoverHandle: Handle | null;
 
     constructor() {
         super()
@@ -37,6 +38,7 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
         this.dragHandle = null
         this.dragRect = new Bounds(0, 0, 50, 50)
         this.potentialShapes = []
+        this.hoverHandle = null
     }
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
@@ -100,6 +102,14 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
                     await sel.setPosition(new_pos)
                 }
             }
+        } else {
+            const page = state.getSelectedPage();
+            if (!page) return
+            let hand = findHandleInPage(page, pt, state)
+            if(hand !== this.hoverHandle) {
+                this.hoverHandle = hand
+                state.fireSelectionChange()
+            }
         }
     }
 
@@ -126,6 +136,9 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
             for (let shape of this.potentialShapes) {
                 shape.drawSelected(ctx);
             }
+        }
+        if(this.hoverHandle) {
+            ctx.overlayHandle(this.hoverHandle, 'blue')
         }
     }
 

@@ -176,7 +176,7 @@ export interface ScaledSurface {
 
     overlayFillText(s: string, point: Point): void;
 
-    overlayHandle(hand: Handle): void;
+    overlayHandle(hand: Handle, color:string): void;
 
     overlayPoint(point: Point, green: string): void;
 }

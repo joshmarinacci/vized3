@@ -5,7 +5,7 @@ import {DocClass, PageClass} from "../models/om";
 import {RectClass} from "../models/rect";
 import {CircleClass} from "../models/circle";
 import {lookup_dpi, size_to_pixels} from "../models/unit";
-import {ScaledDrawingSurface} from "../editing/PageView";
+import {ScaledDrawingSurface} from "../editing/scaled_drawing";
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
