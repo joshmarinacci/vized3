@@ -19,6 +19,7 @@ describe('json', () => {
         expect(page.props.children.length).toBe(3)
         let shape1 = page.props.children[0]
         expect(shape1.props.center.x).toEqual(circs[0].getPropValue('center').x)
+        // await fs.promises.writeFile('foo.json', JSON.stringify(doc, null, '   '))
     })
 
     it('should restore from JSON', async () => {
