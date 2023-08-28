@@ -1,11 +1,12 @@
-import {GlobalState} from "./models/state";
-import React, {useContext, useState} from "react";
-import {DialogContext, Spacer} from "josh_react_util";
-import {NumberAssetClass, ObjectProxy, PropSchema} from "./models/om";
+import {DialogContext, Spacer} from "josh_react_util"
+import React, {useContext, useState} from "react"
+
+import {NumberAssetClass, ObjectProxy, PropSchema} from "./models/om"
+import {GlobalState} from "./models/state"
 
 function ProxyAssetView(props: { asset: any, source:ObjectProxy<any>, onChange:(value:ObjectProxy<any>)=>void }) {
     const {source} = props
-    let asset = props.asset as NumberAssetClass
+    const asset = props.asset as NumberAssetClass
     return <li>
         <label>
             asset proxy
@@ -23,6 +24,7 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
     const dm = useContext(DialogContext)
     const [source, setSource] = useState(target)
     const assets = props.state.getCurrentDocument().getListProp('assets')
+        .filter(a => a.getPropSchemaNamed('value').base === prop.base)
     const cancel = () => dm.hide()
     const choose = () => {
         if(source.getUUID() === target.getUUID()) {

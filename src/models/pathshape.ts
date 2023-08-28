@@ -1,3 +1,5 @@
+import {Bounds, Point} from "josh_js_util"
+
 import {
     CenterPositionDef,
     DrawableClass,
@@ -6,8 +8,7 @@ import {
     ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
-} from "./om";
-import {Bounds, Point} from "josh_js_util";
+} from "./om"
 
 export const PathShapeDef: ObjectDef = {
     name: 'path-shape',
@@ -50,7 +51,7 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
 
     drawSelf(ctx: ScaledSurface): void {
         if(this.props.points.length < 2) return
-        ctx.fillLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.fill)
+        ctx.fillLinePath(this.getPosition(),this.props.points,this.props.closed,this.getPropValue('fill'))
         ctx.strokeLinePath(this.getPosition(),this.props.points,this.props.closed,this.props.strokeFill)
     }
 
@@ -84,7 +85,7 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
         ctx.translate(this.getPosition().x,this.getPosition().y)
         ctx.beginPath()
         ctx.moveTo(this.props.points[0].x,this.props.points[0].y)
-        for (let pt of this.props.points) ctx.lineTo(pt.x, pt.y)
+        for (const pt of this.props.points) ctx.lineTo(pt.x, pt.y)
         if(this.props.closed) ctx.closePath()
         ctx.restore()
     }
@@ -98,15 +99,15 @@ export class PathShapeClass extends DrawableClass<typeof PathShapeDef> {
     }
 
     async translateBy(offset: Point): Promise<void> {
-        let center = this.getPropValue('center') as Point
+        const center = this.getPropValue('center') as Point
         await this.setPropValue('center', center.add(offset))
     }
 }
 
 export function calcBounds(pts:Point[]) {
-    let pt = pts[0]
+    const pt = pts[0]
     let bds = new Bounds(pt.x,pt.y,0,0)
-    for(let pt of pts) {
+    for(const pt of pts) {
         if(pt.x < bds.left()) {
             bds = new Bounds(pt.x,bds.top(),bds.right()-pt.x,bds.h)
         }

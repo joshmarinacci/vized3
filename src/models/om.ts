@@ -1,4 +1,5 @@
 import {Bounds, genId, Point, Size} from "josh_js_util"
+
 import {lookup_name, Unit} from "./unit"
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
@@ -338,11 +339,11 @@ export class ObjectProxy<T extends ObjectDef> {
     getPropSchemas() {
         return Object.values(this.def.props)
     }
+    getPropSchemaNamed(name:string) {
+        return this.def.props[name]
+    }
     hasPropNamed(uuid: string) {
         return this.def.props.hasOwnProperty(uuid)
-    }
-    getPropNamed(name: string) {
-        return this.props[this.def.props[name].name]
     }
     setPropProxySource(name:string, source:ObjectProxy<any>) {
         this.proxies.set(name,source)

@@ -1,17 +1,20 @@
-import React, {useContext} from "react"
 import './TreeView.css'
-import {PopupContext, toClass,} from "josh_react_util"
-import {GlobalState} from "./models/state"
-import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om"
-import {MenuActionButton, MenuBox, useObservableChange} from "./common"
+
 import {Point} from "josh_js_util"
+import {PopupContext, toClass,} from "josh_react_util"
+import React, {useContext} from "react"
+
 import {
     AddNewCircleAction,
     AddNewColorAssetAction,
     AddNewNumberAssetAction,
+    AddNewPageAction,
     AddNewRectAction,
     DeleteSelection
 } from "./actions"
+import {MenuActionButton, MenuBox, useObservableChange} from "./common"
+import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om"
+import {GlobalState} from "./models/state"
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
@@ -33,7 +36,7 @@ function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, sele
                     pm.show_at(menu, e.target, "left", new Point(0,0))
                 }}
     >
-        <b>{shape.hasPropNamed('name')?shape.getPropNamed("name"):"no name"}</b>
+        <b>{shape.hasPropNamed('name')?shape.getPropValue("name"):"no name"}</b>
     </div>
 }
 
@@ -79,7 +82,15 @@ export function TreeView(props: { state:GlobalState}) {
     }
     return <div className={'panel left tree-view'}>
         <h3 onClick={select_document}>document: {props.state.getCurrentDocument().getPropValue('name')}</h3>
-        <h3>pages</h3>
+        <h3
+            onContextMenu={(e) => {
+                e.preventDefault()
+                const menu = <MenuBox>
+                    <MenuActionButton key={'add_page'} state={props.state} action={AddNewPageAction}/>
+                </MenuBox>
+                pm.show_at(menu, e.target, "left", new Point(0,0))
+            }}
+        >pages</h3>
         {doc.getListProp('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
         })}

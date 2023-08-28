@@ -1,24 +1,24 @@
-import {Bounds} from "josh_js_util"
 import assert from "assert"
-import {expect, describe, it} from "vitest"
-import {
-    FamilyPropChanged,
-    JSONObject,
-    ObjectManager,
-    ObjectProxy,
-    PageDef,
-    PropChanged,
-    PropSchema,
-    PageClass,
-    NumberAssetDef,
-    DocClass,
-    JSONDoc,
-    ColorAssetDef
-} from "./om.js"
-import {RectClass, RectDef} from "./rect"
-import {CircleClass, CircleDef} from "./circle"
+import {Bounds} from "josh_js_util"
+import {describe, expect, it} from "vitest"
+
 import {createThreeCirclesDoc} from "../actions.test"
 import {saveJSON} from "../exporters/json"
+import {CircleClass, CircleDef} from "./circle"
+import {
+    ColorAssetDef,
+    DocClass,
+    FamilyPropChanged,
+    JSONDoc,
+    JSONObject,
+    NumberAssetDef,
+    ObjectManager,
+    ObjectProxy,
+    PageClass,
+    PageDef,
+    PropChanged,
+    PropSchema} from "./om.js"
+import {RectClass, RectDef} from "./rect"
 
 
 describe('model tests', () => {
@@ -302,7 +302,7 @@ describe('asset tests', () => {
         const {state, circs} = await createThreeCirclesDoc()
         expect(state).toBeTruthy()
         const doc = state.getCurrentDocument()
-        const name = doc.getPropNamed('name')
+        const name = doc.getPropValue('name')
         expect(name).toEqual('unnamed')
         const pages = doc.getListProp('pages')
         expect(pages).toBeTruthy()

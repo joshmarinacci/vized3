@@ -1,4 +1,13 @@
-import {GlobalState} from "./models/state"
+import {Bounds, Point} from "josh_js_util"
+
+import {exportCanvasJS} from "./exporters/canvas"
+import {savePNGJSON} from "./exporters/json"
+import {exportPDF} from "./exporters/pdf"
+import {exportPNG} from "./exporters/png"
+import {exportSVG} from "./exporters/svg"
+import {SupportedIcons} from "./icons"
+import {CircleDef} from "./models/circle"
+import {NGonClass, NGonDef} from "./models/ngon"
 import {
     ColorAssetDef,
     DocClass,
@@ -8,17 +17,9 @@ import {
     ObjectProxy,
     PageDef
 } from "./models/om"
-import {Bounds, Point} from "josh_js_util"
-import {savePNGJSON} from "./exporters/json"
-import {exportPNG} from "./exporters/png"
-import {exportSVG} from "./exporters/svg"
-import {exportCanvasJS} from "./exporters/canvas"
-import {SupportedIcons} from "./icons"
-import {RectDef} from "./models/rect"
-import {CircleDef} from "./models/circle"
 import {PathShapeDef} from "./models/pathshape"
-import {NGonClass, NGonDef} from "./models/ngon"
-import {exportPDF} from "./exporters/pdf"
+import {RectDef} from "./models/rect"
+import {GlobalState} from "./models/state"
 
 export type MenuAction = {
     title:string
@@ -75,6 +76,16 @@ export const ExportCanvasJSAction:MenuAction = {
     }
 }
 
+export const AddNewPageAction:MenuAction = {
+    title:'add new page',
+    icon:SupportedIcons.Add,
+    tags:['add','page'],
+    description:'adds a new page to the document',
+    perform: async (state:GlobalState) => {
+        const page = state.om.make(PageDef,{})
+        state.getCurrentDocument().appendListProp('pages',page)
+    }
+}
 export const AddNewRectAction:MenuAction = {
     title: 'new rect',
     icon: SupportedIcons.Add,
@@ -88,7 +99,6 @@ export const AddNewRectAction:MenuAction = {
         page.appendListProp('children', rect)
     }
 }
-
 export const AddNewCircleAction:MenuAction = {
     title: 'new circle',
     icon: SupportedIcons.Add,
@@ -103,7 +113,6 @@ export const AddNewCircleAction:MenuAction = {
         page.appendListProp('children', circle)
     }
 }
-
 export const AddNewPathShapeAction:MenuAction = {
     title: 'new path shape',
     icon: SupportedIcons.Add,
@@ -115,7 +124,6 @@ export const AddNewPathShapeAction:MenuAction = {
         page.appendListProp('children', shape)
     }
 }
-
 export const AddNewNGonAction:MenuAction = {
     title: 'new N-gon',
     icon: SupportedIcons.Add,
@@ -129,7 +137,6 @@ export const AddNewNGonAction:MenuAction = {
         page.appendListProp('children', shape)
     }
 }
-
 export const AddNewNumberAssetAction:MenuAction = {
     title:'add number asset',
     perform: async (state)=> {
@@ -291,10 +298,15 @@ export const ALL_ACTIONS: MenuAction[] = [
     DownloadSVGAction,
     DownloadPDFAction,
     ExportCanvasJSAction,
+
+    AddNewPageAction,
     AddNewRectAction,
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
+    AddNewNumberAssetAction,
+    AddNewColorAssetAction,
+
     DeleteSelection,
     RightAlignShapes,
     LeftAlignShapes,
@@ -302,5 +314,4 @@ export const ALL_ACTIONS: MenuAction[] = [
     BottomAlignShapes,
     VCenterAlignShapes,
     HCenterAlignShapes,
-    AddNewNumberAssetAction,
 ]

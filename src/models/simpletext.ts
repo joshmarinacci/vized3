@@ -1,4 +1,5 @@
 import {Bounds, Point} from "josh_js_util"
+
 import {
     CenterPositionDef,
     DrawableClass,
@@ -65,7 +66,7 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
     }
 
     drawSelf(ctx: ScaledSurface): void {
-        ctx.fillText(this.props.text,this.props.center,this.props.fill,this.props.fontSize)
+        ctx.fillText(this.props.text,this.props.center,this.getPropValue('fill'),this.props.fontSize)
     }
 
     refresh(prop: PropSchema) {
