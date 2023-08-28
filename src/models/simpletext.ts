@@ -1,4 +1,4 @@
-import {Bounds, Point} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util"
 import {
     CenterPositionDef,
     DrawableClass,
@@ -8,7 +8,7 @@ import {
     ObjectManager,
     PropSchema,
     ScaledSurface
-} from "./om";
+} from "./om"
 
 export const SimpleTextDef: ObjectDef = {
     name: 'simple-text',
@@ -32,9 +32,9 @@ export const SimpleTextDef: ObjectDef = {
 }
 
 export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
-    private metrics: TextMetrics;
-    private can: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
+    private metrics: TextMetrics
+    private can: HTMLCanvasElement
+    private ctx: CanvasRenderingContext2D
 
     constructor(om: ObjectManager, opts: Record<keyof typeof SimpleTextDef.props, any>) {
         super(om, SimpleTextDef, opts)
@@ -53,14 +53,14 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
     }
 
     contains(pt: Point): boolean {
-        let h = this.calcHeight()
-        let bds = new Bounds(this.props.center.x, this.props.center.y - h, this.metrics.width, h)
+        const h = this.calcHeight()
+        const bds = new Bounds(this.props.center.x, this.props.center.y - h, this.metrics.width, h)
         return bds.contains(pt)
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        let h = this.calcHeight()
-        let bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width,h)
+        const h = this.calcHeight()
+        const bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width,h)
         ctx.outlineRect(bds)
     }
 
@@ -80,12 +80,12 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
     }
 
     getHandle() {
-        return null;
+        return null
     }
 
     intersects(bounds: Bounds): boolean {
-        let center = this.getPropValue('center') as Point
-        let bds = new Bounds(center.x, center.y - 50, 100, 50)
+        const center = this.getPropValue('center') as Point
+        const bds = new Bounds(center.x, center.y - 50, 100, 50)
         return bds.intersects(bounds)
     }
 
@@ -97,12 +97,12 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
         await this.setPropValue('center', pos)
     }
     getAlignmentBounds(): Bounds {
-        let center = this.getPropValue('center') as Point
+        const center = this.getPropValue('center') as Point
         return new Bounds(center.x, center.y - 50, 100, 50)
     }
 
     async translateBy(offset: Point): Promise<void> {
-        let center = this.getPropValue('center') as Point
+        const center = this.getPropValue('center') as Point
         await this.setPropValue('center', center.add(offset))
     }
 }

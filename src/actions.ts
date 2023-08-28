@@ -1,16 +1,16 @@
-import {GlobalState} from "./models/state";
-import {DocClass, DocDef, DrawableClass, NumberAssetDef, ObjectProxy, PageDef} from "./models/om";
-import {Bounds, Point} from "josh_js_util";
-import {savePNGJSON} from "./exporters/json";
-import {exportPNG} from "./exporters/png";
-import {exportSVG} from "./exporters/svg";
-import {exportCanvasJS} from "./exporters/canvas";
-import {SupportedIcons} from "./icons";
-import {RectDef} from "./models/rect";
-import {CircleDef} from "./models/circle";
-import {PathShapeDef} from "./models/pathshape";
-import {NGonClass, NGonDef} from "./models/ngon";
-import {exportPDF} from "./exporters/pdf";
+import {GlobalState} from "./models/state"
+import {DocClass, DocDef, DrawableClass, NumberAssetDef, ObjectProxy, PageDef} from "./models/om"
+import {Bounds, Point} from "josh_js_util"
+import {savePNGJSON} from "./exporters/json"
+import {exportPNG} from "./exporters/png"
+import {exportSVG} from "./exporters/svg"
+import {exportCanvasJS} from "./exporters/canvas"
+import {SupportedIcons} from "./icons"
+import {RectDef} from "./models/rect"
+import {CircleDef} from "./models/circle"
+import {PathShapeDef} from "./models/pathshape"
+import {NGonClass, NGonDef} from "./models/ngon"
+import {exportPDF} from "./exporters/pdf"
 
 export type MenuAction = {
     title:string
@@ -92,7 +92,7 @@ export const AddNewCircleAction:MenuAction = {
             center: new Point(2, 2),
             radius: 1,
         })
-        await page.appendListProp('children', circle)
+        page.appendListProp('children', circle)
     }
 }
 
@@ -104,7 +104,7 @@ export const AddNewPathShapeAction:MenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const shape = state.om.make(PathShapeDef, {})
-        await page.appendListProp('children', shape)
+        page.appendListProp('children', shape)
     }
 }
 
@@ -118,7 +118,7 @@ export const AddNewNGonAction:MenuAction = {
         const shape = state.om.make(NGonDef, {
             center: new Point(200, 200),
         })
-        await page.appendListProp('children', shape)
+        page.appendListProp('children', shape)
     }
 }
 
@@ -137,7 +137,7 @@ export const DeleteSelection:MenuAction = {
     tags:['delete','shape'],
     perform: async (state: GlobalState) => {
         const objs = state.getSelectedObjects()
-        for(let obj of objs) {
+        for(const obj of objs) {
             if (obj && obj.parent) {
                 const parent = obj.parent as unknown as any
                 await parent.removeListPropByValue('children', obj)
@@ -168,8 +168,8 @@ export const BottomAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0])
-        for (let obj of objs) {
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
             await moveObjBy(obj,new Point(0,fbds.bottom()- calcObjectBounds(obj).bottom()))
         }
     }
@@ -180,8 +180,8 @@ export const LeftAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0]);
-        for (let obj of objs) {
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
             await moveObjBy(obj,new Point(fbds.left() - calcObjectBounds(obj).left(),0))
         }
     }
@@ -192,9 +192,9 @@ export const RightAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0]);
-        for (let obj of objs) {
-            let bds = calcObjectBounds(obj)
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
+            const bds = calcObjectBounds(obj)
             await moveObjBy(obj,new Point(fbds.right() - bds.right(),0))
         }
     }
@@ -205,8 +205,8 @@ export const TopAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0]);
-        for (let obj of objs) {
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
             await moveObjBy(obj,new Point(0,fbds.top() - calcObjectBounds(obj).top()))
         }
     }
@@ -217,8 +217,8 @@ export const HCenterAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0])
-        for (let obj of objs) {
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
             await moveObjBy(obj, new Point(fbds.center().x - calcObjectBounds(obj).center().x, 0))
         }
     }
@@ -229,8 +229,8 @@ export const VCenterAlignShapes: MenuAction = {
     perform: async (state) => {
         const objs = state.getSelectedObjects()
         if (objs.length < 2) return
-        let fbds = calcObjectBounds(objs[0])
-        for (let obj of objs) {
+        const fbds = calcObjectBounds(objs[0])
+        for (const obj of objs) {
             await moveObjBy(obj, new Point(0,fbds.center().y - calcObjectBounds(obj).center().y))
         }
     }
@@ -257,17 +257,17 @@ export const ConvertNGonToPath:MenuAction = {
     perform: async (state) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        let ngon = state.getSelectedObjects()[0] as NGonClass
-        let line_path = ngon.toSinglePath()
+        const ngon = state.getSelectedObjects()[0] as NGonClass
+        const line_path = ngon.toSinglePath()
         const parent = ngon.parent as unknown as any
         await parent.removeListPropByValue('children', ngon)
-        let path = state.om.make(PathShapeDef,{
+        const path = state.om.make(PathShapeDef,{
             points:line_path.points,
             closed: line_path.closed
         })
         page.appendListProp('children', path)
     }
-};
+}
 
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,

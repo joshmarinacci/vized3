@@ -1,4 +1,4 @@
-import {Bounds, Point} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util"
 import {
     DrawableClass,
     FillDef,
@@ -9,7 +9,7 @@ import {
     ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
-} from "./om";
+} from "./om"
 
 export const RectDef: ObjectDef = {
     name: 'rect',
@@ -20,11 +20,11 @@ export const RectDef: ObjectDef = {
             base: 'object',
             readonly: false,
             setter: (obj, name, value) => {
-                let old_bounds = obj as Bounds;
-                let new_bounds = old_bounds.copy()
+                const old_bounds = obj as Bounds
+                const new_bounds = old_bounds.copy()
                 // @ts-ignore
                 new_bounds[name] = value
-                return new_bounds;
+                return new_bounds
             },
             subProps: {
                 x: {
@@ -73,7 +73,7 @@ export const RectDef: ObjectDef = {
 }
 
 class RectResizeHandle implements Handle {
-    private obj: RectClass;
+    private obj: RectClass
 
     constructor(obj: RectClass) {
         this.obj = obj
@@ -84,14 +84,14 @@ class RectResizeHandle implements Handle {
     }
 
     async setPosition(pos: Point) {
-        let old_bounds = this.obj.getPropValue('bounds')
+        const old_bounds = this.obj.getPropValue('bounds')
         const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, pos.x - old_bounds.x, pos.y - old_bounds.y)
         await this.obj.setPropValue("bounds", new_bounds)
     }
 
     contains(pt: Point) {
-        let pos = this.obj.getPropValue('bounds').bottom_right()
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        const pos = this.obj.getPropValue('bounds').bottom_right()
+        const b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
         return b.contains(pt)
     }
 }
@@ -132,7 +132,7 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     }
 
     async setPosition(pos: Point): Promise<void> {
-        let bounds = this.getPropValue('bounds') as Bounds
+        const bounds = this.getPropValue('bounds') as Bounds
         await this.setPropValue('bounds', new Bounds(pos.x, pos.y, bounds.w, bounds.h))
     }
 
@@ -141,7 +141,7 @@ export class RectClass extends DrawableClass<typeof RectDef> {
     }
 
     async translateBy(offset: Point): Promise<void> {
-        let bds = this.getPropValue('bounds') as Bounds
+        const bds = this.getPropValue('bounds') as Bounds
         await this.setPropValue('bounds', bds.add(offset))
     }
 }

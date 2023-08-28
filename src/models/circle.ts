@@ -1,4 +1,4 @@
-import {Bounds, Point, toRadians} from "josh_js_util";
+import {Bounds, Point, toRadians} from "josh_js_util"
 import {
     CenterPositionDef,
     DrawableClass,
@@ -10,7 +10,7 @@ import {
     ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
-} from "./om";
+} from "./om"
 
 export const CircleDef: ObjectDef = {
     name: 'circle',
@@ -38,23 +38,23 @@ class CircleResizeHandle implements Handle {
     }
 
     getPosition(): Point {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
+        const center = this.obj.getPropValue("center")
+        const radius = this.obj.getPropValue('radius')
         return center.add(new Point(radius, 0))
     }
 
     async setPosition(pos: Point) {
-        let center = this.obj.getPropValue("center")
-        let diff = pos.subtract(center)
-        let radius = diff.x
+        const center = this.obj.getPropValue("center")
+        const diff = pos.subtract(center)
+        const radius = diff.x
         await this.obj.setPropValue('radius', radius)
     }
 
     contains(pt: Point) {
-        let center = this.obj.getPropValue("center")
-        let radius = this.obj.getPropValue('radius')
-        let pos = center.add(new Point(radius, 0))
-        let b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        const center = this.obj.getPropValue("center")
+        const radius = this.obj.getPropValue('radius')
+        const pos = center.add(new Point(radius, 0))
+        const b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
         return b.contains(pt)
     }
 }
@@ -82,9 +82,9 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     }
 
     intersects(bounds: Bounds): boolean {
-        let center = this.getPropValue('center') as Point
-        let rad = this.getPropValue('radius') as number
-        let bds = new Bounds(center.x - rad, center.y - rad, rad * 2, rad * 2)
+        const center = this.getPropValue('center') as Point
+        const rad = this.getPropValue('radius') as number
+        const bds = new Bounds(center.x - rad, center.y - rad, rad * 2, rad * 2)
         return bds.intersects(bounds)
     }
 
@@ -97,14 +97,13 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     }
 
     getAlignmentBounds() {
-        let center = this.getPropValue('center') as Point
-        let rad = this.getPropValue('radius') as number
-        let bds = new Bounds(center.x-rad,center.y-rad,rad*2,rad*2)
-        return bds
+        const center = this.getPropValue('center') as Point
+        const rad = this.getPropValue('radius') as number
+        return new Bounds(center.x - rad, center.y - rad, rad * 2, rad * 2)
     }
 
     async translateBy(offset: Point): Promise<void> {
-        let center = this.getPropValue('center') as Point
+        const center = this.getPropValue('center') as Point
         await this.setPropValue('center', center.add(offset))
     }
 }

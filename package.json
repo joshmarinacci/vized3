@@ -10,7 +10,6 @@
     "@types/react": "^18.2.14",
     "@types/react-dom": "^18.2.6",
     "crc-32": "^1.2.2",
-    "esbuild": "^0.18.19",
     "josh_js_util": "^0.1.11",
     "josh_react_util": "^1.0.19",
     "josh_web_util": "0.0.5",
@@ -52,6 +51,8 @@
   },
   "devDependencies": {
     "@types/react-color": "^3.0.6",
+    "esbuild": "^0.18.19",
+    "eslint": "^8.48.0",
     "vitest": "^0.34.1"
   }
 }
