@@ -22,6 +22,7 @@ export const CircleDef: ObjectDef = {
             base: "number",
             readonly: false,
             defaultValue: 20,
+            canProxy:true,
         },
         fill: FillDef,
         strokeFill: StrokeFillDef,
@@ -64,18 +65,19 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
     }
 
     drawSelf(ctx: ScaledSurface): void {
-        ctx.fillArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
+        ctx.fillArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.props.fill)
     }
 
     contains(pt: Point): boolean {
-        return pt.subtract(this.props.center).magnitude() < this.props.radius
+        return pt.subtract(this.props.center).magnitude() < this.getPropValue('radius')
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.outlineArc(this.props.center,this.props.radius,0,toRadians(360),this.props.fill)
+        ctx.outlineArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.props.fill)
     }
 
-    getHandle(): Handle {
+    getHandle() {
+        if(this.isPropProxySource('radius')) return null
         return new CircleResizeHandle(this)
     }
 

@@ -371,9 +371,11 @@ describe('asset tests', () => {
         let page = doc.getListPropAt('pages',0)
         let circle = page.getListPropAt('children',0)
         expect(circle.getPropValue('radius')).toEqual(10)
+        expect(circle.isPropProxySource('radius')).toBeFalsy()
 
         //set the circles radius property to the num asset
         circle.setPropProxySource('radius',numAsset)
+        expect(circle.isPropProxySource('radius')).toBeTruthy()
         //now radius should equal 66
         expect(numAsset.getPropValue('value')).toEqual(66)
         expect(circle.getPropValue('radius')).toEqual(66)

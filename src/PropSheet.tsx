@@ -1,15 +1,16 @@
 import React, {useContext, useState} from "react";
 import {GlobalState} from "./models/state";
 import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
-import {PopupContext, toClass} from "josh_react_util";
-import {useObjectProxyChange, useObservableChange} from "./common";
+import {DialogContext, PopupContext, toClass} from "josh_react_util";
+import {ToggleIconButton, useObjectProxyChange, useObservableChange} from "./common";
 import "./PropSheet.css"
 import {MINECRAFT} from "./exporters/common";
+import {SupportedIcons} from "./icons";
+import {ProxySelectionDialog} from "./ProxySelectionDialog";
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
     const value = props.target.getPropValue(props.schema.name)
     return <>
-        <label>{props.schema.name}</label>
         <input type={"number"} value={value} onChange={async (e) => {
             let num = parseInt(e.target.value)
             await props.target.setPropValue(props.schema.name, num)
@@ -55,7 +56,7 @@ function SubPropEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
 }
 
 function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<any>, onClick:any}) {
-    return <div className={'color-swatch-button'}>
+    return <div className={'color-swatch-button input'}>
         <button
             className={'color-swatch-button'}
             style={{backgroundColor:props.target.getPropValue(props.schema.name) as string}}
@@ -123,14 +124,34 @@ function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<any> })
 
 }
 
-function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any> }) {
-    const { prop, target } = props
+function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any>, state:GlobalState }) {
+    const { prop, target , state} = props
+    const dm = useContext(DialogContext)
     if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
     if(prop.hidden) return <></>
     if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)+""}</b></>
     if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
-    if(prop.base === 'number') return <NumberEditor schema={prop} target={target}/>
+    if(prop.base === 'number') {
+        if(prop.canProxy) {
+            return (<>
+                <label>{prop.name}</label>
+                <ToggleIconButton
+                    regularIcon={SupportedIcons.CheckboxUnchecked}
+                    selectedIcon={SupportedIcons.CheckboxChecked}
+                    selected={target.isPropProxySource(prop.name)}
+                    onClick={() => {
+                        dm.show(<ProxySelectionDialog state={state} prop={prop} target={target}/>)
+                    }}
+                />
+                <NumberEditor schema={prop} target={target}/>
+            </>)
+        }
+        return (<>
+            <label>{prop.name}</label>
+            <NumberEditor schema={prop} target={target}/>
+        </>)
+    }
     if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>
     if(prop.base === 'boolean') return <BooleanEditor schema={prop} target={target}/>
     return <label>unknown property type {prop.name}</label>
@@ -151,6 +172,6 @@ export function InnerPropSheet(props:{state:GlobalState, selected:ObjectProxy<Ob
     useObservableChange(props.state,'selection')
     const schemas = (props.selected)?props.selected.getPropSchemas():[]
     return <div className={'prop-sheet panel'}>{schemas.map((schema) => {
-        return <PropEditor key={schema.name} prop={schema} target={props.selected}/>
+        return <PropEditor key={schema.name} prop={schema} target={props.selected} state={props.state}/>
     })}</div>
 }

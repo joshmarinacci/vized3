@@ -2,10 +2,15 @@ import React, {useContext} from "react"
 import './TreeView.css'
 import {PopupContext, toClass,} from "josh_react_util";
 import {GlobalState} from "./models/state";
-import {ObjectDef, ObjectProxy, PageClass} from "./models/om";
+import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om";
 import {MenuActionButton, MenuBox, useObservableChange} from "./common";
 import {Point} from "josh_js_util";
-import {AddNewCircleAction, AddNewRectAction, DeleteSelection} from "./actions";
+import {
+    AddNewCircleAction,
+    AddNewNumberAssetAction,
+    AddNewRectAction,
+    DeleteSelection
+} from "./actions";
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
@@ -50,11 +55,24 @@ function TreePageItem(props: { page: PageClass, state:GlobalState, selected:Obje
         }
     </div>
 }
-
+function TreeAssetItem(props: { asset: NumberAssetClass, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+    const {asset, state} = props
+    const classes = toClass({
+        'tree-item':true,
+        'selectable':true,
+        selected:state.getSelectedObjects().find(s => s === asset),
+    })
+    return <div className={classes} onClick={() => {
+        state.setSelectedObjects([asset])
+    }}>
+        <b>asset: {asset.getPropValue('name')}</b>
+    </div>
+}
 export function TreeView(props: { state:GlobalState}) {
     useObservableChange(props.state,'selection')
     const selected = props.state.getSelectedObjects()
     const doc = props.state.getCurrentDocument()
+    const pm = useContext(PopupContext)
     const select_document = () => {
         props.state.setSelectedObjects([doc])
     }
@@ -63,6 +81,19 @@ export function TreeView(props: { state:GlobalState}) {
         <h3>pages</h3>
         {doc.getListProp('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
+        })}
+        <h3
+            onContextMenu={(e) => {
+                e.preventDefault()
+                const menu = <MenuBox>
+                    <MenuActionButton key={'add_num'} state={props.state} action={AddNewNumberAssetAction}/>
+                </MenuBox>
+                pm.show_at(menu, e.target, "left", new Point(0,0))
+            }}
+        >assets</h3>
+
+        {doc.getListProp('assets').map((asset,i) => {
+            return <TreeAssetItem key={i} asset={asset} state={props.state} selected={selected}/>
         })}
     </div>
 }

@@ -13,4 +13,6 @@ export enum SupportedIcons {
     Add='add',
     Delete='delete',
     Search='search',
+    CheckboxChecked='check_box',
+    CheckboxUnchecked='check_box_outline_blank'
 }

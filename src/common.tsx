@@ -59,7 +59,7 @@ export function ToggleIconButton(props: {
 export function IconButton(props: {
     onClick?: () => any,
     icon: SupportedIcons,
-    children: ReactNode
+    children?: ReactNode
     disabled?: boolean
 }): JSX.Element {
     return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>

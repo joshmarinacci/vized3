@@ -1,5 +1,5 @@
 import {GlobalState} from "./models/state";
-import {DocClass, DocDef, DrawableClass, ObjectProxy, PageDef} from "./models/om";
+import {DocClass, DocDef, DrawableClass, NumberAssetDef, ObjectProxy, PageDef} from "./models/om";
 import {Bounds, Point} from "josh_js_util";
 import {savePNGJSON} from "./exporters/json";
 import {exportPNG} from "./exporters/png";
@@ -89,7 +89,8 @@ export const AddNewCircleAction:MenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const circle = state.om.make(CircleDef, {
-            center: new Point(200, 200),
+            center: new Point(2, 2),
+            radius: 1,
         })
         await page.appendListProp('children', circle)
     }
@@ -119,6 +120,15 @@ export const AddNewNGonAction:MenuAction = {
         })
         await page.appendListProp('children', shape)
     }
+}
+
+export const AddNewNumberAssetAction:MenuAction = {
+    title:'add number asset',
+    perform: async (state)=> {
+        const asset = state.om.make(NumberAssetDef,{})
+        state.getCurrentDocument().appendListProp('assets',asset)
+    }
+
 }
 
 export const DeleteSelection:MenuAction = {
@@ -277,4 +287,5 @@ export const ALL_ACTIONS: MenuAction[] = [
     BottomAlignShapes,
     VCenterAlignShapes,
     HCenterAlignShapes,
+    AddNewNumberAssetAction,
 ]

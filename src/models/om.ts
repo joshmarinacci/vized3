@@ -11,9 +11,10 @@ export type PropSchema = {
     defaultValue:any,
     readonly:boolean,
     custom?:'css-color',
-    subProps?:Record<string,PropSchema>,
-    setter?:PropSetter,
-    hidden?:boolean,
+    subProps?:Record<string,PropSchema>
+    setter?:PropSetter
+    hidden?:boolean
+    canProxy?:boolean
 }
 
 export type EnumSchema = PropSchema & {
@@ -336,6 +337,9 @@ export class ObjectProxy<T extends ObjectDef> {
             this.props[key] = value
             this.proxies.delete(key)
         }
+    }
+    isPropProxySource<K extends keyof T['props']>(key:K) {
+        return this.proxies.has(key)
     }
     getUUID() {
         return this.uuid
