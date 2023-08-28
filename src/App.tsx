@@ -1,4 +1,5 @@
-import React, {useContext, useState} from 'react';
+import './App.css'
+
 import {
     DialogContainer,
     DialogContext,
@@ -10,20 +11,8 @@ import {
     PopupContextImpl,
     Spacer,
 } from "josh_react_util"
-import './App.css';
-import {TreeView} from "./TreeView";
-import {PageView,} from "./editing/PageView";
-import {PropSheet} from "./PropSheet";
-import {
-    DropdownMenuButton,
-    IconButton,
-    MainLayout,
-    ToggleIconButton,
-    useObjectManagerChange,
-    useObservableChange
-} from "./common";
-import {GlobalState} from "./models/state";
-import {HistoryChanged} from "./models/om";
+import React, {useContext, useState} from 'react'
+
 import {
     AddNewCircleAction,
     AddNewNGonAction,
@@ -36,11 +25,24 @@ import {
     MenuAction,
     NewDocumentAction,
     SavePNGJSONAction
-} from "./actions";
-import {LoadFileDialog} from "./LoadFileDialog";
-import {SettingsDialog} from "./SettingsDialog";
-import {SupportedIcons} from "./icons";
-import {ActionSearchBox} from "./actionsearch";
+} from "./actions"
+import {ActionSearchBox} from "./actionsearch"
+import {
+    DropdownMenuButton,
+    IconButton,
+    MainLayout,
+    ToggleIconButton,
+    useObjectManagerChange,
+    useObservableChange
+} from "./common"
+import {PageView,} from "./editing/PageView"
+import {SupportedIcons} from "./icons"
+import {LoadFileDialog} from "./LoadFileDialog"
+import {HistoryChanged} from "./models/om"
+import {GlobalState} from "./models/state"
+import {PropSheet} from "./PropSheet"
+import {SettingsDialog} from "./SettingsDialog"
+import {TreeView} from "./TreeView"
 
 const state = new GlobalState()
 
@@ -124,4 +126,4 @@ function App() {
         </DialogContext.Provider>
     )
 }
-export default App;
+export default App

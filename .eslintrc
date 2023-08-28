@@ -1,12 +1,14 @@
 {
   "parser": "@typescript-eslint/parser",
   "plugins": [
-    "@typescript-eslint"
+    "@typescript-eslint",
+    "simple-import-sort"
   ],
   "extends": [
     "plugin:@typescript-eslint/recommended"
   ],
   "rules": {
-    "semi": ["error","never"]
+    "semi": ["error","never"],
+    "simple-import-sort/imports": "error"
   }
 }
