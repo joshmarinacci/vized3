@@ -1,18 +1,18 @@
-import React, {useContext, useState} from "react";
-import {GlobalState} from "./models/state";
-import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om";
-import {DialogContext, PopupContext, toClass} from "josh_react_util";
-import {ToggleIconButton, useObjectProxyChange, useObservableChange} from "./common";
+import React, {useContext, useState} from "react"
+import {GlobalState} from "./models/state"
+import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om"
+import {DialogContext, PopupContext, toClass} from "josh_react_util"
+import {ToggleIconButton, useObjectProxyChange, useObservableChange} from "./common"
 import "./PropSheet.css"
-import {MINECRAFT} from "./exporters/common";
-import {SupportedIcons} from "./icons";
-import {ProxySelectionDialog} from "./ProxySelectionDialog";
+import {MINECRAFT} from "./exporters/common"
+import {SupportedIcons} from "./icons"
+import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
     const value = props.target.getPropValue(props.schema.name)
     return <>
         <input type={"number"} value={value} onChange={async (e) => {
-            let num = parseInt(e.target.value)
+            const num = parseInt(e.target.value)
             await props.target.setPropValue(props.schema.name, num)
         }}/>
     </>
@@ -23,10 +23,10 @@ function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, t
     return <>
         <label>{props.schema.name}</label>
         <input type={"number"} value={value[props.schema.name]} onChange={async (e) => {
-            let num = parseInt(e.target.value)
-            let v = props.target.getPropValue(props.parentSchema.name)
+            const num = parseInt(e.target.value)
+            const v = props.target.getPropValue(props.parentSchema.name)
             if(!props.parentSchema.setter) throw new Error('cannot use sub props without a setter')
-            let nv = props.parentSchema.setter(v,props.schema.name,num)
+            const nv = props.parentSchema.setter(v,props.schema.name,num)
             await props.target.setPropValue(props.parentSchema.name, nv)
         }}/>
     </>
@@ -87,7 +87,7 @@ function FillInput(props:{ schema: PropSchema, target:ObjectProxy<any>}) {
     const show = () => setVisible((!visible))
     const pm = useContext(PopupContext)
     return <>
-        <label>{props.schema.name}</label>
+        {/*<label>{props.schema.name}</label>*/}
         {/*<div className={'color-picker-wrapper'}>*/}
         <FillSwatchButton schema={props.schema} target={target} onClick={(e:MouseEvent) => {
             pm.show_at(<SwatchColorPicker colors={MINECRAFT} selected={value} onSelect={async (hex: string) => {
@@ -127,7 +127,20 @@ function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<any> })
 function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any>, state:GlobalState }) {
     const { prop, target , state} = props
     const dm = useContext(DialogContext)
-    if(prop.custom === 'css-color') return <FillInput schema={prop} target={target}/>
+    if(prop.custom === 'css-color') {
+        return <>
+            <label>{prop.name}</label>
+            {prop.canProxy && <ToggleIconButton
+                regularIcon={SupportedIcons.CheckboxUnchecked}
+                selectedIcon={SupportedIcons.CheckboxChecked}
+                selected={target.isPropProxySource(prop.name)}
+                onClick={() => {
+                    dm.show(<ProxySelectionDialog state={state} prop={prop} target={target}/>)
+                }}
+            />}
+            <FillInput schema={prop} target={target}/>
+        </>
+    }
     if(prop.hidden) return <></>
     if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)+""}</b></>
     if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
@@ -152,7 +165,20 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any>, state:G
             <NumberEditor schema={prop} target={target}/>
         </>)
     }
-    if(prop.base === 'string') return <StringEditor schema={prop} target={target}/>
+    if(prop.base === 'string') {
+        return <>
+            <label>{prop.name}</label>
+            {prop.canProxy && <ToggleIconButton
+                    regularIcon={SupportedIcons.CheckboxUnchecked}
+                    selectedIcon={SupportedIcons.CheckboxChecked}
+                    selected={target.isPropProxySource(prop.name)}
+                    onClick={() => {
+                        dm.show(<ProxySelectionDialog state={state} prop={prop} target={target}/>)
+                    }}
+                />}
+            <StringEditor schema={prop} target={target}/>
+        </>
+    }
     if(prop.base === 'boolean') return <BooleanEditor schema={prop} target={target}/>
     return <label>unknown property type {prop.name}</label>
 }

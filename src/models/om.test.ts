@@ -1,6 +1,6 @@
-import {Bounds} from "josh_js_util";
-import assert from "assert";
-import {expect, describe, it} from "vitest";
+import {Bounds} from "josh_js_util"
+import assert from "assert"
+import {expect, describe, it} from "vitest"
 import {
     FamilyPropChanged,
     JSONObject,
@@ -12,12 +12,13 @@ import {
     PageClass,
     NumberAssetDef,
     DocClass,
-    JSONDoc
-} from "./om.js";
-import {RectClass, RectDef} from "./rect";
-import {CircleClass, CircleDef} from "./circle";
-import {createThreeCirclesDoc} from "../actions.test";
-import {saveJSON} from "../exporters/json";
+    JSONDoc,
+    ColorAssetDef
+} from "./om.js"
+import {RectClass, RectDef} from "./rect"
+import {CircleClass, CircleDef} from "./circle"
+import {createThreeCirclesDoc} from "../actions.test"
+import {saveJSON} from "../exporters/json"
 
 
 describe('model tests', () => {
@@ -41,19 +42,19 @@ describe('model tests', () => {
         const om = new ObjectManager()
         om.registerDef(PageDef, PageClass)
         om.registerDef(RectDef, RectClass)
-        let page = await new PageClass(om,{});
+        const page = await new PageClass(om,{})
         assert(page.getPropValue('children').length === 0)
-        let rect = await om.make(RectDef, {})
+        const rect = await om.make(RectDef, {})
         await page.appendListProp('children',rect)
         assert(page.getPropValue('children').length === 1)
-        let rect2 = page.getListPropAt('children',0)
+        const rect2 = page.getListPropAt('children',0)
         assert(rect === rect2)
     })
     it('should watch for changes on a single object', async () => {
         const om = new ObjectManager()
         om.registerDef(PageDef, PageClass)
         om.registerDef(RectDef, RectClass)
-        let rect = new RectClass(om,{})
+        const rect = new RectClass(om,{})
         // add listener
         let changed = false
         rect.addEventListener(PropChanged, (evt) => {
@@ -70,7 +71,7 @@ describe('model tests', () => {
         const page = new PageClass(om, {})
         const rect = new RectClass(om, {})
         await page.appendListProp('children',rect)
-        let changed:boolean = false
+        let changed = false
         page.addEventListener(FamilyPropChanged, (evt) => {
             changed = true
         })
@@ -111,7 +112,7 @@ describe('model tests', () => {
         assert(json_obj.root.name === 'page')
         assert(Array.isArray(json_obj.root.props.children))
         assert(json_obj.root.props.children.length === 1)
-        let json_rect:JSONObject = json_obj.root.props.children[0]
+        const json_rect:JSONObject = json_obj.root.props.children[0]
 
         expect(json_rect.name).toBe('rect')
         assert(typeof json_rect.props.fill == 'string')
@@ -138,9 +139,9 @@ describe('model tests', () => {
         assert(new_root instanceof PageClass)
         assert((new_root as PageClass).hasChildren !== null)
         assert((new_root as PageClass).hasChildren())
-        let new_rects = new_root.getPropValue('children')
+        const new_rects = new_root.getPropValue('children')
         assert(new_rects.length === 1)
-        let new_rect = new_root.getListPropAt('children',0)
+        const new_rect = new_root.getListPropAt('children',0)
         assert(new_rect.def.name === 'rect')
         assert(new_rect.getPropValue("fill") === 'green')
         assert(new_rect.getPropValue("bounds") instanceof Bounds)
@@ -293,34 +294,34 @@ describe('model tests', () => {
             // confirm object is not registered anymore
             assert(!om.hasObject(rect.getUUID()))
         }
-    });
+    })
 })
 
 describe('asset tests', () => {
     it('should have an empty assets section', async () => {
-        let {state, circs} = await createThreeCirclesDoc()
+        const {state, circs} = await createThreeCirclesDoc()
         expect(state).toBeTruthy()
-        let doc = state.getCurrentDocument()
-        let name = doc.getPropNamed('name')
+        const doc = state.getCurrentDocument()
+        const name = doc.getPropNamed('name')
         expect(name).toEqual('unnamed')
-        let pages = doc.getListProp('pages')
+        const pages = doc.getListProp('pages')
         expect(pages).toBeTruthy()
         expect(pages.length).toEqual(1)
-        let page = doc.getListPropAt('pages',0)
-        let children = page.getListProp('children')
+        const page = doc.getListPropAt('pages',0)
+        const children = page.getListProp('children')
         expect(children.length).toEqual(3)
 
-        let assets = doc.getListProp('assets')
+        const assets = doc.getListProp('assets')
         expect(assets).toBeTruthy()
         expect(assets.length).toEqual(0)
     })
     it('should make a number asset and persist it', async () => {
-        let {state, circs} = await createThreeCirclesDoc()
-        let doc = state.getCurrentDocument()
+        const {state, circs} = await createThreeCirclesDoc()
+        const doc = state.getCurrentDocument()
 
         // persist with no assets
         {
-            let json_doc = await saveJSON(state)
+            const json_doc = await saveJSON(state)
             // console.log(JSON.stringify(json_doc, null, '   '))
             expect(json_doc.root.props.pages[0].props.children.length).toBe(3)
             expect(json_doc.root.props.assets.length).toBe(0)
@@ -328,7 +329,7 @@ describe('asset tests', () => {
 
         // add a number asset
         {
-            let numAsset = state.om.make(NumberAssetDef, {value: 66})
+            const numAsset = state.om.make(NumberAssetDef, {value: 66})
             expect(numAsset).toBeTruthy()
             expect(numAsset.getPropValue('name')).toEqual('unnamed')
             expect(numAsset.getPropValue('value')).toEqual(66)
@@ -340,20 +341,20 @@ describe('asset tests', () => {
 
         // persist with the single asset
         {
-            let json_doc = await saveJSON(state)
+            const json_doc = await saveJSON(state)
             console.log(JSON.stringify(json_doc, null, '   '))
             expect(json_doc.root.props.pages[0].props.children.length).toBe(3)
             expect(json_doc.root.props.assets.length).toBe(1)
-            let num_asset_json = json_doc.root.props.assets[0]
+            const num_asset_json = json_doc.root.props.assets[0]
             expect(num_asset_json.props.name).toBe('unnamed')
             expect(num_asset_json.props.value).toBe(66)
         }
         //reload json
         {
-            let json_doc = await saveJSON(state)
-            let doc_obj = await state.om.fromJSON<DocClass>(json_doc as JSONDoc)
+            const json_doc = await saveJSON(state)
+            const doc_obj = await state.om.fromJSON<DocClass>(json_doc as JSONDoc)
             expect(doc_obj.getListProp('assets').length).toEqual(1)
-            let num_asset = doc_obj.getListPropAt('assets',0)
+            const num_asset = doc_obj.getListPropAt('assets',0)
             expect(num_asset.getPropValue('name')).toEqual('unnamed')
             expect(num_asset.getPropValue('value')).toEqual(66)
 
@@ -361,15 +362,15 @@ describe('asset tests', () => {
 
     })
     it('should update a circle radius with a number asset', async () => {
-        let {state, circs} = await createThreeCirclesDoc()
-        let doc = state.getCurrentDocument()
+        const {state, circs} = await createThreeCirclesDoc()
+        const doc = state.getCurrentDocument()
         // add a number asset
-        let numAsset = state.om.make(NumberAssetDef, {value: 66})
+        const numAsset = state.om.make(NumberAssetDef, {value: 66})
         //add asset to the assets list
         doc.appendListProp('assets',numAsset)
         // get the first circle
-        let page = doc.getListPropAt('pages',0)
-        let circle = page.getListPropAt('children',0)
+        const page = doc.getListPropAt('pages',0)
+        const circle = page.getListPropAt('children',0)
         expect(circle.getPropValue('radius')).toEqual(10)
         expect(circle.isPropProxySource('radius')).toBeFalsy()
 
@@ -396,6 +397,20 @@ describe('asset tests', () => {
         circle.setPropProxySource('radius',numAsset)
         //radius should now be 68
         expect(circle.getPropValue('radius')).toEqual(68)
+
+    })
+    it('should make a color asset', async () => {
+        const {state, circs} = await createThreeCirclesDoc()
+        const colorAsset = state.om.make(ColorAssetDef, {value:'#ffff00'})
+        expect(colorAsset).toBeTruthy()
+        expect(colorAsset.getPropValue('value')).toEqual('#ffff00')
+        state.getCurrentDocument().appendListProp('assets',colorAsset)
+
+        const circle = circs[0] as CircleClass
+        expect(circle.getPropValue('fill')).toEqual('#cccccc')
+
+        circle.setPropProxySource('fill',colorAsset)
+        expect(circle.getPropValue('fill')).toEqual('#ffff00')
 
     })
 })

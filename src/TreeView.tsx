@@ -1,16 +1,17 @@
 import React, {useContext} from "react"
 import './TreeView.css'
-import {PopupContext, toClass,} from "josh_react_util";
-import {GlobalState} from "./models/state";
-import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om";
-import {MenuActionButton, MenuBox, useObservableChange} from "./common";
-import {Point} from "josh_js_util";
+import {PopupContext, toClass,} from "josh_react_util"
+import {GlobalState} from "./models/state"
+import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om"
+import {MenuActionButton, MenuBox, useObservableChange} from "./common"
+import {Point} from "josh_js_util"
 import {
     AddNewCircleAction,
+    AddNewColorAssetAction,
     AddNewNumberAssetAction,
     AddNewRectAction,
     DeleteSelection
-} from "./actions";
+} from "./actions"
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
     const shape = props.shape
@@ -87,6 +88,7 @@ export function TreeView(props: { state:GlobalState}) {
                 e.preventDefault()
                 const menu = <MenuBox>
                     <MenuActionButton key={'add_num'} state={props.state} action={AddNewNumberAssetAction}/>
+                    <MenuActionButton key={'add_color'} state={props.state} action={AddNewColorAssetAction}/>
                 </MenuBox>
                 pm.show_at(menu, e.target, "left", new Point(0,0))
             }}

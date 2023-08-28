@@ -1,7 +1,7 @@
-import {expect, describe, it} from "vitest";
-import {Bounds, Point} from "josh_js_util";
-import assert from "assert";
-import {DocDef, PageDef} from "./models/om";
+import {expect, describe, it} from "vitest"
+import {Bounds, Point} from "josh_js_util"
+import assert from "assert"
+import {DocDef, PageDef} from "./models/om"
 import {
     BottomAlignShapes,
     HCenterAlignShapes,
@@ -9,21 +9,21 @@ import {
     RightAlignShapes,
     TopAlignShapes,
     VCenterAlignShapes
-} from "./actions";
-import {GlobalState} from "./models/state";
-import {RectDef} from "./models/rect";
-import {CircleDef} from "./models/circle";
+} from "./actions"
+import {GlobalState} from "./models/state"
+import {RectDef} from "./models/rect"
+import {CircleDef} from "./models/circle"
 
 async function createThreeRectsDoc() {
     const state = new GlobalState()
-    let page = await state.om.make(PageDef, {})
-    let rect1 = await state.om.make(RectDef, {
+    const page = await state.om.make(PageDef, {})
+    const rect1 = await state.om.make(RectDef, {
         bounds: new Bounds(100,100,10,10*2), fill:'red' })
     await page.appendListProp('children',rect1)
-    let rect2 = await state.om.make(RectDef, {
+    const rect2 = await state.om.make(RectDef, {
         bounds: new Bounds(200,200,20,20*2), fill:'green' })
     await page.appendListProp('children',rect2)
-    let rect3 = await state.om.make(RectDef, {
+    const rect3 = await state.om.make(RectDef, {
         bounds: new Bounds(300,300,30,30*2), fill:'blue' })
     await page.appendListProp('children',rect3)
 
@@ -36,19 +36,19 @@ async function createThreeRectsDoc() {
 
 export async function createThreeCirclesDoc() {
     const state = new GlobalState()
-    let doc = state.om.make(DocDef, {})
+    const doc = state.om.make(DocDef, {})
     state.swapDoc(doc)
-    let page = state.om.make(PageDef, {})
-    await doc.appendListProp('pages',page)
-    let circ1 = state.om.make(CircleDef, {
+    const page = state.om.make(PageDef, {})
+    doc.appendListProp('pages', page)
+    const circ1 = state.om.make(CircleDef, {
         center: new Point(100,100), radius: 10})
-    await page.appendListProp('children',circ1)
-    let circ2 = state.om.make(CircleDef, {
+    page.appendListProp('children', circ1)
+    const circ2 = state.om.make(CircleDef, {
         center: new Point(200,200), radius: 20})
-    await page.appendListProp('children',circ2)
-    let circ3 = state.om.make(CircleDef, {
+    page.appendListProp('children', circ2)
+    const circ3 = state.om.make(CircleDef, {
         center: new Point(300,300), radius: 30})
-    await page.appendListProp('children',circ3)
+    page.appendListProp('children',circ3)
 
     return {
         state:state,

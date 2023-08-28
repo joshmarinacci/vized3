@@ -1,5 +1,5 @@
-import {Bounds, genId, Point, Size} from "josh_js_util";
-import {lookup_name, Unit} from "./unit";
+import {Bounds, genId, Point, Size} from "josh_js_util"
+import {lookup_name, Unit} from "./unit"
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
 export type PropRenderer = (oldObj:any, propname:string, propvalue:any) => any
@@ -29,11 +29,11 @@ export const CenterPositionDef:PropSchema = {
     base: 'object',
     readonly: false,
     setter: (obj, name, value) => {
-        let pt = obj as Point;
-        let pt2 = pt.clone()
+        const pt = obj as Point
+        const pt2 = pt.clone()
         // @ts-ignore
         pt2[name] = value
-        return pt2;
+        return pt2
     },
     subProps: {
         x: {
@@ -71,8 +71,8 @@ export const SizeDef:PropSchema = {
         }
     },
     setter: (obj, name, value) => {
-        let s_old =obj as Size
-        let snew = new Size(s_old.w,s_old.h)
+        const s_old =obj as Size
+        const snew = new Size(s_old.w,s_old.h)
         // @ts-ignore
         snew[name] = value
         return snew
@@ -85,7 +85,8 @@ export const FillDef:PropSchema = {
     base: 'string',
     readonly: false,
     custom:'css-color',
-    defaultValue: '#cccccc'
+    defaultValue: '#cccccc',
+    canProxy:true
 }
 export const StrokeFillDef:PropSchema = {
     name:'strokeFill',
@@ -170,6 +171,22 @@ export const NumberAssetDef:ObjectDef = {
         }
     }
 }
+export const ColorAssetDef:ObjectDef = {
+    name:'color-asset',
+    props: {
+        name: NameDef,
+        value: {
+            name:'value',
+            base:"string",
+            readonly:false,
+            custom:'css-color',
+            defaultValue:'#000000',
+            hidden:false,
+        }
+    }
+}
+
+
 export interface Handle {
     getPosition(): Point;
     setPosition(pos: Point): Promise<void>;
@@ -223,12 +240,12 @@ export type OMEventTypes = typeof HistoryChanged
 
 
 export class ObjectProxy<T extends ObjectDef> {
-    private listeners: Map<EventTypes, any[]>;
+    private listeners: Map<EventTypes, any[]>
     parent: ObjectProxy<ObjectDef> | null
-    def: ObjectDef;
-    private uuid: string;
-    props:Record<keyof T['props'], any>;
-    private proxies: Map<keyof T['props'], ObjectProxy<any>>;
+    def: ObjectDef
+    private uuid: string
+    props:Record<keyof T['props'], any>
+    private proxies: Map<keyof T['props'], ObjectProxy<any>>
 
     constructor(om: ObjectManager, def: T, opts: Record<keyof T['props'],any>) {
         this.uuid = genId('object')
@@ -237,7 +254,7 @@ export class ObjectProxy<T extends ObjectDef> {
         this.parent = null
         this.props = {} as Record<keyof T['props'], any>
         Object.keys(def.props).forEach(name => {
-            let prop = def.props[name]
+            const prop = def.props[name]
             let val = prop.defaultValue
             if(prop.defaultValue instanceof Function) val = val()
             if(opts[prop.name]) val = opts[prop.name]
@@ -333,7 +350,7 @@ export class ObjectProxy<T extends ObjectDef> {
     removePropProxySource<K extends keyof T['props']>(key:K) {
         if(this.proxies.has(key)) {
             // @ts-ignore
-            let value =  this.proxies.get(key).getPropValue('value')
+            const value =  this.proxies.get(key).getPropValue('value')
             this.props[key] = value
             this.proxies.delete(key)
         }
@@ -381,6 +398,12 @@ export class NumberAssetClass extends ObjectProxy<typeof NumberAssetDef>{
     }
 }
 
+export class ColorAssetClass extends ObjectProxy<typeof ColorAssetDef> {
+    constructor(om:ObjectManager, opts: Record<keyof typeof ColorAssetDef.props, any>) {
+        super(om, ColorAssetDef, opts)
+    }
+}
+
 export type JSONObject = {
     name: string
     props: Record<string, any>
@@ -402,8 +425,8 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
             return
         }
         if (prop.base === 'list') {
-            let arr: JSONObject[] = []
-            let list = obj.getPropValue(prop.name)
+            const arr: JSONObject[] = []
+            const list = obj.getPropValue(prop.name)
             list.forEach((val: ObjectProxy<ObjectDef>) => {
                 arr.push(toJSON(val))
             })
@@ -411,7 +434,7 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
             return
         }
         if (prop.base === 'object') {
-            let val = obj.getPropValue(prop.name)
+            const val = obj.getPropValue(prop.name)
             if (val instanceof Bounds) {
                 json.props[prop.name] = val.toJSON()
                 return
@@ -446,7 +469,7 @@ function toJSON(obj: ObjectProxy<any>): JSONObject {
 async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
     const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, any> = {}
-    for (let key of Object.keys(def.props)) {
+    for (const key of Object.keys(def.props)) {
         const propSchema = def.props[key]
         if (propSchema.base === 'enum') {
             const schema = propSchema as EnumSchema
@@ -469,8 +492,8 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
         if (propSchema.base === 'list') {
             props[key] = []
             const vals = obj.props[key] as JSONObject[]
-            for (let val of vals) {
-                let obj_val = await fromJSON(om, val)
+            for (const val of vals) {
+                const obj_val = await fromJSON(om, val)
                 props[key].push(obj_val)
             }
             continue
@@ -485,7 +508,7 @@ async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
                 continue
             }
             if (key === 'size') {
-                let v = obj.props[key]
+                const v = obj.props[key]
                 props[key] = new Size(v.w,v.h)
                 continue
             }
@@ -511,9 +534,9 @@ class AppendListEvent<T> implements HistoryEvent {
     oldValue:any
     newValue:any
     obj: ObjectProxy<ObjectDef>
-    desc: string;
-    uuid: string;
-    compressable: boolean;
+    desc: string
+    uuid: string
+    compressable: boolean
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:appendlist')
         this.target = target
@@ -546,11 +569,11 @@ class AppendListEvent<T> implements HistoryEvent {
     }
 }
 class SetListItemEvent<T> implements HistoryEvent {
-    uuid: string;
-    private target: ObjectProxy<ObjectDef>;
-    private prop: PropSchema;
-    compressable: boolean;
-    desc: string;
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number, value:ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:setlistelement')
         this.target = target
@@ -564,19 +587,19 @@ class SetListItemEvent<T> implements HistoryEvent {
     }
 
     redo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
 
     undo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
 }
 class InsertListItemEvent<T> implements HistoryEvent {
-    uuid: string;
-    private target: ObjectProxy<ObjectDef>;
-    private prop: PropSchema;
-    compressable: boolean;
-    desc: string;
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number, value:ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:setlistelement')
         this.target = target
@@ -590,18 +613,18 @@ class InsertListItemEvent<T> implements HistoryEvent {
         this.compressable = false
     }
     redo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
     undo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
 }
 class RemoveListItemEvent<T> implements HistoryEvent {
-    uuid: string;
-    private target: ObjectProxy<ObjectDef>;
-    private prop: PropSchema;
-    compressable: boolean;
-    desc: string;
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number) {
         this.uuid = genId('event:dellistelement')
         this.target = target
@@ -616,11 +639,11 @@ class RemoveListItemEvent<T> implements HistoryEvent {
     }
 
     redo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
 
     undo(): Promise<void> {
-        return Promise.resolve(undefined);
+        return Promise.resolve(undefined)
     }
 }
 class DeleteListEvent<T> implements HistoryEvent {
@@ -629,11 +652,11 @@ class DeleteListEvent<T> implements HistoryEvent {
     prop: PropSchema
     oldValue:any
     newValue:any
-    desc: string;
-    uuid: string;
+    desc: string
+    uuid: string
     index: number
     obj: ObjectProxy<any>
-    compressable: boolean;
+    compressable: boolean
     constructor(target:ObjectProxy<any>, prop:PropSchema, obj:ObjectProxy<any>) {
         this.uuid = genId('event:deletelist')
         this.target = target
@@ -668,11 +691,11 @@ class DeleteListEvent<T> implements HistoryEvent {
     }
 }
 class CreateObjectEvent<T extends ObjectDef> implements HistoryEvent {
-    desc: string;
-    uuid: string;
-    target: ObjectProxy<T>;
-    private om: ObjectManager;
-    compressable: boolean;
+    desc: string
+    uuid: string
+    target: ObjectProxy<T>
+    private om: ObjectManager
+    compressable: boolean
 
     constructor(om: ObjectManager, obj:ObjectProxy<any>) {
         this.om = om
@@ -692,8 +715,8 @@ class CreateObjectEvent<T extends ObjectDef> implements HistoryEvent {
     }
 }
 class DeleteObjectEvent<T> implements HistoryEvent {
-    desc: string;
-    uuid: string;
+    desc: string
+    uuid: string
     compressable: boolean
     constructor() {
         this.uuid = genId('event:deleteobject')
@@ -716,9 +739,9 @@ class PropChangeEvent<T extends ObjectDef> implements HistoryEvent {
     prop: PropSchema
     oldValue:any
     newValue:any
-    desc: string;
-    uuid: string;
-    compressable: boolean;
+    desc: string
+    uuid: string
+    compressable: boolean
     constructor(target:ObjectProxy<T>, prop:PropSchema, value:any) {
         this.uuid = genId('event:propchange')
         this.target = target
@@ -750,12 +773,12 @@ export class ObjectManager {
     private defs: Map<string, ObjectDef>
     private classes: Map<string, any>
     private _proxies: Map<string, ObjectProxy<ObjectDef>>
-    private global_prop_change_handler: (e:any) => void;
+    private global_prop_change_handler: (e:any) => void
     private changes: HistoryEvent[]
-    private _undoing: boolean;
-    private current_change_index: number;
+    private _undoing: boolean
+    private current_change_index: number
     private listeners:Map<OMEventTypes,[]>
-    private compressing: boolean;
+    private compressing: boolean
 
     constructor() {
         this.listeners = new Map()
@@ -792,8 +815,8 @@ export class ObjectManager {
         this.listeners.get(type).forEach(cb => cb(value))
     }
     make(def: ObjectDef, props: any) {
-        let cons = this.lookupConstructor(def.name)
-        let obj:ObjectProxy<any> = new cons(def,props)
+        const cons = this.lookupConstructor(def.name)
+        const obj:ObjectProxy<any> = new cons(def,props)
         const evt = new CreateObjectEvent(this,obj)
         this.changes.push(evt)
         this.current_change_index++
@@ -840,7 +863,7 @@ export class ObjectManager {
 
     async performUndo() {
         if(!this.canUndo()) return
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         this._undoing = true
         await recent.undo()
         this._undoing = false
@@ -851,7 +874,7 @@ export class ObjectManager {
     async performRedo() {
         if(!this.canRedo()) return
         this.current_change_index++
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         this._undoing = true
         await recent.redo()
         this._undoing = false
@@ -860,7 +883,7 @@ export class ObjectManager {
 
     dumpHistory() {
         console.log("len",this.changes.length, "current",this.current_change_index)
-        let changes = this.changes.map((ch,i) => {
+        const changes = this.changes.map((ch,i) => {
             const active = (i === this.current_change_index)
             return `${active?'*':' '} ${ch.uuid}: ${ch.desc} ${ch.compressable?'!':'_'}`
         }).join("\n")
@@ -891,7 +914,7 @@ ${changes}`)
         if(!compressing) {
             while(this.compressHistory()) { }
             // console.log("compressing")
-            let last = this.changes[this.current_change_index]
+            const last = this.changes[this.current_change_index]
             if(last instanceof PropChangeEvent) {
                 last.compressable = false
             }
@@ -900,10 +923,10 @@ ${changes}`)
     }
 
     private compressHistory() {
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         if(recent instanceof PropChangeEvent) {
             if(this.current_change_index-1 > 0) {
-                let prev = this.changes[this.current_change_index - 1]
+                const prev = this.changes[this.current_change_index - 1]
                 if(prev instanceof PropChangeEvent && (prev as PropChangeEvent<any>).compressable) {
                     if(prev.prop.name === recent.prop.name) {
                         prev.compressWithSelf(recent)

@@ -103,10 +103,10 @@ export class RectClass extends DrawableClass<typeof RectDef> {
 
     drawSelf(ctx: ScaledSurface): void {
         if (this.props.roundedCornersEnabled) {
-            ctx.fillRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.fill)
+            ctx.fillRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.getPropValue('fill'))
             ctx.strokeRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.strokeFill, this.props.strokeWidth)
         } else {
-            ctx.fillRect(this.props.bounds, this.props.fill)
+            ctx.fillRect(this.props.bounds, this.getPropValue('fill'))
             ctx.strokeRect(this.props.bounds, this.props.strokeFill, this.props.strokeWidth)
         }
     }

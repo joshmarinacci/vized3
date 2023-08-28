@@ -1,22 +1,24 @@
-import {Bounds, Point} from "josh_js_util";
-import {ObservableBase } from "./model";
+import {Bounds, Point} from "josh_js_util"
+import {ObservableBase } from "./model"
 import {
+    ColorAssetClass,
+    ColorAssetDef,
     DocClass,
     DocDef, NumberAssetClass, NumberAssetDef, ObjectDef,
     ObjectManager,
     ObjectProxy,
     PageClass,
     PageDef
-} from "./om";
-import {RectClass, RectDef} from "./rect";
-import {CircleClass, CircleDef} from "./circle";
-import {SimpleTextClass, SimpleTextDef} from "./simpletext";
-import {PathShapeClass, PathShapeDef} from "./pathshape";
-import {NGonClass, NGonDef} from "./ngon";
+} from "./om"
+import {RectClass, RectDef} from "./rect"
+import {CircleClass, CircleDef} from "./circle"
+import {SimpleTextClass, SimpleTextDef} from "./simpletext"
+import {PathShapeClass, PathShapeDef} from "./pathshape"
+import {NGonClass, NGonDef} from "./ngon"
 
 export class GlobalState extends ObservableBase {
-    om: ObjectManager;
-    private _doc: DocClass;
+    om: ObjectManager
+    private _doc: DocClass
     private current_page: PageClass
     private selected_objects: ObjectProxy<ObjectDef>[]
     private selected_page: PageClass | null
@@ -32,8 +34,9 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(PathShapeDef, PathShapeClass)
         this.om.registerDef(NGonDef, NGonClass)
         this.om.registerDef(NumberAssetDef, NumberAssetClass)
+        this.om.registerDef(ColorAssetDef, ColorAssetClass)
         this._doc = this.om.make(DocDef,{})
-        let page = this.om.make(PageDef, {}) as PageClass
+        const page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
         page.appendListProp('children',this.om.make(RectDef, { bounds: new Bounds(1,1,2,3), name:'rect', fill:'#ff0000'}))
         page.appendListProp('children',this.om.make(CircleDef, { center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'}))

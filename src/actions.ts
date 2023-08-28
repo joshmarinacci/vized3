@@ -1,5 +1,13 @@
 import {GlobalState} from "./models/state"
-import {DocClass, DocDef, DrawableClass, NumberAssetDef, ObjectProxy, PageDef} from "./models/om"
+import {
+    ColorAssetDef,
+    DocClass,
+    DocDef,
+    DrawableClass,
+    NumberAssetDef,
+    ObjectProxy,
+    PageDef
+} from "./models/om"
 import {Bounds, Point} from "josh_js_util"
 import {savePNGJSON} from "./exporters/json"
 import {exportPNG} from "./exporters/png"
@@ -126,6 +134,13 @@ export const AddNewNumberAssetAction:MenuAction = {
     title:'add number asset',
     perform: async (state)=> {
         const asset = state.om.make(NumberAssetDef,{})
+        state.getCurrentDocument().appendListProp('assets',asset)
+    }
+}
+export const AddNewColorAssetAction:MenuAction = {
+    title:'add color asset',
+    perform: async (state)=> {
+        const asset = state.om.make(ColorAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
     }
 
