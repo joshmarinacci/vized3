@@ -227,6 +227,7 @@ export class ObjectProxy<T extends ObjectDef> {
     def: ObjectDef;
     private uuid: string;
     props:Record<keyof T['props'], any>;
+    private proxies: Map<keyof T['props'], ObjectProxy<any>>;
 
     constructor(om: ObjectManager, def: T, opts: Record<keyof T['props'],any>) {
         this.uuid = genId('object')
@@ -242,9 +243,14 @@ export class ObjectProxy<T extends ObjectDef> {
             // @ts-ignore
             this.props[prop.name] = val
         })
+        this.proxies = new Map()
     }
 
-    getPropValue<K extends keyof T['props']>(key: K) {
+    getPropValue<K extends keyof T['props']>(key: K):any {
+        if(this.proxies.has(key)) {
+            // @ts-ignore
+            return this.proxies.get(key).getPropValue('value')
+        }
         return this.props[key]
     }
 
@@ -295,14 +301,12 @@ export class ObjectProxy<T extends ObjectDef> {
         if(!this.listeners.has(type)) this.listeners.set(type,[])
         return this.listeners.get(type) as EventHandler[]
     }
-
     addEventListener(type: EventTypes, handler: EventHandler) {
         this._get_listeners(type).push(handler)
     }
     removeEventListener(type: EventTypes, handler: EventHandler) {
         this.listeners.set(type, this._get_listeners(type).filter(h => h !== handler))
     }
-
     private _fire(type: EventTypes, value: any) {
         if (!this.listeners.get(type)) this.listeners.set(type, [])
         // @ts-ignore
@@ -316,15 +320,23 @@ export class ObjectProxy<T extends ObjectDef> {
     getPropSchemas() {
         return Object.values(this.def.props)
     }
-
     hasPropNamed(uuid: string) {
         return this.def.props.hasOwnProperty(uuid)
     }
-
     getPropNamed(name: string) {
         return this.props[this.def.props[name].name]
     }
-
+    setPropProxySource(name:string, source:ObjectProxy<any>) {
+        this.proxies.set(name,source)
+    }
+    removePropProxySource<K extends keyof T['props']>(key:K) {
+        if(this.proxies.has(key)) {
+            // @ts-ignore
+            let value =  this.proxies.get(key).getPropValue('value')
+            this.props[key] = value
+            this.proxies.delete(key)
+        }
+    }
     getUUID() {
         return this.uuid
     }

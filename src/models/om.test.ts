@@ -360,4 +360,40 @@ describe('asset tests', () => {
         }
 
     })
+    it('should update a circle radius with a number asset', async () => {
+        let {state, circs} = await createThreeCirclesDoc()
+        let doc = state.getCurrentDocument()
+        // add a number asset
+        let numAsset = state.om.make(NumberAssetDef, {value: 66})
+        //add asset to the assets list
+        doc.appendListProp('assets',numAsset)
+        // get the first circle
+        let page = doc.getListPropAt('pages',0)
+        let circle = page.getListPropAt('children',0)
+        expect(circle.getPropValue('radius')).toEqual(10)
+
+        //set the circles radius property to the num asset
+        circle.setPropProxySource('radius',numAsset)
+        //now radius should equal 66
+        expect(numAsset.getPropValue('value')).toEqual(66)
+        expect(circle.getPropValue('radius')).toEqual(66)
+        //update num to 67
+        await numAsset.setPropValue('value',67)
+        // now radius should equal 67
+        expect(circle.getPropValue('radius')).toEqual(67)
+        // disconnect
+        circle.removePropProxySource('radius')
+        // radius should still be 67
+        expect(circle.getPropValue('radius')).toEqual(67)
+        //update num to 68
+        await numAsset.setPropValue('value', 68)
+        expect(numAsset.getPropValue('value')).toEqual(68)
+        //radius should still be 67
+        expect(circle.getPropValue('radius')).toEqual(67)
+        //re-connect
+        circle.setPropProxySource('radius',numAsset)
+        //radius should now be 68
+        expect(circle.getPropValue('radius')).toEqual(68)
+
+    })
 })
