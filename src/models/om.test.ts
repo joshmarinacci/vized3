@@ -9,10 +9,15 @@ import {
     PageDef,
     PropChanged,
     PropSchema,
-    PageClass
+    PageClass,
+    NumberAssetDef,
+    DocClass,
+    JSONDoc
 } from "./om.js";
 import {RectClass, RectDef} from "./rect";
 import {CircleClass, CircleDef} from "./circle";
+import {createThreeCirclesDoc} from "../actions.test";
+import {saveJSON} from "../exporters/json";
 
 
 describe('model tests', () => {
@@ -289,4 +294,70 @@ describe('model tests', () => {
             assert(!om.hasObject(rect.getUUID()))
         }
     });
+})
+
+describe('asset tests', () => {
+    it('should have an empty assets section', async () => {
+        let {state, circs} = await createThreeCirclesDoc()
+        expect(state).toBeTruthy()
+        let doc = state.getCurrentDocument()
+        let name = doc.getPropNamed('name')
+        expect(name).toEqual('unnamed')
+        let pages = doc.getListProp('pages')
+        expect(pages).toBeTruthy()
+        expect(pages.length).toEqual(1)
+        let page = doc.getListPropAt('pages',0)
+        let children = page.getListProp('children')
+        expect(children.length).toEqual(3)
+
+        let assets = doc.getListProp('assets')
+        expect(assets).toBeTruthy()
+        expect(assets.length).toEqual(0)
+    })
+    it('should make a number asset and persist it', async () => {
+        let {state, circs} = await createThreeCirclesDoc()
+        let doc = state.getCurrentDocument()
+
+        // persist with no assets
+        {
+            let json_doc = await saveJSON(state)
+            // console.log(JSON.stringify(json_doc, null, '   '))
+            expect(json_doc.root.props.pages[0].props.children.length).toBe(3)
+            expect(json_doc.root.props.assets.length).toBe(0)
+        }
+
+        // add a number asset
+        {
+            let numAsset = state.om.make(NumberAssetDef, {value: 66})
+            expect(numAsset).toBeTruthy()
+            expect(numAsset.getPropValue('name')).toEqual('unnamed')
+            expect(numAsset.getPropValue('value')).toEqual(66)
+
+            //add asset to the assets list
+            state.getCurrentDocument().appendListProp('assets',numAsset)
+            expect(state.getCurrentDocument().getListProp('assets').length).toEqual(1)
+        }
+
+        // persist with the single asset
+        {
+            let json_doc = await saveJSON(state)
+            console.log(JSON.stringify(json_doc, null, '   '))
+            expect(json_doc.root.props.pages[0].props.children.length).toBe(3)
+            expect(json_doc.root.props.assets.length).toBe(1)
+            let num_asset_json = json_doc.root.props.assets[0]
+            expect(num_asset_json.props.name).toBe('unnamed')
+            expect(num_asset_json.props.value).toBe(66)
+        }
+        //reload json
+        {
+            let json_doc = await saveJSON(state)
+            let doc_obj = await state.om.fromJSON<DocClass>(json_doc as JSONDoc)
+            expect(doc_obj.getListProp('assets').length).toEqual(1)
+            let num_asset = doc_obj.getListPropAt('assets',0)
+            expect(num_asset.getPropValue('name')).toEqual('unnamed')
+            expect(num_asset.getPropValue('value')).toEqual(66)
+
+        }
+
+    })
 })

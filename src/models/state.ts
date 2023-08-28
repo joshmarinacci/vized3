@@ -2,7 +2,7 @@ import {Bounds, Point} from "josh_js_util";
 import {ObservableBase } from "./model";
 import {
     DocClass,
-    DocDef, ObjectDef,
+    DocDef, NumberAssetClass, NumberAssetDef, ObjectDef,
     ObjectManager,
     ObjectProxy,
     PageClass,
@@ -31,6 +31,7 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(SimpleTextDef, SimpleTextClass)
         this.om.registerDef(PathShapeDef, PathShapeClass)
         this.om.registerDef(NGonDef, NGonClass)
+        this.om.registerDef(NumberAssetDef, NumberAssetClass)
         this._doc = this.om.make(DocDef,{})
         let page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)

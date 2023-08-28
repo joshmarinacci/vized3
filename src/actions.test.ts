@@ -36,17 +36,17 @@ async function createThreeRectsDoc() {
 
 export async function createThreeCirclesDoc() {
     const state = new GlobalState()
-    let doc = await state.om.make(DocDef, {})
+    let doc = state.om.make(DocDef, {})
     state.swapDoc(doc)
-    let page = await state.om.make(PageDef, {})
+    let page = state.om.make(PageDef, {})
     await doc.appendListProp('pages',page)
-    let circ1 = await state.om.make(CircleDef, {
+    let circ1 = state.om.make(CircleDef, {
         center: new Point(100,100), radius: 10})
     await page.appendListProp('children',circ1)
-    let circ2 = await state.om.make(CircleDef, {
+    let circ2 = state.om.make(CircleDef, {
         center: new Point(200,200), radius: 20})
     await page.appendListProp('children',circ2)
-    let circ3 = await state.om.make(CircleDef, {
+    let circ3 = state.om.make(CircleDef, {
         center: new Point(300,300), radius: 30})
     await page.appendListProp('children',circ3)
 

@@ -134,6 +134,12 @@ export const DocDef:ObjectDef = {
             base:'list',
             readonly: false,
             defaultValue:()=>[],
+        },
+        assets: {
+            name:'assets',
+            base:'list',
+            readonly:false,
+            defaultValue:()=>[],
         }
     }
 }
@@ -147,6 +153,19 @@ export const PageDef: ObjectDef = {
             base: 'list',
             readonly: false,
             defaultValue:()=>[],
+        }
+    }
+}
+export const NumberAssetDef:ObjectDef = {
+    name:'number-asset',
+    props: {
+        name: NameDef,
+        value: {
+            name:'value',
+            defaultValue: 0,
+            readonly: false,
+            base:'number',
+            hidden: false
         }
     }
 }
@@ -337,6 +356,12 @@ export class PageClass extends ObjectProxy<typeof PageDef> {
 export class DocClass extends ObjectProxy<typeof DocDef>{
     constructor(om:ObjectManager, opts: Record<keyof typeof DocDef.props, any>) {
         super(om, DocDef, opts)
+    }
+}
+
+export class NumberAssetClass extends ObjectProxy<typeof NumberAssetDef>{
+    constructor(om:ObjectManager, opts: Record<keyof typeof NumberAssetDef.props, any>) {
+        super(om, NumberAssetDef, opts)
     }
 }
 
