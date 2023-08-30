@@ -413,6 +413,15 @@ export type JSONDoc = {
     version: number
     root: JSONObject
 }
+export type JSONDocReference = {
+    uuid:string,
+    name:string,
+    creationDate:Date,
+    updateDate:Date,
+}
+export type JSONDocIndex = {
+    docs:JSONDocReference[]
+}
 
 function toJSON(obj: ObjectProxy<any>): JSONObject {
     const json: JSONObject = {

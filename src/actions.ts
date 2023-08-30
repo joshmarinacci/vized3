@@ -2,6 +2,7 @@ import {Bounds, Point} from "josh_js_util"
 
 import {exportCanvasJS} from "./exporters/canvas"
 import {savePNGJSON} from "./exporters/json"
+import {saveLocalStorage} from "./exporters/local"
 import {exportPDF} from "./exporters/pdf"
 import {exportPNG} from "./exporters/png"
 import {exportSVG} from "./exporters/svg"
@@ -36,6 +37,16 @@ export const SavePNGJSONAction:MenuAction = {
     tags:['save','export','download','png'],
     perform:async (state) => {
         await savePNGJSON(state)
+    }
+}
+
+export const SaveLocalStorageAction:MenuAction = {
+    icon:SupportedIcons.SaveDocument,
+    title:'save in browser',
+    description:'save the document in the browsers internal storage',
+    tags:['save','local'],
+    perform:async(state) => {
+        await saveLocalStorage(state)
     }
 }
 export const DownloadPNGAction:MenuAction = {
@@ -314,4 +325,5 @@ export const ALL_ACTIONS: MenuAction[] = [
     BottomAlignShapes,
     VCenterAlignShapes,
     HCenterAlignShapes,
+    SaveLocalStorageAction,
 ]

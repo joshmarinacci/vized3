@@ -22,9 +22,8 @@ import {
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
-    MenuAction,
     NewDocumentAction,
-    SavePNGJSONAction
+    SaveLocalStorageAction
 } from "./actions"
 import {ActionSearchBox} from "./actionsearch"
 import {
@@ -37,6 +36,7 @@ import {
 } from "./common"
 import {PageView,} from "./editing/PageView"
 import {SupportedIcons} from "./icons"
+import {ListFilesDialog} from "./ListFilesDialog"
 import {LoadFileDialog} from "./LoadFileDialog"
 import {HistoryChanged} from "./models/om"
 import {GlobalState} from "./models/state"
@@ -46,16 +46,16 @@ import {TreeView} from "./TreeView"
 
 const state = new GlobalState()
 
-const UploadDocumentAction:MenuAction = {
-    title:"Upload Document",
-    icon:SupportedIcons.UploadDocument,
-    tags:['upload','document'],
-    description: "upload document from disk in JSON or PNG JSON form",
-    perform: async (state) => {
-        const dialog = <LoadFileDialog state={state}/>
-        console.log("made dialog",dialog)
-    }
-}
+// const UploadDocumentAction:MenuAction = {
+//     title:"Upload Document",
+//     icon:SupportedIcons.UploadDocument,
+//     tags:['upload','document'],
+//     description: "upload document from disk in JSON or PNG JSON form",
+//     perform: async (state) => {
+//         const dialog = <LoadFileDialog state={state}/>
+//         console.log("made dialog",dialog)
+//     }
+// }
 
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
@@ -64,13 +64,17 @@ function Main() {
     useObservableChange(state,'selection')
     const dm = useContext(DialogContext)
     const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
+    const showOpenDialog = () => dm.show(<ListFilesDialog state={state}/>)
+
+
     const pm = useContext(PopupContext)
     return (<FillPage>
         <HBox className={'toolbar'}>
             <DropdownMenuButton title={'File'} state={state} items={[
                 NewDocumentAction,
                 // UploadDocumentAction,
-                SavePNGJSONAction,
+                // SavePNGJSONAction,
+                SaveLocalStorageAction,
                 DownloadPNGAction,
                 DownloadSVGAction,
                 DownloadPDFAction,
@@ -85,6 +89,7 @@ function Main() {
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
             <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
+            <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => showOpenDialog()}>Open List</IconButton>
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>
