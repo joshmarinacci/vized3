@@ -1,6 +1,3 @@
-import {EventTypes} from "./om";
-import {RectDef} from "./rect";
-
 type PropSchema<Value> = {
     name: string,
     base: string,
@@ -40,8 +37,8 @@ type RectType = {
 }
 
 class RectObject {
-    private x: number;
-    private y: number;
+    private x: number
+    private y: number
     constructor() {
         this.x = 3
         this.y = 4
@@ -58,7 +55,7 @@ const PropChanged:ObjectWrapperEventTypes = 'PropChanged'
 class ObjWrapper<T> {
     private obj: any
     private def: typeof RectSchema
-    private listeners: Map<ObjectWrapperEventTypes, ObjectWrapperEventHandler[]>;
+    private listeners: Map<ObjectWrapperEventTypes, ObjectWrapperEventHandler[]>
     private props: typeof RectSchema["props"]
     constructor(def:typeof RectSchema, obj:RectObject, init:Partial<T>) {
         this.def = def
@@ -106,13 +103,13 @@ class ObjWrapper<T> {
 }
 
 
-const obj = new ObjWrapper<RectType>(RectSchema,new RectObject(),{x:1});
+const obj = new ObjWrapper<RectType>(RectSchema,new RectObject(),{x:1})
 const hand:ObjectWrapperEventHandler = (evt) => {
     console.log("an event happened")
 }
 obj.addEventListener(PropChanged, hand)
-const x = obj.getValue('x');
-const mood = obj.getValue('mood');
+const x = obj.getValue('x')
+const mood = obj.getValue('mood')
 obj.setValue('mood','happy')
 
 // const y:string = obj.getValue('y'); // type error, y is a number

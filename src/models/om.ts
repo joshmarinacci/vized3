@@ -11,7 +11,7 @@ export type PropSchema = {
     base: 'number' | 'string' | 'object' | 'list' | 'boolean' | 'enum',
     defaultValue:any,
     readonly:boolean,
-    custom?:'css-color',
+    custom?:'css-color'|'css-gradient',
     subProps?:Record<string,PropSchema>
     setter?:PropSetter
     hidden?:boolean
@@ -159,34 +159,6 @@ export const PageDef: ObjectDef = {
         }
     }
 }
-export const NumberAssetDef:ObjectDef = {
-    name:'number-asset',
-    props: {
-        name: NameDef,
-        value: {
-            name:'value',
-            defaultValue: 0,
-            readonly: false,
-            base:'number',
-            hidden: false
-        }
-    }
-}
-export const ColorAssetDef:ObjectDef = {
-    name:'color-asset',
-    props: {
-        name: NameDef,
-        value: {
-            name:'value',
-            base:"string",
-            readonly:false,
-            custom:'css-color',
-            defaultValue:'#000000',
-            hidden:false,
-        }
-    }
-}
-
 
 export interface Handle {
     getPosition(): Point;
@@ -393,17 +365,6 @@ export class DocClass extends ObjectProxy<typeof DocDef>{
     }
 }
 
-export class NumberAssetClass extends ObjectProxy<typeof NumberAssetDef>{
-    constructor(om:ObjectManager, opts: Record<keyof typeof NumberAssetDef.props, any>) {
-        super(om, NumberAssetDef, opts)
-    }
-}
-
-export class ColorAssetClass extends ObjectProxy<typeof ColorAssetDef> {
-    constructor(om:ObjectManager, opts: Record<keyof typeof ColorAssetDef.props, any>) {
-        super(om, ColorAssetDef, opts)
-    }
-}
 
 export type JSONObject = {
     name: string

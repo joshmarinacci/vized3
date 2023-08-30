@@ -1,20 +1,27 @@
 import {Bounds, Point} from "josh_js_util"
-import {ObservableBase } from "./model"
+
 import {
     ColorAssetClass,
     ColorAssetDef,
+    GradientAssetClass,
+    GradientAssetDef, NumberAssetClass,
+    NumberAssetDef
+} from "./assets"
+import {CircleClass, CircleDef} from "./circle"
+import {ObservableBase } from "./model"
+import {NGonClass, NGonDef} from "./ngon"
+import {
     DocClass,
-    DocDef, NumberAssetClass, NumberAssetDef, ObjectDef,
+    DocDef,
+    ObjectDef,
     ObjectManager,
     ObjectProxy,
     PageClass,
     PageDef
 } from "./om"
-import {RectClass, RectDef} from "./rect"
-import {CircleClass, CircleDef} from "./circle"
-import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 import {PathShapeClass, PathShapeDef} from "./pathshape"
-import {NGonClass, NGonDef} from "./ngon"
+import {RectClass, RectDef} from "./rect"
+import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
 export class GlobalState extends ObservableBase {
     om: ObjectManager
@@ -35,6 +42,7 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(NGonDef, NGonClass)
         this.om.registerDef(NumberAssetDef, NumberAssetClass)
         this.om.registerDef(ColorAssetDef, ColorAssetClass)
+        this.om.registerDef(GradientAssetDef, GradientAssetClass)
         this._doc = this.om.make(DocDef,{})
         const page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)
@@ -42,6 +50,8 @@ export class GlobalState extends ObservableBase {
         page.appendListProp('children',this.om.make(CircleDef, { center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'}))
         page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(1,5), name:'text', fill:'#000000'}))
         page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(1,3), name:'path', fill:'#0000ff'}))
+
+        this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

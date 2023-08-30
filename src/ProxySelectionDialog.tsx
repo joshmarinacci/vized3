@@ -1,12 +1,11 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
-import {NumberAssetClass, ObjectProxy, PropSchema} from "./models/om"
+import {ObjectProxy, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
 
-function ProxyAssetView(props: { asset: any, source:ObjectProxy<any>, onChange:(value:ObjectProxy<any>)=>void }) {
-    const {source} = props
-    const asset = props.asset as NumberAssetClass
+function ProxyAssetView(props: { asset: ObjectProxy<any>, source:ObjectProxy<any>, onChange:(value:ObjectProxy<any>)=>void }) {
+    const {source, asset} = props
     return <li>
         <label>
             asset proxy
@@ -14,7 +13,7 @@ function ProxyAssetView(props: { asset: any, source:ObjectProxy<any>, onChange:(
                    onChange={() => props.onChange(asset)    }
             />
             {asset.getPropValue('name')}
-            <b>{asset.getPropValue('value')}</b>
+            <b>{asset.getPropValue('value').toString()}</b>
         </label>
     </li>
 }
@@ -23,8 +22,15 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
     const {prop, state, target} = props
     const dm = useContext(DialogContext)
     const [source, setSource] = useState(target)
-    const assets = props.state.getCurrentDocument().getListProp('assets')
-        .filter(a => a.getPropSchemaNamed('value').base === prop.base)
+    const assets = (props.state.getCurrentDocument().getListProp('assets') as ObjectProxy<any>[])
+        .filter(a => {
+            if (prop.custom === 'css-color') {
+                if(a.getPropSchemaNamed('value').custom === 'css-color') return true
+                if(a.getPropSchemaNamed('value').custom === 'css-gradient') return true
+            }
+            return (a.getPropSchemaNamed('value').base === prop.base)
+        })
+
     const cancel = () => dm.hide()
     const choose = () => {
         if(source.getUUID() === target.getUUID()) {
@@ -37,7 +43,7 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
     return <div className={'dialog'}>
         <header>choose proxy value</header>
         <section>
-            <p>The property <b>radius</b> is set by</p>
+            <p>The property <b>{prop.name}</b> is set by</p>
             <p>
                 <label>
                     <input type='radio' value={source.getUUID()} checked={source === target}
@@ -48,7 +54,7 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
             <ul>
                 {
                     assets.map((asset, i) => {
-                        return <ProxyAssetView key={asset.uuid} asset={asset} source={source} onChange={setSource}/>
+                        return <ProxyAssetView key={asset.getUUID()} asset={asset} source={source} onChange={setSource}/>
                     })
                 }
 

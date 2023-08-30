@@ -7,14 +7,13 @@ import {exportPDF} from "./exporters/pdf"
 import {exportPNG} from "./exporters/png"
 import {exportSVG} from "./exporters/svg"
 import {SupportedIcons} from "./icons"
+import { ColorAssetDef, GradientAssetDef, NumberAssetDef } from "./models/assets"
 import {CircleDef} from "./models/circle"
 import {NGonClass, NGonDef} from "./models/ngon"
 import {
-    ColorAssetDef,
     DocClass,
     DocDef,
     DrawableClass,
-    NumberAssetDef,
     ObjectProxy,
     PageDef
 } from "./models/om"
@@ -162,6 +161,13 @@ export const AddNewColorAssetAction:MenuAction = {
         state.getCurrentDocument().appendListProp('assets',asset)
     }
 
+}
+export const AddNewGradientAssetAction:MenuAction = {
+    title:'add gradient asset',
+    perform: async (state)=> {
+        const asset = state.om.make(GradientAssetDef,{})
+        state.getCurrentDocument().appendListProp('assets',asset)
+    }
 }
 
 export const DeleteSelection:MenuAction = {

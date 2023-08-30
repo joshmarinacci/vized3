@@ -4,14 +4,13 @@ import {describe, expect, it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions.test"
 import {saveJSON} from "../exporters/json"
+import {ColorAssetDef, NumberAssetDef } from "./assets"
 import {CircleClass, CircleDef} from "./circle"
 import {
-    ColorAssetDef,
     DocClass,
     FamilyPropChanged,
     JSONDoc,
     JSONObject,
-    NumberAssetDef,
     ObjectManager,
     ObjectProxy,
     PageClass,

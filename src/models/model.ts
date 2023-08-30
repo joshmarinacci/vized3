@@ -10,7 +10,7 @@ export class ObservableBase implements Observable {
     private listeners: Map<OEvent, Array<ObservableListener>>
 
     constructor() {
-        this.listeners = new Map<OEvent, Array<ObservableListener>>();
+        this.listeners = new Map<OEvent, Array<ObservableListener>>()
     }
 
     protected _get_listeners(type: OEvent): ObservableListener[] {

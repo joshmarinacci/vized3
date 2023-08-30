@@ -7,13 +7,14 @@ import React, {useContext} from "react"
 import {
     AddNewCircleAction,
     AddNewColorAssetAction,
+    AddNewGradientAssetAction,
     AddNewNumberAssetAction,
     AddNewPageAction,
     AddNewRectAction,
     DeleteSelection
 } from "./actions"
 import {MenuActionButton, MenuBox, useObservableChange} from "./common"
-import {NumberAssetClass, ObjectDef, ObjectProxy, PageClass} from "./models/om"
+import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
 function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
@@ -59,7 +60,7 @@ function TreePageItem(props: { page: PageClass, state:GlobalState, selected:Obje
         }
     </div>
 }
-function TreeAssetItem(props: { asset: NumberAssetClass, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreeAssetItem(props: { asset: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const {asset, state} = props
     const classes = toClass({
         'tree-item':true,
@@ -100,6 +101,7 @@ export function TreeView(props: { state:GlobalState}) {
                 const menu = <MenuBox>
                     <MenuActionButton key={'add_num'} state={props.state} action={AddNewNumberAssetAction}/>
                     <MenuActionButton key={'add_color'} state={props.state} action={AddNewColorAssetAction}/>
+                    <MenuActionButton key={'add_gradient'} state={props.state} action={AddNewGradientAssetAction}/>
                 </MenuBox>
                 pm.show_at(menu, e.target, "left", new Point(0,0))
             }}

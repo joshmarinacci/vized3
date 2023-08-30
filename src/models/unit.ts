@@ -1,4 +1,4 @@
-import {Point, Size} from "josh_js_util";
+import {Point, Size} from "josh_js_util"
 
 export enum Unit {
     Inch="Inch",

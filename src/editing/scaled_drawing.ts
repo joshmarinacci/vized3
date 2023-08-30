@@ -1,12 +1,14 @@
-import {Handle, ScaledSurface} from "../models/om";
-import {lookup_dpi, point_to_pixels, Unit} from "../models/unit";
-import {Bounds, Point} from "josh_js_util";
+import {Bounds, Point} from "josh_js_util"
+
+import {LinearColorGradient} from "../models/assets"
+import {Handle, ScaledSurface} from "../models/om"
+import {lookup_dpi, point_to_pixels, Unit} from "../models/unit"
 
 export class ScaledDrawingSurface implements ScaledSurface {
-    private ctx: CanvasRenderingContext2D;
-    private scale: number;
-    private unit: Unit;
-    private zoomLevel: number;
+    private ctx: CanvasRenderingContext2D
+    private scale: number
+    private unit: Unit
+    private zoomLevel: number
 
     constructor(ctx: CanvasRenderingContext2D, zoomLevel: number, unit: Unit) {
         this.ctx = ctx
@@ -15,9 +17,20 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.unit = unit
     }
 
-    fillRect(bounds: Bounds, fill: "string") {
-        this.ctx.fillStyle = fill
-        this.ctx.fillRect(bounds.x * this.scale, bounds.y * this.scale, bounds.w * this.scale, bounds.h * this.scale)
+    fillRect(bounds: Bounds, fill: any) {
+        this.ctx.save()
+        this.ctx.translate(bounds.x*this.scale, bounds.y*this.scale)
+        if(fill instanceof LinearColorGradient) {
+            const grad = this.ctx.createLinearGradient(fill.start.x,fill.start.y,fill.end.x,fill.end.y)
+            fill.stops.forEach(stop => {
+                grad.addColorStop(stop.position, stop.color)
+            })
+            this.ctx.fillStyle = grad
+        } else {
+            this.ctx.fillStyle = fill
+        }
+        this.ctx.fillRect(0,0, bounds.w * this.scale, bounds.h * this.scale)
+        this.ctx.restore()
     }
 
     outlineRect(bounds: Bounds) {
@@ -77,7 +90,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.translate(position.x * this.scale, position.y * this.scale)
         this.ctx.beginPath()
         this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
-        for (let pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
+        for (const pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
         if (closed) this.ctx.closePath()
         this.ctx.fill()
         this.ctx.restore()
@@ -89,7 +102,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.translate(position.x * this.scale, position.y * this.scale)
         this.ctx.beginPath()
         this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
-        for (let pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
+        for (const pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
         if (closed) this.ctx.closePath()
         this.ctx.stroke()
         this.ctx.restore()
@@ -101,7 +114,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.translate(position.x * this.scale, position.y * this.scale)
         this.ctx.beginPath()
         this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
-        for (let pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
+        for (const pt of points) this.ctx.lineTo(pt.x * this.scale, pt.y * this.scale)
         this.ctx.closePath()
         this.ctx.stroke()
         this.ctx.restore()
@@ -109,7 +122,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
 
     overlayHandle(h: Handle, color='red') {
         this.ctx.fillStyle = color
-        let p = point_to_pixels(h.getPosition(), this.unit).scale(Math.pow(2,this.zoomLevel))
+        const p = point_to_pixels(h.getPosition(), this.unit).scale(Math.pow(2,this.zoomLevel))
         this.ctx.fillRect(p.x - 10, p.y - 10, 20, 20)
         this.ctx.strokeStyle = 'black'
         this.ctx.lineWidth = 1
@@ -130,7 +143,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
 
     overlayPoint(point: Point, color: string) {
         this.ctx.fillStyle = color
-        let r = 5
+        const r = 5
         this.ctx.fillRect(point.x * this.scale - r, point.y * this.scale - r, r * 2, r * 2)
     }
 
