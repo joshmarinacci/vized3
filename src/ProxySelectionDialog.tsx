@@ -1,6 +1,7 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
+import {ValueThumbnail} from "./common"
 import {ObjectProxy, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
 
@@ -13,7 +14,7 @@ function ProxyAssetView(props: { asset: ObjectProxy<any>, source:ObjectProxy<any
                    onChange={() => props.onChange(asset)    }
             />
             {asset.getPropValue('name')}
-            <b>{asset.getPropValue('value').toString()}</b>
+            <ValueThumbnail value={asset.getPropValue('value')} schema={asset.getPropSchemaNamed('value')}/>
         </label>
     </li>
 }

@@ -51,6 +51,8 @@ export class GlobalState extends ObservableBase {
         page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(1,5), name:'text', fill:'#000000'}))
         page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(1,3), name:'path', fill:'#0000ff'}))
 
+        this._doc.appendListProp('assets', this.om.make(NumberAssetDef,{}))
+        this._doc.appendListProp('assets', this.om.make(ColorAssetDef,{}))
         this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
         this.current_page = page
         this.selected_objects = []

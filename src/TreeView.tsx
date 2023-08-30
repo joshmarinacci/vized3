@@ -13,7 +13,7 @@ import {
     AddNewRectAction,
     DeleteSelection
 } from "./actions"
-import {MenuActionButton, MenuBox, useObservableChange} from "./common"
+import {MenuActionButton, MenuBox, useObservableChange, ValueThumbnail} from "./common"
 import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
@@ -60,6 +60,7 @@ function TreePageItem(props: { page: PageClass, state:GlobalState, selected:Obje
         }
     </div>
 }
+
 function TreeAssetItem(props: { asset: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const {asset, state} = props
     const classes = toClass({
@@ -71,6 +72,7 @@ function TreeAssetItem(props: { asset: ObjectProxy<any>, state:GlobalState, sele
         state.setSelectedObjects([asset])
     }}>
         <b>asset: {asset.getPropValue('name')}</b>
+        <ValueThumbnail value={asset.getPropValue('value')} schema={asset.getPropSchemaNamed('value')}/>
     </div>
 }
 export function TreeView(props: { state:GlobalState}) {

@@ -15,7 +15,14 @@ import React, {
 import {MenuAction} from "./actions"
 import {SupportedIcons} from "./icons"
 import {Observable} from "./models/model"
-import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om"
+import {
+    EventTypes,
+    ObjectDef,
+    ObjectManager,
+    ObjectProxy,
+    OMEventTypes,
+    PropSchema
+} from "./models/om"
 import {GlobalState} from "./models/state"
 
 export function MainLayout(props: {
@@ -143,4 +150,34 @@ export function DropdownMenuButton(props: {
         pm.show_at(menu, e.target, "left", new Point(0, 0))
     }
     return <button onClick={showMenu}>{title}</button>
+}
+
+export function ValueThumbnail(props: { value: any, schema: PropSchema }) {
+    const {value, schema} = props
+    if (typeof value === 'undefined') {
+        return <div>undefined</div>
+    }
+    if (schema.custom === 'css-color') {
+        return <div style={{
+            width: '32px',
+            height: '32px',
+            border: '1px solid black',
+            backgroundColor: value as string
+        }}></div>
+    }
+    if (schema.custom === 'css-gradient') {
+        return <div style={{
+            width: '32px',
+            height: '32px',
+            border: '1px solid black',
+            backgroundColor: 'green',
+        }}></div>
+    }
+    if (typeof value === 'string') {
+        return <div>{value}</div>
+    }
+    if (schema.base === 'number') {
+        return <div>{value}</div>
+    }
+    return <div>some kind of value</div>
 }

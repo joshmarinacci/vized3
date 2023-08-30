@@ -1,11 +1,13 @@
-import React, {useContext, useState} from "react"
-import {GlobalState} from "./models/state"
-import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om"
-import {DialogContext, PopupContext, toClass} from "josh_react_util"
-import {ToggleIconButton, useObjectProxyChange, useObservableChange} from "./common"
 import "./PropSheet.css"
+
+import {DialogContext, PopupContext, toClass} from "josh_react_util"
+import React, {useContext, useState} from "react"
+
+import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "./common"
 import {MINECRAFT} from "./exporters/common"
 import {SupportedIcons} from "./icons"
+import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om"
+import {GlobalState} from "./models/state"
 import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
 function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<any> }) {
@@ -142,7 +144,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any>, state:G
         </>
     }
     if(prop.hidden) return <></>
-    if(prop.readonly) return <><label>{prop.name}</label><b>{target.getPropValue(prop.name)+""}</b></>
+    if(prop.readonly) return <><label>{prop.name}</label><ValueThumbnail value={target.getPropValue(prop.name)} schema={prop}/></>
     if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
     if(prop.base === 'number') {
@@ -180,7 +182,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<any>, state:G
         </>
     }
     if(prop.base === 'boolean') return <BooleanEditor schema={prop} target={target}/>
-    return <label>unknown property type {prop.name}</label>
+    return <><label>{prop.name}</label><ValueThumbnail value={target.getPropValue(prop.name)} schema={prop}/></>
 }
 
 export function PropSheet(props:{state:GlobalState}) {
