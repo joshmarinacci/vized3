@@ -1,3 +1,7 @@
+import './common.css'
+
+import {Point} from "josh_js_util"
+import {PopupContext, toClass} from "josh_react_util"
 import React, {
     CSSProperties,
     JSX,
@@ -6,15 +10,13 @@ import React, {
     useContext,
     useEffect,
     useState
-} from "react";
-import {PopupContext, toClass} from "josh_react_util";
-import {Observable} from "./models/model";
-import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
-import {MenuAction} from "./actions";
-import {GlobalState} from "./models/state";
-import './common.css';
-import {SupportedIcons} from "./icons";
-import {Point} from "josh_js_util";
+} from "react"
+
+import {MenuAction} from "./actions"
+import {SupportedIcons} from "./icons"
+import {Observable} from "./models/model"
+import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om"
+import {GlobalState} from "./models/state"
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -52,7 +54,7 @@ export function ToggleIconButton(props: {
         'borderless': true,
     })} onClick={props.onClick}>
         <span
-            className="material-symbols-rounded">{props.selected ? props.selectedIcon : props.regularIcon}</span>
+            className="material-icons">{props.selected ? props.selectedIcon : props.regularIcon}</span>
     </button>
 }
 
@@ -64,7 +66,7 @@ export function IconButton(props: {
 }): JSX.Element {
     return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>
         <span
-            className="material-symbols-rounded">{props.icon}</span>
+            className="material-icons">{props.icon}</span>
         {props.children}
     </button>
 }
@@ -122,7 +124,7 @@ function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
 export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
     let icon = <></>
     if(props.action.icon) {
-        icon = <span  className="material-symbols-rounded">{props.action.icon}</span>
+        icon = <span  className="material-icons">{props.action.icon}</span>
     }
     return <MenuButton
         onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>
