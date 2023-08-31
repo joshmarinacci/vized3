@@ -1,7 +1,7 @@
-import {expect, describe, it} from "vitest"
-import {Bounds, Point} from "josh_js_util"
 import assert from "assert"
-import {DocDef, PageDef} from "./models/om"
+import {Bounds, Point} from "josh_js_util"
+import {describe, expect, it} from "vitest"
+
 import {
     BottomAlignShapes,
     HCenterAlignShapes,
@@ -10,9 +10,10 @@ import {
     TopAlignShapes,
     VCenterAlignShapes
 } from "./actions"
-import {GlobalState} from "./models/state"
-import {RectDef} from "./models/rect"
 import {CircleDef} from "./models/circle"
+import {DocDef, PageDef} from "./models/om"
+import {RectDef} from "./models/rect"
+import {GlobalState} from "./models/state"
 
 async function createThreeRectsDoc() {
     const state = new GlobalState()

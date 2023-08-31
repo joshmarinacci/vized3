@@ -53,7 +53,7 @@ export class GlobalState extends ObservableBase {
 
         this._doc.appendListProp('assets', this.om.make(NumberAssetDef,{}))
         this._doc.appendListProp('assets', this.om.make(ColorAssetDef,{}))
-        this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
+        // this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
         this.current_page = page
         this.selected_objects = []
         this.selected_page = page

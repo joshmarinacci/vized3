@@ -69,6 +69,22 @@ export class LinearColorGradient {
         }
         ]
     }
+    toJSON() {
+        return {
+            type:'linear-color-gradient',
+            start: this.start.toJSON(),
+            end: this.end.toJSON(),
+            stops: this.stops.map(stop => ({
+                position: stop.position,
+                color: stop.color})
+            )
+        }
+    }
+
+    static fromJSON(value: unknown) {
+        const grad = new LinearColorGradient()
+        return grad
+    }
 }
 
 export const GradientAssetDef:ObjectDef = {

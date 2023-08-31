@@ -1,3 +1,7 @@
+import {Bounds, Point} from "josh_js_util"
+import React from "react"
+
+import {ObservableBase} from "../models/model"
 import {
     DrawableClass,
     Handle,
@@ -5,12 +9,9 @@ import {
     ObjectProxy,
     PageClass,
     ScaledSurface
-} from "../models/om";
-import {Bounds, Point} from "josh_js_util";
-import {ObservableBase} from "../models/model";
-import {findHandleInPage, findShapeInPage, MouseHandlerProtocol} from "./editing";
-import React from "react";
-import {GlobalState} from "../models/state";
+} from "../models/om"
+import {GlobalState} from "../models/state"
+import {findHandleInPage, findShapeInPage, MouseHandlerProtocol} from "./editing"
 
 function calcObjPos(target: ObjectProxy<any>) {
     if (target instanceof DrawableClass) return target.getPosition()
@@ -18,15 +19,15 @@ function calcObjPos(target: ObjectProxy<any>) {
 }
 
 export class DragHandler extends ObservableBase implements MouseHandlerProtocol {
-    private pressed: boolean;
-    private originalPositions: Map<ObjectProxy<ObjectDef>, Point>;
-    private dragStartPoint: Point;
-    private draggingRect: boolean;
-    private dragRect: Bounds;
-    private potentialShapes: DrawableClass<any>[];
-    private draggingHandle: boolean;
-    private dragHandle: Handle | null;
-    private hoverHandle: Handle | null;
+    private pressed: boolean
+    private originalPositions: Map<ObjectProxy<ObjectDef>, Point>
+    private dragStartPoint: Point
+    private draggingRect: boolean
+    private dragRect: Bounds
+    private potentialShapes: DrawableClass<any>[]
+    private draggingHandle: boolean
+    private dragHandle: Handle | null
+    private hoverHandle: Handle | null
 
     constructor() {
         super()
@@ -42,9 +43,9 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
     }
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState) {
-        const page = state.getSelectedPage();
+        const page = state.getSelectedPage()
         if (!page) return
-        let hand = findHandleInPage(page, pt, state)
+        const hand = findHandleInPage(page, pt, state)
         if (hand) {
             this.draggingHandle = true
             this.dragHandle = hand
@@ -53,7 +54,7 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
             return
         }
 
-        let shape = findShapeInPage(page, pt)
+        const shape = findShapeInPage(page, pt)
         const sel = state.getSelectedObjects()
         if (shape) {
             if (sel.some(s => s === shape)) {
@@ -92,20 +93,20 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
                 await this.dragHandle.setPosition(pt)
                 return
             }
-            for (let sel of state.getSelectedObjects()) {
+            for (const sel of state.getSelectedObjects()) {
                 if (!this.originalPositions.has(sel)) {
                     this.originalPositions.set(sel, calcObjPos(sel))
                 }
-                let original_pos = this.originalPositions.get(sel) as Point
-                let new_pos = original_pos.add(diff)
+                const original_pos = this.originalPositions.get(sel) as Point
+                const new_pos = original_pos.add(diff)
                 if (sel instanceof DrawableClass) {
                     await sel.setPosition(new_pos)
                 }
             }
         } else {
-            const page = state.getSelectedPage();
+            const page = state.getSelectedPage()
             if (!page) return
-            let hand = findHandleInPage(page, pt, state)
+            const hand = findHandleInPage(page, pt, state)
             if(hand !== this.hoverHandle) {
                 this.hoverHandle = hand
                 state.fireSelectionChange()
@@ -133,8 +134,8 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
     drawOverlay(ctx: ScaledSurface, state: GlobalState) {
         if (this.draggingRect) {
             ctx.dragRect(this.dragRect)
-            for (let shape of this.potentialShapes) {
-                shape.drawSelected(ctx);
+            for (const shape of this.potentialShapes) {
+                shape.drawSelected(ctx)
             }
         }
         if(this.hoverHandle) {
@@ -144,7 +145,7 @@ export class DragHandler extends ObservableBase implements MouseHandlerProtocol 
 
     private findShapesInPageRect(page: PageClass | null, dragRect: Bounds): DrawableClass<any>[] {
         if (!page) return []
-        let chs = page.getListProp('children') as DrawableClass<any>[]
+        const chs = page.getListProp('children') as DrawableClass<any>[]
         return chs.filter(obj => obj.intersects(dragRect))
     }
 

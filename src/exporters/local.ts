@@ -1,7 +1,8 @@
 import {make_logger} from "josh_js_util"
 
-import {DocClass, JSONDoc, JSONDocIndex} from "../models/om"
+import {DocClass} from "../models/om"
 import {GlobalState} from "../models/state"
+import {fromJSONDoc, JSONDoc, JSONDocIndex, saveJSON} from "./json"
 
 function loadIndex():JSONDocIndex {
     const index = localStorage.getItem('index')
@@ -14,7 +15,8 @@ function loadIndex():JSONDocIndex {
 
 export async function saveLocalStorage(state: GlobalState) {
     const log = make_logger('local')
-    const json_obj = await state.om.toJSON(state.getCurrentDocument())
+    const json_obj =  saveJSON(state)
+    console.log("generated json",json_obj)
     const doc = state.getCurrentDocument()
     log.info('json is',json_obj)
     //first save the doc itself
@@ -25,7 +27,7 @@ export async function saveLocalStorage(state: GlobalState) {
     const old_doc = index.docs.find(dr => dr.uuid === doc.getUUID())
     if(old_doc) {
         old_doc.name = doc.getPropValue('name')
-        old_doc.updateDate = new Date(Date.now)
+        old_doc.updateDate = new Date(Date.now())
     } else {
         index.docs.push({
             uuid: doc.getUUID(),
@@ -54,7 +56,7 @@ export async function loadLocalDoc(state:GlobalState, uuid:string):Promise<DocCl
     const json = localStorage.getItem(uuid)
     if(json) {
         const obj:JSONDoc = JSON.parse(json)
-        return await state.om.fromJSON(obj) as DocClass
+        return fromJSONDoc(state.om,obj)
     } else {
         throw new Error(`no such document with uuid: ${uuid}`)
     }

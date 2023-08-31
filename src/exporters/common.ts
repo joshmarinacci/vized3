@@ -1,4 +1,4 @@
-import {DocClass} from "../models/om";
+import {DocClass} from "../models/om"
 
 export const PICO8 = [
     '#000000',

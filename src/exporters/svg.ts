@@ -1,12 +1,13 @@
-import {forceDownloadBlob} from "josh_web_util";
-import {traverse} from "./common";
-import {GlobalState} from "../models/state";
-import {DocClass, ObjectDef, ObjectProxy, PageClass} from "../models/om";
-import {RectClass} from "../models/rect";
-import {CircleClass} from "../models/circle";
+import {forceDownloadBlob} from "josh_web_util"
+
+import {CircleClass} from "../models/circle"
+import {ObjectDef, ObjectProxy} from "../models/om"
+import {RectClass} from "../models/rect"
+import {GlobalState} from "../models/state"
+import {traverse} from "./common"
 
 function splat_SVG(name: string, opts: Record<string,any>) {
-    let atts = Object.keys(opts).map(key => `${key}="${opts[key]}"`)
+    const atts = Object.keys(opts).map(key => `${key}="${opts[key]}"`)
     return `<${name} ${atts.join(" ")}/>`
 }
 
@@ -16,14 +17,12 @@ export async function toSVG(state: GlobalState) {
 
     traverse(state.getCurrentDocument(), (item: ObjectProxy<ObjectDef>) => {
         if (item.def.name === 'document') {
-            const doc = item as DocClass
-            let template = `<?xml version="1.0" standalone="no"?>
+            const template = `<?xml version="1.0" standalone="no"?>
     <svg width="400" height="400" version="1.1" xmlns="http://www.w3.org/2000/svg">`
             before.push(template)
             after.push('</svg>')
         }
         if (item.def.name === 'page') {
-            const page = item as PageClass
         }
         if (item.def.name === 'rect') {
             const sq = item as RectClass
@@ -33,7 +32,7 @@ export async function toSVG(state: GlobalState) {
                 width: sq.props.bounds.w,
                 height: sq.props.bounds.h,
                 fill: sq.props.fill,
-            }));
+            }))
         }
         if (item.def.name === 'circle') {
             const circle = item as CircleClass
@@ -46,13 +45,13 @@ export async function toSVG(state: GlobalState) {
         }
     })
 
-    let output = before.join("\n") + after.join("\n")
+    const output = before.join("\n") + after.join("\n")
     console.log("generated", output)
     return output
 }
 
 export async function exportSVG(state: GlobalState) {
-    let output = await toSVG(state)
-    let blog = new Blob([output])
+    const output = await toSVG(state)
+    const blog = new Blob([output])
     forceDownloadBlob('demo.svg', blog)
 }

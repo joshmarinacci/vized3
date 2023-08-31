@@ -1,11 +1,12 @@
-import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
-import {traverse} from "./common";
-import {GlobalState} from "../models/state";
-import {DocClass, PageClass} from "../models/om";
-import {RectClass} from "../models/rect";
-import {CircleClass} from "../models/circle";
-import {lookup_dpi, size_to_pixels} from "../models/unit";
-import {ScaledDrawingSurface} from "../editing/scaled_drawing";
+import {canvas_to_blob, forceDownloadBlob} from "josh_web_util"
+
+import {ScaledDrawingSurface} from "../editing/scaled_drawing"
+import {CircleClass} from "../models/circle"
+import {PageClass} from "../models/om"
+import {RectClass} from "../models/rect"
+import {GlobalState} from "../models/state"
+import {lookup_dpi, size_to_pixels} from "../models/unit"
+import {traverse} from "./common"
 
 export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
@@ -16,21 +17,21 @@ export async function exportPNG(state: GlobalState) {
 
 export async function stateToCanvas(state:GlobalState) {
     const canvas = document.createElement('canvas')
-    let doc = state.getCurrentDocument()
-    let unit = doc.getPropValue('unit')
-    let page = doc.getListPropAt('pages',0) as PageClass
-    let size = size_to_pixels(page.getPropValue('size'),unit)
+    const doc = state.getCurrentDocument()
+    const unit = doc.getPropValue('unit')
+    const page = doc.getListPropAt('pages',0) as PageClass
+    const size = size_to_pixels(page.getPropValue('size'),unit)
     console.log("pixel size is",size)
     canvas.width = size.w
     canvas.height = size.h
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    let surf = new ScaledDrawingSurface(ctx,lookup_dpi(unit),unit)
+    const surf = new ScaledDrawingSurface(ctx,lookup_dpi(unit),unit)
     traverse(state.getCurrentDocument(), (item: any) => {
         if (item.def.name === 'document') {
-            const doc = item.obj as DocClass
+            // const doc = item.obj as DocClass
         }
         if (item.def.name === 'page') {
-            const page = item as PageClass
+            // const page = item as PageClass
             ctx.fillStyle = 'white'
             ctx.fillRect(0, 0, canvas.width, canvas.height)
         }

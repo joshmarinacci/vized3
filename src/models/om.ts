@@ -1,5 +1,6 @@
 import {Bounds, genId, Point, Size} from "josh_js_util"
 
+import {JSONObject} from "../exporters/json"
 import {lookup_name, Unit} from "./unit"
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
@@ -11,7 +12,7 @@ export type PropSchema = {
     base: 'number' | 'string' | 'object' | 'list' | 'boolean' | 'enum',
     defaultValue:any,
     readonly:boolean,
-    custom?:'css-color'|'css-gradient',
+    custom?:'css-color'|'css-gradient' | 'points',
     subProps?:Record<string,PropSchema>
     setter?:PropSetter
     hidden?:boolean
@@ -31,7 +32,7 @@ export const CenterPositionDef:PropSchema = {
     readonly: false,
     setter: (obj, name, value) => {
         const pt = obj as Point
-        const pt2 = pt.clone()
+        const pt2 = pt.copy()
         // @ts-ignore
         pt2[name] = value
         return pt2
@@ -219,8 +220,10 @@ export class ObjectProxy<T extends ObjectDef> {
     private uuid: string
     props:Record<keyof T['props'], any>
     private proxies: Map<keyof T['props'], ObjectProxy<any>>
+    private om: ObjectManager
 
     constructor(om: ObjectManager, def: T, opts: Record<keyof T['props'],any>) {
+        this.om = om
         this.uuid = genId('object')
         this.def = def
         this.listeners = new Map<EventTypes, any[]>()
@@ -320,6 +323,9 @@ export class ObjectProxy<T extends ObjectDef> {
     setPropProxySource(name:string, source:ObjectProxy<any>) {
         this.proxies.set(name,source)
     }
+    getPropProxySource(name: string):ObjectProxy<any> {
+        return this.proxies.get(name)
+    }
     removePropProxySource<K extends keyof T['props']>(key:K) {
         if(this.proxies.has(key)) {
             // @ts-ignore
@@ -335,6 +341,7 @@ export class ObjectProxy<T extends ObjectDef> {
         return this.uuid
     }
     refresh(prop:PropSchema){}
+
 }
 
 
@@ -363,130 +370,6 @@ export class DocClass extends ObjectProxy<typeof DocDef>{
     constructor(om:ObjectManager, opts: Record<keyof typeof DocDef.props, any>) {
         super(om, DocDef, opts)
     }
-}
-
-
-export type JSONObject = {
-    name: string
-    props: Record<string, any>
-}
-export type JSONDoc = {
-    version: number
-    root: JSONObject
-}
-export type JSONDocReference = {
-    uuid:string,
-    name:string,
-    creationDate:Date,
-    updateDate:Date,
-}
-export type JSONDocIndex = {
-    docs:JSONDocReference[]
-}
-
-function toJSON(obj: ObjectProxy<any>): JSONObject {
-    const json: JSONObject = {
-        name: obj.def.name,
-        props: {},
-    }
-    obj.getPropSchemas().forEach(prop => {
-        // console.log("prop is",pop)
-        if (prop.base === 'string') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        if (prop.base === 'list') {
-            const arr: JSONObject[] = []
-            const list = obj.getPropValue(prop.name)
-            list.forEach((val: ObjectProxy<ObjectDef>) => {
-                arr.push(toJSON(val))
-            })
-            json.props[prop.name] = arr
-            return
-        }
-        if (prop.base === 'object') {
-            const val = obj.getPropValue(prop.name)
-            if (val instanceof Bounds) {
-                json.props[prop.name] = val.toJSON()
-                return
-            }
-            if (val instanceof Point) {
-                json.props[prop.name] = val.toJSON()
-                return
-            }
-            if (val instanceof Size) {
-                json.props[prop.name] = { w: val.w, h: val.h}
-                return
-            }
-            throw new Error(`unhandled toJSON object type ${prop.name}`)
-        }
-        if(prop.base === 'number') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        if(prop.base === 'boolean') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        if(prop.base === 'enum') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        throw new Error(`unhandled toJSON type ${prop.base}`)
-    })
-    return json
-}
-
-async function fromJSON<T>(om: ObjectManager, obj: JSONObject):Promise<T> {
-    const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
-    const props: Record<string, any> = {}
-    for (const key of Object.keys(def.props)) {
-        const propSchema = def.props[key]
-        if (propSchema.base === 'enum') {
-            const schema = propSchema as EnumSchema
-            const nv = schema.fromJSONValue(obj,key,obj.props[key])
-            props[key] = nv
-            continue
-        }
-        if (propSchema.base === 'string') {
-            props[key] = obj.props[key]
-            continue
-        }
-        if (propSchema.base === 'number') {
-            props[key] = obj.props[key]
-            continue
-        }
-        if (propSchema.base === 'boolean') {
-            props[key] = obj.props[key]
-            continue
-        }
-        if (propSchema.base === 'list') {
-            props[key] = []
-            const vals = obj.props[key] as JSONObject[]
-            for (const val of vals) {
-                const obj_val = await fromJSON(om, val)
-                props[key].push(obj_val)
-            }
-            continue
-        }
-        if (propSchema.base === 'object') {
-            if (key === 'bounds') {
-                props[key] = Bounds.fromJSON(obj.props[key])
-                continue
-            }
-            if (key === 'center') {
-                props[key] = Point.fromJSON(obj.props[key])
-                continue
-            }
-            if (key === 'size') {
-                const v = obj.props[key]
-                props[key] = new Size(v.w,v.h)
-                continue
-            }
-        }
-        throw new Error(`cant restore property ${key}`)
-    }
-    return (await om.make(def, props)) as T
 }
 
 
@@ -795,26 +678,13 @@ export class ObjectManager {
         return evt.target
     }
 
-    async lookupDef(name: string) {
+    lookupDef(name: string) {
         if (!this.defs.has(name)) throw new Error(`cannot restore without def for ${name}`)
         return this.defs.get(name)
     }
     lookupConstructor(name: string) {
         if (!this.classes.has(name)) throw new Error(`cannot restore without class for ${name}`)
         return this.classes.get(name)
-    }
-
-    async toJSON(root: ObjectProxy<any>) {
-        const doc: JSONDoc = {
-            version: 1,
-            root: toJSON(root),
-        }
-        return Promise.resolve(doc)
-    }
-
-    async fromJSON<T>(json_obj: JSONDoc): Promise<T> {
-        const root = await fromJSON<T>(this, json_obj.root)
-        return root
     }
 
     registerDef(def: ObjectDef, clazz:any) {
@@ -870,6 +740,9 @@ ${changes}`)
 
     hasObject(uuid: string) {
         return this._proxies.has(uuid)
+    }
+    getObject(uuid:string) {
+        return this._proxies.get(uuid)
     }
 
     async removeObject(target: ObjectProxy<any>) {

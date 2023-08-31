@@ -28,6 +28,7 @@ export const PathShapeDef: ObjectDef = {
             name:'points',
             base:'list',
             readonly: true,
+            custom:'points',
             defaultValue:() => [
                 new Point(0,0),
                 new Point(3,2),
