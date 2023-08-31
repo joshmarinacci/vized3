@@ -4,7 +4,7 @@ import {describe, expect, it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions.test"
 import {saveJSON} from "../exporters/json"
-import {ColorAssetDef, NumberAssetDef } from "./assets"
+import {ColorAssetDef, GradientAssetDef, NumberAssetDef} from "./assets"
 import {CircleClass, CircleDef} from "./circle"
 import {
     DocClass,
@@ -404,12 +404,16 @@ describe('asset tests', () => {
         expect(colorAsset).toBeTruthy()
         expect(colorAsset.getPropValue('value')).toEqual('#ffff00')
         state.getCurrentDocument().appendListProp('assets',colorAsset)
-
         const circle = circs[0] as CircleClass
         expect(circle.getPropValue('fill')).toEqual('#cccccc')
-
         circle.setPropProxySource('fill',colorAsset)
         expect(circle.getPropValue('fill')).toEqual('#ffff00')
+    })
 
+    it('should make a gradient asset', async () => {
+        const {state, circs} = await createThreeCirclesDoc()
+        const gradientAsset = state.om.make(GradientAssetDef, {})
+        expect(gradientAsset).toBeTruthy()
+        state.getCurrentDocument().appendListProp('assets',gradientAsset)
     })
 })
