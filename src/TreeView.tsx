@@ -17,7 +17,7 @@ import {MenuActionButton, MenuBox, useObservableChange, ValueThumbnail} from "./
 import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
-function TreeShapeItem(props: { shape: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<any>[] }) {
+function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const shape = props.shape
     const classes = toClass({
         'tree-item':true,
@@ -61,18 +61,19 @@ function TreePageItem(props: { page: PageClass, state:GlobalState, selected:Obje
     </div>
 }
 
-function TreeAssetItem(props: { asset: ObjectProxy<any>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
     const {asset, state} = props
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
+        'tree-leaf':true,
         selected:state.getSelectedObjects().find(s => s === asset),
     })
     return <div className={classes} onClick={() => {
         state.setSelectedObjects([asset])
     }}>
-        <b>asset: {asset.getPropValue('name')}</b>
-        <ValueThumbnail value={asset.getPropValue('value')} schema={asset.getPropSchemaNamed('value')}/>
+        <label>{asset.getPropValue('name')}</label>
+        <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </div>
 }
 export function TreeView(props: { state:GlobalState}) {

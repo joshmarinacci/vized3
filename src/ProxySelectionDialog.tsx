@@ -1,24 +1,23 @@
+import "./ProxySelectionDialog.css"
+
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
 import {ValueThumbnail} from "./common"
 import {ObjectDef, ObjectProxy, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
-
 function ProxyAssetView(props: { asset: ObjectProxy<ObjectDef>, source:ObjectProxy<ObjectDef>, onChange:(value:ObjectProxy<ObjectDef>)=>void }) {
     const {source, asset} = props
     return <li>
         <label>
-            asset proxy
             <input type='radio' value={'proxy'} checked={source.getUUID() === asset.getUUID()}
                    onChange={() => props.onChange(asset)    }
             />
-            {asset.getPropValue('name')}
-            <ValueThumbnail value={asset.getPropValue('value')} schema={asset.getPropSchemaNamed('value')}/>
+            <span>{asset.getPropValue('name')}</span>
         </label>
+        <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </li>
 }
-
 export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchema, target:ObjectProxy<ObjectDef> }) {
     const {prop, state, target} = props
     const dm = useContext(DialogContext)
@@ -52,7 +51,7 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
                     /> plain value
                 </label>
             </p>
-            <ul>
+            <ul className={'assets-list'}>
                 {
                     assets.map((asset) => {
                         return <ProxyAssetView key={asset.getUUID()} asset={asset} source={source} onChange={setSource}/>

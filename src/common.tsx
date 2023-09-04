@@ -152,8 +152,9 @@ export function DropdownMenuButton(props: {
     return <button onClick={showMenu}>{title}</button>
 }
 
-export function ValueThumbnail(props: { value: any, schema: PropSchema }) {
-    const {value, schema} = props
+export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: PropSchema }) {
+    const schema = props.prop
+    const value = props.target.getPropValue(props.prop.name)
     if (typeof value === 'undefined') {
         return <div>undefined</div>
     }

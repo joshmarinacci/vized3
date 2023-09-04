@@ -5,7 +5,13 @@
     margin-left: 1rem;
     padding: 0.55rem 0.5rem;
 }
+.tree-view .tree-item.tree-leaf {
+    display: flex;
+    flex-direction: row;
+}
 
 .tree-view .tree-item label {
+    font-weight: bold;
     padding-left: 1rem;
+    padding-right: 1rem;
 }
