@@ -67,7 +67,6 @@ function Main() {
     const showOpenDialog = () => dm.show(<ListFilesDialog state={state}/>)
 
 
-    const pm = useContext(PopupContext)
     return (<FillPage>
         <HBox className={'toolbar'}>
             <DropdownMenuButton title={'File'} state={state} items={[

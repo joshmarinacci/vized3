@@ -4,7 +4,7 @@ import {JSONObject} from "../exporters/json"
 import {lookup_name, Unit} from "./unit"
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
-export type PropRenderer = (oldObj:any, propname:string, propvalue:any) => any
+export type PropRenderer = (oldObj:ObjectProxy<ObjectDef>, propname:string, propvalue:any) => any
 export type PropLoader = (obj:JSONObject, propname:string, propvalue:any) => any
 
 export type PropSchema = {

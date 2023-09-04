@@ -14,6 +14,7 @@ import {
     DocClass,
     DocDef,
     DrawableClass,
+    ObjectDef,
     ObjectProxy,
     PageDef
 } from "./models/om"
@@ -178,7 +179,7 @@ export const DeleteSelection:MenuAction = {
         const objs = state.getSelectedObjects()
         for(const obj of objs) {
             if (obj && obj.parent) {
-                const parent = obj.parent as unknown as any
+                const parent = obj.parent as unknown as ObjectProxy<ObjectDef>
                 await parent.removeListPropByValue('children', obj)
             }
         }
@@ -186,14 +187,14 @@ export const DeleteSelection:MenuAction = {
     }
 }
 
-function calcObjectBounds(obj: ObjectProxy<any>) {
+function calcObjectBounds(obj: ObjectProxy<ObjectDef>) {
     if (obj instanceof DrawableClass) {
         return obj.getAlignmentBounds()
     }
     throw new Error("object has no bounds")
 }
 
-async function moveObjBy(obj: ObjectProxy<any>, diff: Point) {
+async function moveObjBy(obj: ObjectProxy<ObjectDef>, diff: Point) {
     if (obj instanceof DrawableClass) {
         await obj.translateBy(diff)
         return
@@ -298,7 +299,7 @@ export const ConvertNGonToPath:MenuAction = {
         if (!page) return console.warn("no page selected")
         const ngon = state.getSelectedObjects()[0] as NGonClass
         const line_path = ngon.toSinglePath()
-        const parent = ngon.parent as unknown as any
+        const parent = ngon.parent as unknown as ObjectProxy<ObjectDef>
         await parent.removeListPropByValue('children', ngon)
         const path = state.om.make(PathShapeDef,{
             points:line_path.points,

@@ -51,7 +51,7 @@ export type JSONDocIndex = {
     docs:JSONDocReference[]
 }
 
-function propertyToJSON(prop: PropSchema, obj: ObjectProxy<any>):JSONProp {
+function propertyToJSON(prop: PropSchema, obj: ObjectProxy<ObjectDef>):JSONProp {
     console.log("saving prop",prop)
     if(obj.isPropProxySource(prop.name)) {
         const ref:JSONPropReference = {
@@ -111,8 +111,7 @@ function propertyToJSON(prop: PropSchema, obj: ObjectProxy<any>):JSONProp {
     throw new Error(`unhandled toJSON type ${prop.toString()}`)
 }
 
-export function toJSONObj(obj: ObjectProxy<any>): JSONObject {
-    console.log("saving json obj",obj)
+export function toJSONObj(obj: ObjectProxy<ObjectDef>): JSONObject {
     const json: JSONObject = {
         name: obj.def.name,
         props: {},
@@ -140,7 +139,7 @@ function propertyFromJSON(om: ObjectManager, prop: PropSchema, obj: JSONObject) 
     const vv: JSONProp = obj.props[prop.name] as JSONProp
     if (vv.type === 'reference') {
     }
-    const v: JSONPropValue = vv
+    const v: JSONPropValue = vv as JSONPropValue
     if(prop.custom === 'css-gradient') {
         return LinearColorGradient.fromJSON(v.value)
     }
@@ -273,18 +272,14 @@ export function fromJSONDocV1(om:ObjectManager, json_obj:JSONDocV1):DocClass {
 export async function savePNGJSON(state: GlobalState) {
     const canvas = await stateToCanvas(state)
     const json_obj = toJSONDoc(state.getCurrentDocument())
-    console.log('canvas is',canvas)
-    console.log('json is',json_obj)
     const json_string = JSON.stringify(json_obj,null,'    ')
 
     const blob = await canvas_to_blob(canvas)
     const array_buffer = await blob.arrayBuffer()
     const uint8buffer = new Uint8Array(array_buffer)
-    console.log("json string is",json_string)
 
     // @ts-ignore
     const out_buffer = writeMetadata(uint8buffer as Buffer,{ tEXt: { SOURCE:json_string,  } })
-    console.log("out buffer is",out_buffer)
     const final_blob = new Blob([out_buffer as BlobPart], {type:'image/png'})
     // let url = buffer_to_dataurl(out_buffer,"image/png")
     forceDownloadBlob('final_blob.json.png',final_blob)
@@ -303,12 +298,11 @@ export async function loadPNGJSON(state:GlobalState, file:File):Promise<DocClass
             console.log("metadata is",metadata)
             if(metadata && metadata.tEXt && metadata.tEXt.SOURCE) {
                 const json = JSON.parse(metadata.tEXt.SOURCE)
-                const obj = state.om.fromJSON<DocClass>(json as JSONDoc)
-                obj.then(ob => {
-                    res(ob)
-                })
+                const obj = fromJSONDoc(state.om, json as JSONDoc)
+                res(obj)
             }
         })
+        reader.addEventListener('error', () => rej())
         reader.readAsArrayBuffer(file)
     })
 }

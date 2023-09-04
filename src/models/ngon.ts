@@ -8,6 +8,7 @@ import {
     NameDef,
     ObjectDef,
     ObjectManager,
+    ScaledSurface,
     StrokeFillDef,
     StrokeWidthDef
 } from "./om"
@@ -85,18 +86,21 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
         return pt.subtract(this.props.center).magnitude() < this.props.radius
     }
 
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        this.drawPath(ctx)
-        ctx.stroke()
+    drawSelected(ctx: ScaledSurface): void {
+        const fill = this.getPropValue('fill')
+        const points:Point[] = this.drawPath()
+        const center = this.getPosition()
+        const closed = true
+        ctx.strokeLinePath(center,points,closed,fill)
     }
 
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.getPropValue('fill')
-        this.drawPath(ctx)
-        ctx.fill()
-        ctx.strokeStyle = this.props.strokeFill
-        ctx.lineWidth = this.props.strokeWidth
-        ctx.stroke()
+    drawSelf(ctx: ScaledSurface): void {
+        const fill = this.getPropValue('fill')
+        const points:Point[] = this.drawPath()
+        const center = this.getPosition()
+        const closed = true
+        ctx.fillLinePath(center,points,closed,fill)
+        ctx.strokeLinePath(center,points,closed,this.getPropValue('strokeFill'))
     }
 
     getHandle(): Handle | null {
@@ -118,23 +122,19 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
         await this.setPropValue('center', pos)
     }
 
-    private drawPath(ctx: CanvasRenderingContext2D) {
-        ctx.beginPath()
+    private drawPath():Point[] {
         const n = this.getPropValue('sides') as number
         const r = this.getPropValue('radius') as number
         const c = this.getPropValue('center') as Point
         const r2 = this.getPropValue('starRadius') as number
+        const points:Point[] = []
         if(this.getPropValue('star')) {
             for (let i = 0; i < n*2; i++) {
                 const theta = i * Math.PI * 2 / (n*2)
                 const x = Math.sin(theta)
                 const y = Math.cos(theta)
                 const rr = (i%2 === 0)?r:r2
-                if (i === 0) {
-                    ctx.moveTo(x*rr + c.x, y*rr + c.y)
-                } else {
-                    ctx.lineTo(x*rr + c.x, y*rr + c.y)
-                }
+                points.push(new Point(x*rr, y*rr))
             }
 
         } else {
@@ -142,14 +142,10 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
                 const theta = i * Math.PI * 2 / n
                 const x = Math.sin(theta) * r
                 const y = Math.cos(theta) * r
-                if (i === 0) {
-                    ctx.moveTo(x + c.x, y + c.y)
-                } else {
-                    ctx.lineTo(x + c.x, y + c.y)
-                }
+                points.push(new Point(x, y))
             }
         }
-        ctx.closePath()
+        return points
     }
 
     getAlignmentBounds(): Bounds {

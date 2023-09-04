@@ -82,7 +82,7 @@ describe('json', () => {
     })
 
     it('should save a number asset', async () => {
-        const {state, circs} = await createThreeCirclesDoc()
+        const {state} = await createThreeCirclesDoc()
         const om = state.om
         const num_asset = om.make(NumberAssetDef, {value:66})
         const num_json = toJSONObj(num_asset)
@@ -96,9 +96,9 @@ describe('json', () => {
     })
 
     it('should save a gradient asset', async () => {
-        const {state, circs} = await createThreeCirclesDoc()
+        const {state} = await createThreeCirclesDoc()
         const om = state.om
-        const grad_asset = om.make(GradientAssetDef, {})
+        const grad_asset = om.make(GradientAssetDef, {}) as GradientAssetClass
         const grad_json = toJSONObj(grad_asset)
         console.log("grad json is",grad_json)
         expect(grad_json.name).toEqual('gradient-asset')
@@ -110,7 +110,7 @@ describe('json', () => {
         expect(grad.type).toEqual('linear-color-gradient')
     })
     it('should restore a gradient asset', async () => {
-        const {state, circs} = await createThreeCirclesDoc()
+        const {state} = await createThreeCirclesDoc()
         const om = state.om
         const grad_asset = om.make(GradientAssetDef, {})
         const grad_json = toJSONObj(grad_asset)
@@ -120,7 +120,7 @@ describe('json', () => {
     })
 
     it('should save and restore a path', async () => {
-        const {state, circs} = await createThreeCirclesDoc()
+        const {state} = await createThreeCirclesDoc()
         const om = state.om
         const path_obj = om.make(PathShapeDef, { points:[new Point(5,6)]})
         console.log("original path is",path_obj.getPropValue('points'))

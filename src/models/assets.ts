@@ -1,11 +1,6 @@
 import {Point} from "josh_js_util"
 
-import {
-    NameDef,
-    ObjectDef,
-    ObjectManager,
-    ObjectProxy
-} from "./om"
+import {NameDef, ObjectDef, ObjectManager, ObjectProxy} from "./om"
 
 export const NumberAssetDef:ObjectDef = {
     name:'number-asset',
@@ -82,8 +77,7 @@ export class LinearColorGradient {
     }
 
     static fromJSON(value: unknown) {
-        const grad = new LinearColorGradient()
-        return grad
+        return new LinearColorGradient()
     }
 }
 
