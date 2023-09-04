@@ -4,7 +4,7 @@ import {DialogContext, PopupContext, toClass} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
 import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "./common"
-import {MINECRAFT} from "./exporters/common"
+import {MINECRAFT, PICO8} from "./exporters/common"
 import {SupportedIcons} from "./icons"
 import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
@@ -82,19 +82,53 @@ export function SwatchColorPicker(props:{colors:string[], selected:string, onSel
     </div>
 }
 
+type PALETTE = {
+    name:string
+    colors:string[]
+}
+const PALETTES:PALETTE[] = [
+    {
+        name:'Minecraft',
+        colors:MINECRAFT,
+    },
+    {
+        name:'Pico8',
+        colors:PICO8
+    }
+]
+
+function TabbedColorPicker(props:{value:string, onSelect:(value:string)=>void}) {
+    const [selected, setSelected] = useState(0)
+
+    return <div className={'tabbed-color-picker'}>
+        <div className={'hbox'}>
+            {PALETTES.map((v,i) => <button
+                className={toClass({
+                    selected:i===selected
+                })}
+                key={i}
+                onClick={(e)=>{
+                    e.preventDefault()
+                    e.stopPropagation()
+                    setSelected(i)
+                }}
+            >{PALETTES[i].name}</button>)}
+        </div>
+        <SwatchColorPicker colors={PALETTES[selected].colors}
+                           selected={props.value}
+                           onSelect={props.onSelect}/>
+    </div>
+}
 function FillInput(props:{ schema: PropSchema, target:ObjectProxy<any>}) {
     const { schema, target } = props
     const value = props.target.getPropValue(props.schema.name)
-    const [visible, setVisible] = useState(false)
-    const show = () => setVisible((!visible))
     const pm = useContext(PopupContext)
+    const setColor = async (hex:string ) => {
+        await target.setPropValue(props.schema.name, hex)
+    }
     return <>
-        {/*<label>{props.schema.name}</label>*/}
-        {/*<div className={'color-picker-wrapper'}>*/}
         <FillSwatchButton schema={props.schema} target={target} onClick={(e:MouseEvent) => {
-            pm.show_at(<SwatchColorPicker colors={MINECRAFT} selected={value} onSelect={async (hex: string) => {
-                await target.setPropValue(props.schema.name, hex)
-            }}/>,e.target, "below")
+            pm.show_at(<TabbedColorPicker value={value} onSelect={setColor}/>,e.target,'below')
         }}/>
     </>
 }
