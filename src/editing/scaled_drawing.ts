@@ -39,7 +39,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
 
     strokeRect(bounds: Bounds, strokeFill: string, strokeWidth: number) {
         this.ctx.strokeStyle = strokeFill
-        this.ctx.lineWidth = strokeWidth
+        this.ctx.lineWidth = strokeWidth*this.scale/72
         this.ctx.strokeRect(bounds.x * this.scale, bounds.y * this.scale, bounds.w * this.scale, bounds.h * this.scale)
     }
 
@@ -53,7 +53,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
 
     strokeRoundRect(bounds: Bounds, radius: number, strokeFill: string, strokeWidth: number) {
         this.ctx.strokeStyle = strokeFill
-        this.ctx.lineWidth = strokeWidth
+        this.ctx.lineWidth = strokeWidth*this.scale/72
         this.ctx.beginPath()
         this.ctx.roundRect(bounds.left() * this.scale, bounds.top() * this.scale, bounds.w * this.scale, bounds.h * this.scale, radius)
         this.ctx.closePath()
@@ -95,10 +95,10 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.fill()
         this.ctx.restore()
     }
-    strokeLinePath(position: Point, points: Point[], closed: boolean, fill: string) {
+    strokeLinePath(position: Point, points: Point[], closed: boolean, strokeFill: string, strokeWidth:number) {
         this.ctx.save()
-        this.ctx.strokeStyle = fill
-        this.ctx.lineWidth = 1
+        this.ctx.strokeStyle = strokeFill
+        this.ctx.lineWidth = strokeWidth*this.scale/72
         this.ctx.translate(position.x * this.scale, position.y * this.scale)
         this.ctx.beginPath()
         this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
