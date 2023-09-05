@@ -9,7 +9,6 @@ import {
     ObjectManager,
     ScaledSurface
 } from "./om"
-import {RectResizeHandle} from "./rect"
 
 export const SimpleImageDef: ObjectDef = {
     name: 'simple-image',
@@ -28,6 +27,35 @@ export const SimpleImageDef: ObjectDef = {
     }
 }
 
+class ImageResizeHandle implements Handle {
+    private obj: SimpleImageClass
+
+    constructor(obj: SimpleImageClass) {
+        this.obj = obj
+    }
+
+    getPosition(): Point {
+        return this.obj.getPropValue("bounds").bottom_right()
+    }
+
+    async setPosition(pos: Point) {
+        const img = this.obj.getPropValue('image')
+        const ratio = img.height / img.width
+        const old_bounds = this.obj.getPropValue('bounds')
+        const new_width = pos.x-old_bounds.x
+        const new_height = new_width*ratio
+        const new_bounds: Bounds = new Bounds(old_bounds.x, old_bounds.y, new_width, new_height)
+        await this.obj.setPropValue("bounds", new_bounds)
+    }
+
+    contains(pt: Point) {
+        const pos = this.obj.getPropValue('bounds').bottom_right()
+        const b = new Bounds(pos.x - 10, pos.y - 10, 20, 20)
+        return b.contains(pt)
+    }
+}
+
+
 export class SimpleImageClass extends DrawableClass<typeof SimpleImageDef> {
     constructor(om: ObjectManager, opts: Record<keyof typeof SimpleImageDef.props, any>) {
         super(om, SimpleImageDef, opts)
@@ -39,7 +67,6 @@ export class SimpleImageClass extends DrawableClass<typeof SimpleImageDef> {
 
     drawSelected(ctx: ScaledSurface): void {
         ctx.outlineRect(this.props.bounds)
-
     }
 
     drawSelf(ctx: ScaledSurface): void {
@@ -53,7 +80,7 @@ export class SimpleImageClass extends DrawableClass<typeof SimpleImageDef> {
     }
 
     getHandle(): Handle {
-        return new RectResizeHandle(this)
+        return new ImageResizeHandle(this)
     }
 
     getPosition(): Point {

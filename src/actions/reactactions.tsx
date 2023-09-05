@@ -1,4 +1,4 @@
-import {Size} from "josh_js_util"
+import {Bounds, Size} from "josh_js_util"
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {ChangeEvent, JSX, useContext, useState} from "react"
 
@@ -7,7 +7,7 @@ import {loadPNGJSON} from "../exporters/json"
 import {SupportedIcons} from "../icons"
 import {ImageAssetClass, ImageAssetDef} from "../models/assets"
 import {DocClass, DocDef, PageDef} from "../models/om"
-import {SimpleImageDef} from "../models/simpleimage"
+import {SimpleImageClass, SimpleImageDef} from "../models/simpleimage"
 import {GlobalState} from "../models/state"
 import {lookup_name, Unit} from "../models/unit"
 import {ChooseImageDialog} from "./ChooseImageDialog"
@@ -115,14 +115,16 @@ export const NewDocumentAction: ReactMenuAction = {
 function ImportImageButton(props: { state: GlobalState }) {
     const {state} = props
     const dm = useContext(DialogContext)
-    const showNewDialog = () => dm.show(<ChooseImageDialog state={props.state} onComplete={async (img, fileName)=>{
+    const showNewDialog = () => dm.show(<ChooseImageDialog state={props.state} onComplete={async (htmlImage, fileName)=>{
         const asset = state.om.make(ImageAssetDef, {}) as ImageAssetClass
-        await asset.setPropValue('value', img)
+        await asset.setPropValue('value', htmlImage)
         await asset.setPropValue('name',fileName)
         state.getCurrentDocument().appendListProp('assets', asset)
+        const ratio = htmlImage.height / htmlImage.width
 
-        const image = state.om.make(SimpleImageDef, { name:'image'})
+        const image = state.om.make(SimpleImageDef, { name:'image'}) as SimpleImageClass
         image.setPropProxySource('image',asset)
+        await image.setPropValue('bounds', new Bounds(0, 0, 1, 1 * ratio))
         state.getCurrentPage().appendListProp('children',image)
     }}/>)
     return <IconButton icon={SupportedIcons.Image} onClick={showNewDialog}>import image</IconButton>

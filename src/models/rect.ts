@@ -36,7 +36,7 @@ export const RectDef: ObjectDef = {
     }
 }
 
-export class RectResizeHandle implements Handle {
+class RectResizeHandle implements Handle {
     private obj: RectClass
 
     constructor(obj: RectClass) {
