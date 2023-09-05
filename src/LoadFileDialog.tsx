@@ -1,8 +1,10 @@
-import {GlobalState} from "./models/state";
-import React, {ChangeEvent, useContext, useRef, useState} from "react";
-import {DialogContext, Spacer} from "josh_react_util";
-import {loadPNGJSON} from "./exporters/json";
-import './dialog.css';
+import './dialog.css'
+
+import {DialogContext, Spacer} from "josh_react_util"
+import React, {ChangeEvent, useContext, useRef, useState} from "react"
+
+import {loadPNGJSON} from "./exporters/json"
+import {GlobalState} from "./models/state"
 
 function isValidJSONPNGFile(file: File) {
     if(!file) return false
@@ -32,7 +34,7 @@ export function LoadFileDialog(props: { state: GlobalState }) {
     const fileChanged = (e: ChangeEvent<HTMLInputElement>) => {
         // console.log("file changed",e.target.files)
         if (e.target.files && e.target.files.length === 1) {
-            let file = e.target.files[0]
+            const file = e.target.files[0]
             setCanLoad(isValidJSONPNGFile(file))
         }
     }

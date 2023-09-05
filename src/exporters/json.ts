@@ -53,7 +53,6 @@ export type JSONDocIndex = {
 }
 
 function propertyToJSON(prop: PropSchema, obj: ObjectProxy<ObjectDef>):JSONProp {
-    console.log("saving prop",prop)
     if(obj.isPropProxySource(prop.name)) {
         const ref:JSONPropReference = {
             type:'reference',

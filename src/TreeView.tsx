@@ -1,19 +1,21 @@
 import './TreeView.css'
 
 import {Point} from "josh_js_util"
-import {PopupContext, toClass,} from "josh_react_util"
+import {DialogContext, PopupContext, toClass,} from "josh_react_util"
 import React, {useContext} from "react"
 
 import {
     AddNewCircleAction,
     AddNewColorAssetAction,
     AddNewGradientAssetAction,
+    AddNewImageAssetAction,
     AddNewNumberAssetAction,
     AddNewPageAction,
     AddNewRectAction,
     DeleteSelection,
     MenuAction
 } from "./actions"
+import {ChooseImageDialog} from "./ChooseImageDialog"
 import {
     DropdownMenuButton,
     MenuActionButton,
@@ -109,11 +111,16 @@ export function TreeView(props: { state:GlobalState}) {
     const add_assets:MenuAction[] = [
         AddNewNumberAssetAction,
         AddNewColorAssetAction,
-        AddNewGradientAssetAction
+        AddNewGradientAssetAction,
+        AddNewImageAssetAction,
     ]
     const add_page:MenuAction[] = [
         AddNewPageAction
     ]
+    const dm = useContext(DialogContext)
+    const open_image_dialog = () => {
+        dm.show(<ChooseImageDialog state={state}/>)
+    }
 
     return <div className={'panel left tree-view'}>
         <TreeLeafItem
@@ -136,6 +143,7 @@ export function TreeView(props: { state:GlobalState}) {
         <header>
             Assets
             <DropdownMenuButton icon={SupportedIcons.Add} items={add_assets} state={state}/>
+            <button onClick={open_image_dialog}>+I</button>
         </header>
         {doc.getListProp('assets').map((asset,i) => {
             return <TreeAssetItem key={i} asset={asset} state={props.state} selected={selected}/>

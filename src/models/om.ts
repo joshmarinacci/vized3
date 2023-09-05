@@ -12,7 +12,7 @@ export type PropSchema = {
     base: 'number' | 'string' | 'object' | 'list' | 'boolean' | 'enum',
     defaultValue:any,
     readonly:boolean,
-    custom?:'css-color'|'css-gradient' | 'points',
+    custom?:'css-color'|'css-gradient' | 'points' | 'image-asset',
     subProps?:Record<string,PropSchema>
     setter?:PropSetter
     hidden?:boolean

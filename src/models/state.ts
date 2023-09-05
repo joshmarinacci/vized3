@@ -4,7 +4,10 @@ import {
     ColorAssetClass,
     ColorAssetDef,
     GradientAssetClass,
-    GradientAssetDef, NumberAssetClass,
+    GradientAssetDef,
+    ImageAssetClass,
+    ImageAssetDef,
+    NumberAssetClass,
     NumberAssetDef
 } from "./assets"
 import {CircleClass, CircleDef} from "./circle"
@@ -43,6 +46,7 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(NumberAssetDef, NumberAssetClass)
         this.om.registerDef(ColorAssetDef, ColorAssetClass)
         this.om.registerDef(GradientAssetDef, GradientAssetClass)
+        this.om.registerDef(ImageAssetDef, ImageAssetClass)
         this._doc = this.om.make(DocDef,{})
         const page = this.om.make(PageDef, {}) as PageClass
         this._doc.appendListProp('pages',page)

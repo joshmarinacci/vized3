@@ -170,6 +170,10 @@ export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: Pr
             backgroundColor: value as string
         }}></div>
     }
+    if(schema.custom === 'image-asset') {
+        const img:ImageData = value
+        return <div>image: size:{img.width} x {img.height}</div>
+    }
     if (schema.custom === 'css-gradient') {
         return <div style={{
             width: '32px',

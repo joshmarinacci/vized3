@@ -172,7 +172,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef>, s
     if(prop.hidden) return <></>
     if(prop.readonly) return <>
         <label>{prop.name}</label>
-        <ProxyValueThumbnail target={target} prop={prop}/></>
+        <ValueThumbnail target={target} prop={prop}/></>
 
     if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
@@ -192,6 +192,7 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef>, s
     if(prop.base === 'string') regular_input = <StringEditor schema={prop} target={target}/>
     if(prop.base === 'boolean') regular_input = <BooleanEditor schema={prop} target={target}/>
     if(prop.custom === 'css-color') regular_input = <FillInput schema={prop} target={target}/>
+    if(prop.custom === 'image-asset') regular_input = <label>an image</label>
     return <>
         {the_label}
         {prop.canProxy && proxy_button}

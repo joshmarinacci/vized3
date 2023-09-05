@@ -102,3 +102,24 @@ export class GradientAssetClass extends ObjectProxy<typeof GradientAssetDef> {
         super(om, GradientAssetDef, opts)
     }
 }
+
+
+export const ImageAssetDef:ObjectDef = {
+    name:'image-asset',
+    props: {
+        name: NameDef,
+        value: {
+            name:'value',
+            defaultValue: { width:1, height: 1, data:[255,255,255] },
+            readonly: true,
+            base:'string',
+            custom:'image-asset',
+            hidden: false
+        }
+    }
+}
+export class ImageAssetClass extends ObjectProxy<typeof ImageAssetDef>{
+    constructor(om:ObjectManager, opts: Record<keyof typeof ImageAssetDef.props, any>) {
+        super(om, ImageAssetDef, opts)
+    }
+}

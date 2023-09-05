@@ -1,10 +1,16 @@
-import exp from "constants"
 import * as fs from "fs"
 import {Point} from "josh_js_util"
+import pureimage, {Bitmap} from "pureimage"
 import {describe, expect,it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions.test"
-import {GradientAssetClass, GradientAssetDef, NumberAssetDef} from "../models/assets"
+import {
+    GradientAssetClass,
+    GradientAssetDef,
+    ImageAssetClass,
+    ImageAssetDef,
+    NumberAssetDef
+} from "../models/assets"
 import {CircleClass} from "../models/circle"
 import {ObjectDef, ObjectProxy, PageClass} from "../models/om"
 import {PathShapeDef} from "../models/pathshape"
@@ -136,6 +142,29 @@ describe('json', () => {
         expect(points.length).toBe(1)
         expect(points[0].x).toBe(5)
         expect(points[0].y).toBe(6)
+    })
+
+    it('should save and restore an image asset', async () => {
+        const stream = fs.createReadStream('./src/exporters/checkerboard.png')
+        const raw_img:Bitmap = await pureimage.decodePNGFromStream(stream)
+        console.log("img is",raw_img)
+        const {state} = await createThreeCirclesDoc()
+        const om = state.om
+        const img_asset = om.make(ImageAssetDef, {}) as ImageAssetClass
+        await img_asset.setPropValue('value',{
+            width:raw_img.width,
+            height:raw_img.height,
+            data:raw_img.data
+        })
+        const img_json = toJSONObj(img_asset)
+        console.log("img json is",img_json.props.value)
+        expect(img_json.name).toEqual('image-asset')
+        expect(img_json.props['name']).toBeTruthy()
+        expect(img_json.props['name'].type).toEqual('value')
+        expect(img_json.props['name'].value).toEqual('unnamed')
+        expect(img_json.props['value'].type).toEqual('value')
+        // const img = img_json.props['value'].value as unknown
+        // expect(img.type).toEqual('linear-color-gradient')
     })
     // it('should save to PNG JSON', async () => {
     //     let {state, circs} = await createThreeCirclesDoc()

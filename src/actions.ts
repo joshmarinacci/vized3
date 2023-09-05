@@ -7,7 +7,7 @@ import {exportPDF} from "./exporters/pdf"
 import {exportPNG} from "./exporters/png"
 import {exportSVG} from "./exporters/svg"
 import {SupportedIcons} from "./icons"
-import { ColorAssetDef, GradientAssetDef, NumberAssetDef } from "./models/assets"
+import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "./models/assets"
 import {CircleDef} from "./models/circle"
 import {NGonClass, NGonDef} from "./models/ngon"
 import {
@@ -167,6 +167,13 @@ export const AddNewGradientAssetAction:MenuAction = {
     title:'add gradient asset',
     perform: async (state)=> {
         const asset = state.om.make(GradientAssetDef,{})
+        state.getCurrentDocument().appendListProp('assets',asset)
+    }
+}
+export const AddNewImageAssetAction:MenuAction = {
+    title:'add image asset',
+    perform: async (state)=> {
+        const asset = state.om.make(ImageAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
     }
 }
