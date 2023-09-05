@@ -81,6 +81,10 @@ export function IconButton(props: {
     </button>
 }
 
+export function Icon(props:{ icon:SupportedIcons }) {
+    return <span className={'material-symbols-rounded'}>{props.icon}</span>
+}
+
 export function useObservableChange(ob: Observable | undefined, eventType: string) {
     const [count, setCount] = useState(0)
     return useEffect(() => {

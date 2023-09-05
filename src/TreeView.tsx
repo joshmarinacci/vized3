@@ -18,6 +18,7 @@ import {
 import {ChooseImageDialog} from "./ChooseImageDialog"
 import {
     DropdownMenuButton,
+    Icon,
     MenuActionButton,
     MenuBox,
     useObservableChange,
@@ -32,6 +33,7 @@ function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
+        'tree-leaf':true,
         selected:state.isSelectedObject(shape),
     })
     const pm = useContext(PopupContext)
@@ -47,6 +49,7 @@ function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
                     pm.show_at(menu, e.target, "left", new Point(0,0))
                 }}
     >
+        <Icon icon={SupportedIcons.Shape}/>
         <b>{shape.hasPropNamed('name')?shape.getPropValue("name"):"no name"}</b>
     </div>
 }
@@ -62,6 +65,7 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
         state.setSelectedObjects([page])
     }
     return <div className={'tree-item'}>
+        <Icon icon={SupportedIcons.Page}/>
         <b className={classes} onClick={select_page}>{page.getPropValue('name')}</b>
         {
             page.getListProp('children').map((shape:OO,i:number) =>
@@ -72,19 +76,34 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
 
 function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
     const {asset, state} = props
+    const schema = asset.getPropSchemaNamed('value')
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
         'tree-leaf':true,
         selected:state.isSelectedObject(asset),
     })
+    let icon:SupportedIcons = SupportedIcons.Star
+    if(schema.base === 'number') {
+        icon = SupportedIcons.Number
+    }
+    if(schema.custom === "css-color") {
+        icon = SupportedIcons.Color
+    }
+    if(schema.custom === "css-gradient") {
+        icon = SupportedIcons.Gradient
+    }
+    if(schema.custom === "image-asset") {
+        icon = SupportedIcons.Image
+    }
     return <div className={classes} onClick={() => state.setSelectedObjects([asset])}>
+        <Icon icon={icon}/>
         <label>{asset.getPropValue('name')}</label>
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </div>
 }
 
-function TreeLeafItem(props: {item:OO, text:string, state:GlobalState, actions:MenuAction[]}) {
+function TreeDocItem(props: {item:OO, text:string, state:GlobalState, actions:MenuAction[], icon:SupportedIcons}) {
     const {item, text, state, actions}= props
     const pm = useContext(PopupContext)
     return <div
@@ -100,7 +119,7 @@ function TreeLeafItem(props: {item:OO, text:string, state:GlobalState, actions:M
             })}</MenuBox>
             pm.show_at(menu, e.target, "left", new Point(0, 0))
         }}
-    >{text}</div>
+    ><Icon icon={SupportedIcons.Document}/>{text}</div>
 }
 
 export function TreeView(props: { state:GlobalState}) {
@@ -122,8 +141,10 @@ export function TreeView(props: { state:GlobalState}) {
     }
 
     return <div className={'panel left tree-view'}>
-        <TreeLeafItem
-            item={doc} state={state}
+        <TreeDocItem
+            item={doc}
+            state={state}
+            icon={SupportedIcons.SaveDocument}
             text={doc.getPropValue('name')}
             actions={[
                 AddNewPageAction,

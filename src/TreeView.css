@@ -20,6 +20,7 @@
 .tree-view .tree-item.tree-leaf {
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 
 .tree-view .tree-item label {

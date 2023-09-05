@@ -15,5 +15,12 @@ export enum SupportedIcons {
     Search='search',
     Star='star',
     CheckboxChecked='check_box',
-    CheckboxUnchecked='check_box_outline_blank'
+    CheckboxUnchecked='check_box_outline_blank',
+    Document='description',
+    Page='note',
+    Color='palette',
+    Gradient='gradient',
+    Image='image',
+    Number='123',
+    Shape='pentagon'
 }
