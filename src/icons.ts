@@ -22,5 +22,6 @@ export enum SupportedIcons {
     Gradient='gradient',
     Image='image',
     Number='123',
-    Shape='pentagon'
+    Shape='pentagon',
+    OpenDocument='file_open',
 }

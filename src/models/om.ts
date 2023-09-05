@@ -177,11 +177,13 @@ export const DocDef:ObjectDef = {
             name:'pages',
             base:'list',
             readonly: false,
+            hidden:true,
             defaultValue:()=>[],
         },
         assets: {
             name:'assets',
             base:'list',
+            hidden:true,
             readonly:false,
             defaultValue:()=>[],
         }

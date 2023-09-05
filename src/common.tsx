@@ -131,31 +131,39 @@ export function MenuBox(props: { children: ReactNode }) {
     return <div className={'menu-box'}>{props.children}</div>
 }
 
-function MenuButton(props: { children: React.ReactNode, onClick: () => void, disabled:boolean}) {
-    return <button className={'menu-button'} onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
+export type ReactMenuAction = {
+    title:string
+    icon?:SupportedIcons,
+    makeComponent: (state:GlobalState) => JSX.Element
 }
 
-export function MenuActionButton(props: { action: MenuAction, state: GlobalState, disabled?:boolean }) {
+export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, state: GlobalState, disabled?:boolean }):JSX.Element {
     const {action, state, disabled=false} = props
+    if('makeComponent' in action) {
+        return (action as ReactMenuAction).makeComponent(state) as JSX.Element
+    }
     let icon = <></>
     if(action.icon) {
         icon = <span  className="material-icons material-symbols-rounded">{action.icon}</span>
     }
-    return <MenuButton
-        onClick={() => action.perform(state)} disabled={disabled}>{icon}{action.title}</MenuButton>
+    const perform = async () => {
+        await (action as MenuAction).perform(state)
+    }
+    return <button className={'menu-button'} onClick={perform} disabled={disabled}>{icon}{action.title}</button>
 }
 
 export function DropdownMenuButton(props: {
     title?:string,
     icon?:SupportedIcons,
-    items: MenuAction[],
+    items: (MenuAction|ReactMenuAction)[],
     state: GlobalState
 }) {
     const {title, icon, items, state} = props
     const pm = useContext(PopupContext)
     const showMenu = (e: MouseEvent<HTMLButtonElement>) => {
-        const menu = <MenuBox>{items.map((m, i) => <MenuActionButton key={i} action={m}
-                                                                     state={state}/>)}</MenuBox>
+        const menu = <MenuBox>{items.map((m, i) => {
+            return <MenuActionButton key={i} action={m} state={state}/>
+        })}</MenuBox>
         pm.show_at(menu, e.target, "left", new Point(0, 0))
     }
     return <IconButton icon={icon} onClick={showMenu}>{title}</IconButton>

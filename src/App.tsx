@@ -10,27 +10,27 @@ import {
     PopupContextImpl,
     Spacer,
 } from "josh_react_util"
-import React, {useContext, useRef, useState} from 'react'
+import React, {useRef, useState} from 'react'
 
 import {
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
-    AddNewRectAction, AddNewSimpletextAction,
+    AddNewRectAction,
+    AddNewSimpletextAction,
     DeleteSelection,
     DownloadPDFAction,
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
-    NewDocumentAction,
     RedoAction,
     SaveLocalStorageAction,
+    SavePNGJSONAction,
     UndoAction
 } from "./actions"
 import {ActionSearchBox} from "./actionsearch"
 import {
     DropdownMenuButton,
-    IconButton,
     MainLayout,
     MenuActionButton,
     ToggleIconButton,
@@ -39,26 +39,18 @@ import {
 } from "./common"
 import {PageView,} from "./editing/PageView"
 import {SupportedIcons} from "./icons"
-import {ListFilesDialog} from "./ListFilesDialog"
-import {LoadFileDialog} from "./LoadFileDialog"
 import {HistoryChanged} from "./models/om"
 import {GlobalState} from "./models/state"
 import {PropSheet} from "./PropSheet"
-import {SettingsDialog} from "./SettingsDialog"
+import {
+    LoadLocalStorageAction,
+    NewDocumentAction,
+    OpenSettingsAction,
+    UploadAction
+} from "./reactactions"
 import {TreeView} from "./TreeView"
 
 const state = new GlobalState()
-
-// const UploadDocumentAction:MenuAction = {
-//     title:"Upload Document",
-//     icon:SupportedIcons.UploadDocument,
-//     tags:['upload','document'],
-//     description: "upload document from disk in JSON or PNG JSON form",
-//     perform: async (state) => {
-//         const dialog = <LoadFileDialog state={state}/>
-//         console.log("made dialog",dialog)
-//     }
-// }
 
 async function handle_shortcuts(e: React.KeyboardEvent, state: GlobalState) {
     if (e.key === 'Backspace') return await DeleteSelection.perform(state)
@@ -76,12 +68,8 @@ function Main() {
     const [rightVisible, setRightVisible] = useState(true)
     useObjectManagerChange(state.om, HistoryChanged)
     useObservableChange(state,'selection')
-    const dm = useContext(DialogContext)
-    const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
-    const showOpenDialog = () => dm.show(<ListFilesDialog state={state}/>)
 
     const keyref = useRef(null)
-
     return (<div
         ref={keyref}
         className={'fill-page'}
@@ -95,9 +83,10 @@ function Main() {
         <HBox className={'toolbar'}>
             <DropdownMenuButton title={'File'} state={state} items={[
                 NewDocumentAction,
-                // UploadDocumentAction,
-                // SavePNGJSONAction,
+                LoadLocalStorageAction,
                 SaveLocalStorageAction,
+                UploadAction,
+                SavePNGJSONAction,
                 DownloadPNGAction,
                 DownloadSVGAction,
                 DownloadPDFAction,
@@ -110,14 +99,12 @@ function Main() {
                 AddNewNGonAction,
                 AddNewSimpletextAction,
             ]}/>
-            <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
             <MenuActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
-            <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => showOpenDialog()}>Open List</IconButton>
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>
-            <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}/>
+            <MenuActionButton action={OpenSettingsAction} state={state}/>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}

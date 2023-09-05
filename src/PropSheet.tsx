@@ -146,7 +146,7 @@ function EnumPropEditor(props: { schema: EnumSchema, target: OO }) {
         await target.setPropValue(schema.name, e.target.value)
     }
     return <>
-        <select value={value} onChange={update}>
+        <select className={'input'} value={value} onChange={update}>
             {sch.possibleValues.map(val => {
                 return <option key={val} value={val}>{sch.renderer(props.target, sch.name, val)}</option>
             })}
@@ -172,7 +172,10 @@ function PropEditor(props: { prop: PropSchema, target: OO, state:GlobalState }) 
         <label>{prop.name}</label>
         <ValueThumbnail target={target} prop={prop}/></>
 
-    if(prop.base === 'enum') return <EnumPropEditor schema={prop as EnumSchema} target={target}/>
+    if(prop.base === 'enum') return <>
+        <label>{prop.name}</label>
+        <EnumPropEditor schema={prop as EnumSchema} target={target}/>
+    </>
     if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
 
     const the_label = <label>{prop.name}</label>

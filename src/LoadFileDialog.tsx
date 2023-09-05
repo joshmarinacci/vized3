@@ -13,7 +13,7 @@ function isValidJSONPNGFile(file: File) {
     return true
 }
 
-export function LoadFileDialog(props: { state: GlobalState }) {
+export function LoadFileDialog(props: { state: GlobalState, onComplete:(file:File)=>Promise<void> }) {
     const [canLoad, setCanLoad] = useState(false)
     const dm = useContext(DialogContext)
     const input = useRef<HTMLInputElement>(null)
@@ -21,10 +21,7 @@ export function LoadFileDialog(props: { state: GlobalState }) {
         console.log("loading")
         if (input && input.current && input.current.files) {
             const file = input.current.files[0]
-            console.log("file is", file)
-            const doc_proxy = await loadPNGJSON(props.state, file)
-            console.log("loaded doc is", doc_proxy)
-            props.state.swapDoc(doc_proxy)
+            await props.onComplete(file)
         }
         dm.hide()
     }

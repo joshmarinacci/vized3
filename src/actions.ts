@@ -10,7 +10,7 @@ import {SupportedIcons} from "./icons"
 import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "./models/assets"
 import {CircleDef} from "./models/circle"
 import {NGonClass, NGonDef} from "./models/ngon"
-import {DocClass, DocDef, DrawableClass, ObjectDef, ObjectProxy, PageDef} from "./models/om"
+import {DrawableClass, ObjectDef, ObjectProxy, PageDef} from "./models/om"
 import {PathShapeDef} from "./models/pathshape"
 import {RectDef} from "./models/rect"
 import {SimpleTextDef} from "./models/simpletext"
@@ -26,7 +26,7 @@ export type MenuAction = {
 
 export const SavePNGJSONAction:MenuAction = {
     icon:SupportedIcons.SaveDocument,
-    title:'save',
+    title:'Save As doc.JSON.PNG',
     description:'Save the document as a PNG with the document embedded inside of the PNG as JSON.',
     tags:['save','export','download','png'],
     perform:async (state) => {
@@ -36,7 +36,7 @@ export const SavePNGJSONAction:MenuAction = {
 
 export const SaveLocalStorageAction:MenuAction = {
     icon:SupportedIcons.SaveDocument,
-    title:'save in browser',
+    title:'Save',
     description:'save the document in the browsers internal storage',
     tags:['save','local'],
     perform:async(state) => {
@@ -45,7 +45,7 @@ export const SaveLocalStorageAction:MenuAction = {
 }
 export const DownloadPNGAction:MenuAction = {
     icon:SupportedIcons.Download,
-    title:'PNG',
+    title:'export as PNG',
     tags:['save','export','download','png'],
     description:"Export the document as a PNG file",
     perform: async (state) => {
@@ -53,7 +53,7 @@ export const DownloadPNGAction:MenuAction = {
     }
 }
 export const DownloadSVGAction:MenuAction = {
-    title:'SVG',
+    title:'export as SVG',
     tags:['save','export','download','svg'],
     icon:SupportedIcons.Download,
     description:'Export the document as an SVG file',
@@ -62,7 +62,7 @@ export const DownloadSVGAction:MenuAction = {
     }
 }
 export const DownloadPDFAction:MenuAction = {
-    title:'PDF',
+    title:'export as PDF',
     tags:['save','export','download','pdf'],
     icon:SupportedIcons.Download,
     description:'Export the document as a PDF file',
@@ -296,19 +296,6 @@ export const VCenterAlignShapes: MenuAction = {
     }
 }
 
-export const NewDocumentAction: MenuAction = {
-    title: 'New Document',
-    icon: SupportedIcons.NewDocument,
-    tags: ['new', 'document'],
-    description: 'create a new empty document',
-    perform: async (state) => {
-        const doc = state.om.make(DocDef, {}) as DocClass
-        const page = state.om.make(PageDef, {})
-        doc.appendListProp('pages', page)
-        state.swapDoc(doc)
-    }
-}
-
 export const ConvertNGonToPath:MenuAction = {
     title:'Convert to Path',
     icon:SupportedIcons.Settings,
@@ -350,7 +337,6 @@ export const RedoAction:MenuAction = {
 
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,
-    NewDocumentAction,
     DownloadPNGAction,
     DownloadSVGAction,
     DownloadPDFAction,
