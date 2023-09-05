@@ -105,7 +105,7 @@ export const AddNewRectAction:MenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const rect = state.om.make(RectDef, {
-            bounds: new Bounds(100, 300, 100, 100)
+            bounds: new Bounds(1, 3, 1, 1)
         })
         page.appendListProp('children', rect)
     }

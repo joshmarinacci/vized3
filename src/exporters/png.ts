@@ -12,7 +12,7 @@ export async function exportPNG(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
     const canvas = await stateToCanvas(state)
     const blob = await canvas_to_blob(canvas)
-    forceDownloadBlob('demo.png',blob)
+    forceDownloadBlob(`${state.getCurrentDocument().getPropValue('name')}.png`,blob)
 }
 
 export async function stateToCanvas(state:GlobalState) {
@@ -25,7 +25,7 @@ export async function stateToCanvas(state:GlobalState) {
     canvas.width = size.w
     canvas.height = size.h
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    const surf = new ScaledDrawingSurface(ctx,lookup_dpi(unit),unit)
+    const surf = new ScaledDrawingSurface(ctx,0,unit)
     traverse(state.getCurrentDocument(), (item: any) => {
         if (item.def.name === 'document') {
             // const doc = item.obj as DocClass
@@ -35,14 +35,10 @@ export async function stateToCanvas(state:GlobalState) {
             ctx.fillStyle = 'white'
             ctx.fillRect(0, 0, canvas.width, canvas.height)
         }
-        if (item.def.name === 'rect') {
-            const sq = item as RectClass
-            sq.drawSelf(surf)
+        if('drawSelf' in item ) {
+            item.drawSelf(surf)
         }
-        if (item.def.name === 'circle') {
-            const circle = item as CircleClass
-            circle.drawSelf(surf)
-        }
+
     })
     return Promise.resolve(canvas)
 }

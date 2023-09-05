@@ -17,7 +17,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.unit = unit
     }
 
-    fillRect(bounds: Bounds, fill: any) {
+    fillRect(bounds: Bounds, fill: unknown) {
         this.ctx.save()
         this.ctx.translate(bounds.x*this.scale, bounds.y*this.scale)
         if(fill instanceof LinearColorGradient) {
@@ -27,7 +27,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
             })
             this.ctx.fillStyle = grad
         } else {
-            this.ctx.fillStyle = fill
+            this.ctx.fillStyle = fill as string
         }
         this.ctx.fillRect(0,0, bounds.w * this.scale, bounds.h * this.scale)
         this.ctx.restore()

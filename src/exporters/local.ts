@@ -1,8 +1,9 @@
-import {make_logger} from "josh_js_util"
+import {make_logger, Size} from "josh_js_util"
 
 import {DocClass} from "../models/om"
 import {GlobalState} from "../models/state"
 import {fromJSONDoc, JSONDoc, JSONDocIndex, saveJSON} from "./json"
+import {stateToCanvas} from "./png"
 
 function loadIndex():JSONDocIndex {
     const index = localStorage.getItem('index')
@@ -13,6 +14,21 @@ function loadIndex():JSONDocIndex {
     }
 }
 
+function scaleCropCanvasTo(original_canvas: HTMLCanvasElement, size: Size) {
+    const new_canvas = document.createElement('canvas')
+    new_canvas.width = size.w
+    new_canvas.height = size.h
+    const ctx = new_canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0,0,size.w,size.h)
+    ctx.fillStyle = 'red'
+    ctx.fillRect(0+10,0+10,size.w-20,size.h-20)
+    ctx.drawImage(original_canvas,
+        0,0,original_canvas.width,original_canvas.height,
+        0,0, size.w,size.h)
+    return new_canvas
+}
+
 export async function saveLocalStorage(state: GlobalState) {
     const log = make_logger('local')
     const json_obj =  saveJSON(state)
@@ -21,6 +37,10 @@ export async function saveLocalStorage(state: GlobalState) {
     log.info('json is',json_obj)
     //first save the doc itself
     localStorage.setItem(doc.getUUID(),JSON.stringify(json_obj,null,'    '))
+    //now save a thumbnail
+    const canvas = await stateToCanvas(state)
+    const thumbnail = scaleCropCanvasTo(canvas, new Size(64,64))
+    const thumbnail_url = thumbnail.toDataURL('png')
 
     const index:JSONDocIndex = loadIndex()
     console.log("index before is",index)
@@ -28,12 +48,14 @@ export async function saveLocalStorage(state: GlobalState) {
     if(old_doc) {
         old_doc.name = doc.getPropValue('name')
         old_doc.updateDate = new Date(Date.now())
+        old_doc.thumbnail = thumbnail_url
     } else {
         index.docs.push({
             uuid: doc.getUUID(),
             name: doc.getPropValue('name'),
             creationDate: new Date(Date.now()),
             updateDate: new Date(Date.now()),
+            thumbnail: thumbnail_url
         })
     }
     console.log("saving back the index",index)
@@ -42,9 +64,7 @@ export async function saveLocalStorage(state: GlobalState) {
 
 export async function listLocalDocs(state: GlobalState) {
     const log = make_logger('local')
-    log.info('state is',state)
     const index:JSONDocIndex = loadIndex()
-    log.info("the index is",index)
     return index.docs
 }
 export async function loadLocalDoc(state:GlobalState, uuid:string):Promise<DocClass> {

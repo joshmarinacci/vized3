@@ -22,3 +22,6 @@
 
 
 
+.dialog section.scroll {
+    overflow: scroll;
+}

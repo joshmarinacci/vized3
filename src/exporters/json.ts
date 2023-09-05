@@ -44,6 +44,7 @@ export type JSONDocV1 = {
 export type JSONDocReference = {
     uuid:string,
     name:string,
+    thumbnail?:string,
     creationDate:Date,
     updateDate:Date,
 }
