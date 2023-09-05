@@ -3,7 +3,7 @@ import {describe, expect, it} from "vitest"
 import {PageClass} from "../models/om"
 import {GlobalState} from "../models/state"
 import {saveJSON} from "./json"
-import {listLocalDocs, loadLocalDoc, saveLocalStorage} from "./local"
+import {deleteLocalDoc, listLocalDocs, loadLocalDoc, saveLocalStorage} from "./local"
 
 class FakeLocalStorage implements Storage{
     // [name: string]: any
@@ -91,5 +91,22 @@ describe('json', () => {
             expect(page.getListProp('children').length).toBe(5)
         }
 
+    })
+
+    it('shoudl delete from storage', async () => {
+        const state = new GlobalState({
+            localStorage:new FakeLocalStorage()
+        })
+        const uuid = state.getCurrentDocument().getUUID()
+        await saveLocalStorage(state, false)
+        {
+            const list = await listLocalDocs(state)
+            expect(list.length).toBe(1)
+        }
+        await deleteLocalDoc(state,uuid)
+        {
+            const list = await listLocalDocs(state)
+            expect(list.length).toBe(0)
+        }
     })
 })

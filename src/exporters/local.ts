@@ -83,40 +83,11 @@ export async function loadLocalDoc(state:GlobalState, uuid:string):Promise<DocCl
     }
 }
 
-// async function doit() {
-//     const log = make_logger('local')
-//     const state = new GlobalState()
-//     //clear the index if it exists
-//     localStorage.clear()
-//     {
-//         //list the index, see it is empty
-//         const docs = await listLocalDocs(state)
-//         log.info("doc count is", docs.length)
-//     }
-//     //create a new doc
-//     const doc = state.om.make(DocDef, {}) as DocClass
-//     const page = state.om.make(PageDef, {})
-//     doc.appendListProp('pages', page)
-//
-//     const circle = state.om.make(CircleDef,{})
-//     page.appendListProp('children',circle)
-//     state.swapDoc(doc)
-//
-//     //save the doc with the action
-//     await saveLocalStorage(state)
-//     {
-//         //list the docs with the action
-//         const docs = await listLocalDocs(state)
-//         log.info("doc count is", docs.length)
-//         log.info(docs)
-//     }
-//
-//     //re-load the doc with the action
-//     const doc2 = await loadLocalDoc(state,doc.getUUID())
-//     log.info("the local doc2 is",doc2)
-//     return doc2
-// }
-// doit()
-//     .then((doc)=>console.log("doc is",doc))
-//     .catch((e)=>console.error(e))
+export async function deleteLocalDoc(state:GlobalState, uuid:string):Promise<void> {
+    const index:JSONDocIndex = loadIndex(state)
+    const docref = index.docs.find(dr => dr.uuid === uuid)
+    if(!docref) return
+    index.docs = index.docs.filter(doc => doc.uuid !== uuid)
+    state.localStorage.setItem('index',JSON.stringify(index, null, '    '))
+}
 

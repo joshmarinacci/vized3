@@ -203,3 +203,14 @@ export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: Pr
     }
     return <div>some kind of value</div>
 }
+
+type ItemRenderer<T> = (item: T) => JSX.Element
+
+export function ListView<T>(props: { data: T[], renderer: ItemRenderer<T> }) {
+    const {data, renderer} = props
+    return <div className={'list-view'}>
+        {data.map((file, i) => {
+            return <div className={'list-item'} key={i}>{renderer(file)}</div>
+        })}
+    </div>
+}
