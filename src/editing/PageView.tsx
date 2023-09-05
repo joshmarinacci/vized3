@@ -9,7 +9,6 @@ import {
     AddNewNGonAction,
     AddNewRectAction,
     BottomAlignShapes,
-    ConvertNGonToPath,
     DeleteSelection,
     HCenterAlignShapes,
     LeftAlignShapes,
@@ -19,7 +18,6 @@ import {
     VCenterAlignShapes
 } from "../actions/actions"
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common"
-import {NGonClass} from "../models/ngon"
 import {
     DocClass,
     DrawableClass,
@@ -131,12 +129,6 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
             ])
         }
 
-        if(props.state.getSelectedObjects().length === 1) {
-            const sel = props.state.getSelectedObjects()[0]
-            if(sel instanceof NGonClass) {
-                items.push(ConvertNGonToPath)
-            }
-        }
 
         items = items.concat([
             AddNewRectAction,

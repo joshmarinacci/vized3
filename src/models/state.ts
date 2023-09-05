@@ -1,5 +1,6 @@
 import {Bounds, Point} from "josh_js_util"
 
+import {make_filled_image} from "../platform"
 import {
     ColorAssetClass,
     ColorAssetDef,
@@ -11,41 +12,14 @@ import {
     NumberAssetDef
 } from "./assets"
 import {CircleClass, CircleDef} from "./circle"
-import {ObservableBase } from "./model"
+import {ObservableBase} from "./model"
 import {NGonClass, NGonDef} from "./ngon"
-import {
-    DocClass,
-    DocDef,
-    ObjectManager,
-    OO,
-    PageClass,
-    PageDef
-} from "./om"
+import {DocClass, DocDef, ObjectManager, OO, PageClass, PageDef} from "./om"
 import {PathShapeClass, PathShapeDef} from "./pathshape"
 import {RectClass, RectDef} from "./rect"
 import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
 import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
-
-
-function make_filled_image(width: number, height: number, fill: string) {
-    let canvas = null
-    if(typeof document !== 'undefined') {
-        canvas = document.createElement('canvas')
-    } else {
-        canvas = PureImage.make(width, height)
-    }
-    // const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d') as unknown as any
-    ctx.fillStyle = 'white'
-    ctx.fillRect(0,0,width,height)
-    ctx.fillStyle = fill
-    ctx.fillRect(0,0,width/2,height/2)
-    ctx.fillRect(width/2,height/2,width/2,height/2)
-    return canvas
-}
 
 export class GlobalState extends ObservableBase {
     om: ObjectManager
