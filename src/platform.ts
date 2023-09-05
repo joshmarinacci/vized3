@@ -12,7 +12,7 @@ export function make_filled_image(width: number, height: number, fill: string) {
         ctx.fillRect(width / 2, height / 2, width / 2, height / 2)
         return canvas
     } else {
-        console.log("doc is undefined")
+        // console.log("doc is undefined")
         // throw new Error("no canvas image")
         // const pureimage = await import('pureimage')
         // console.log("pi is", pureimage)
