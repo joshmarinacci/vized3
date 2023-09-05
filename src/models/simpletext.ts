@@ -54,14 +54,14 @@ export class SimpleTextClass extends DrawableClass<typeof SimpleTextDef> {
     }
 
     contains(pt: Point): boolean {
-        const h = this.calcHeight()
-        const bds = new Bounds(this.props.center.x, this.props.center.y - h, this.metrics.width, h)
+        const h = this.calcHeight()/72
+        const bds = new Bounds(this.props.center.x, this.props.center.y - h, this.metrics.width/72, h)
         return bds.contains(pt)
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        const h = this.calcHeight()
-        const bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width,h)
+        const h = this.calcHeight()/72
+        const bds = new Bounds(this.props.center.x, this.props.center.y-h,this.metrics.width/72,h)
         ctx.outlineRect(bds)
     }
 
