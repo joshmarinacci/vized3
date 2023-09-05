@@ -8,9 +8,9 @@ import {
     AddNewCircleAction,
     AddNewColorAssetAction,
     AddNewGradientAssetAction,
-    AddNewImageAssetAction,
+    AddNewImageAssetAction, AddNewNGonAction,
     AddNewNumberAssetAction,
-    AddNewPageAction,
+    AddNewPageAction, AddNewPathShapeAction,
     AddNewRectAction,
     DeleteSelection,
     MenuAction
@@ -64,7 +64,23 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
         state.setSelectedPage(page)
         state.setSelectedObjects([page])
     }
-    return <div className={'tree-item'}>
+    const actions = [
+        AddNewRectAction,
+        AddNewCircleAction,
+        AddNewPathShapeAction,
+        AddNewNGonAction,
+        DeleteSelection,
+    ]
+    const pm = useContext(PopupContext)
+    return <div className={'tree-item'}
+    onContextMenu={(e) => {
+        e.preventDefault()
+        const menu = <MenuBox>{actions.map((m, i) => {
+            return <MenuActionButton key={i} action={m} state={state}/>
+        })}</MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0, 0))
+    }}
+    >
         <Icon icon={SupportedIcons.Page}/>
         <b className={classes} onClick={select_page}>{page.getPropValue('name')}</b>
         {
@@ -77,6 +93,10 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
 function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
     const {asset, state} = props
     const schema = asset.getPropSchemaNamed('value')
+    const pm = useContext(PopupContext)
+    const actions = [
+        DeleteSelection
+    ]
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
@@ -96,7 +116,15 @@ function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
     if(schema.custom === "image-asset") {
         icon = SupportedIcons.Image
     }
-    return <div className={classes} onClick={() => state.setSelectedObjects([asset])}>
+    return <div className={classes} onClick={() => state.setSelectedObjects([asset])}
+                onContextMenu={(e) => {
+                    e.preventDefault()
+                    const menu = <MenuBox>{actions.map((m, i) => {
+                        return <MenuActionButton key={i} action={m} state={state}/>
+                    })}</MenuBox>
+                    pm.show_at(menu, e.target, "left", new Point(0, 0))
+                }}
+    >
         <Icon icon={icon}/>
         <label>{asset.getPropValue('name')}</label>
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
@@ -148,9 +176,6 @@ export function TreeView(props: { state:GlobalState}) {
             text={doc.getPropValue('name')}
             actions={[
                 AddNewPageAction,
-                AddNewNumberAssetAction,
-                AddNewColorAssetAction,
-                AddNewGradientAssetAction,
             ]}
         />
         <header>

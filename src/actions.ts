@@ -13,6 +13,7 @@ import {NGonClass, NGonDef} from "./models/ngon"
 import {DocClass, DocDef, DrawableClass, ObjectDef, ObjectProxy, PageDef} from "./models/om"
 import {PathShapeDef} from "./models/pathshape"
 import {RectDef} from "./models/rect"
+import {SimpleTextDef} from "./models/simpletext"
 import {GlobalState} from "./models/state"
 
 export type MenuAction = {
@@ -141,8 +142,24 @@ export const AddNewNGonAction:MenuAction = {
         page.appendListProp('children', shape)
     }
 }
+
+export const AddNewSimpletextAction:MenuAction = {
+    title: 'new simple text',
+    icon: SupportedIcons.Add,
+    tags:['add','shape','text'],
+    perform: async (state: GlobalState) => {
+        const page = state.getSelectedPage()
+        if (!page) return console.warn("no page selected")
+        const shape = state.om.make(SimpleTextDef, {
+            center:new Point(0,1)
+        })
+        page.appendListProp('children', shape)
+    }
+}
+
 export const AddNewNumberAssetAction:MenuAction = {
     title:'add number asset',
+    icon: SupportedIcons.Number,
     perform: async (state)=> {
         const asset = state.om.make(NumberAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
@@ -150,6 +167,7 @@ export const AddNewNumberAssetAction:MenuAction = {
 }
 export const AddNewColorAssetAction:MenuAction = {
     title:'add color asset',
+    icon:SupportedIcons.Color,
     perform: async (state)=> {
         const asset = state.om.make(ColorAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
@@ -158,6 +176,7 @@ export const AddNewColorAssetAction:MenuAction = {
 }
 export const AddNewGradientAssetAction:MenuAction = {
     title:'add gradient asset',
+    icon:SupportedIcons.Gradient,
     perform: async (state)=> {
         const asset = state.om.make(GradientAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
@@ -165,6 +184,7 @@ export const AddNewGradientAssetAction:MenuAction = {
 }
 export const AddNewImageAssetAction:MenuAction = {
     title:'add image asset',
+    icon:SupportedIcons.Image,
     perform: async (state)=> {
         const asset = state.om.make(ImageAssetDef,{})
         state.getCurrentDocument().appendListProp('assets',asset)
@@ -341,8 +361,12 @@ export const ALL_ACTIONS: MenuAction[] = [
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
+    AddNewSimpletextAction,
+
     AddNewNumberAssetAction,
     AddNewColorAssetAction,
+    AddNewGradientAssetAction,
+    AddNewImageAssetAction,
 
     DeleteSelection,
     RightAlignShapes,

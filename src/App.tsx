@@ -16,7 +16,7 @@ import {
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
-    AddNewRectAction,
+    AddNewRectAction, AddNewSimpletextAction,
     DeleteSelection,
     DownloadPDFAction,
     DownloadPNGAction,
@@ -108,6 +108,7 @@ function Main() {
                 AddNewCircleAction,
                 AddNewPathShapeAction,
                 AddNewNGonAction,
+                AddNewSimpletextAction,
             ]}/>
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
             <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
