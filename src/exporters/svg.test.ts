@@ -31,7 +31,6 @@ describe('svg', () => {
         expect(svg.match('svg')).toBeTruthy()
         expect(svg.match('rect')).toBeTruthy()
     })
-
     it('should save an  n-gon to svg', async () => {
         const state = new GlobalState()
         const doc = state.om.make(DocDef, {})
