@@ -1,16 +1,9 @@
-import React, {MouseEvent, useContext, useEffect, useRef, useState} from "react";
-import {Point, Size} from "josh_js_util";
-import {HBox, PopupContext} from "josh_react_util";
-import {GlobalState} from "../models/state";
-import {
-    DocClass,
-    DrawableClass,
-    DrawableShape,
-    FamilyPropChanged,
-    PageClass,
-    PropChanged
-} from "../models/om";
-import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common";
+import "./PageView.css"
+
+import {Point, Size} from "josh_js_util"
+import {HBox, PopupContext} from "josh_react_util"
+import React, {MouseEvent, useContext, useEffect, useRef, useState} from "react"
+
 import {
     AddNewCircleAction,
     AddNewNGonAction,
@@ -24,39 +17,48 @@ import {
     RightAlignShapes,
     TopAlignShapes,
     VCenterAlignShapes
-} from "../actions";
+} from "../actions"
+import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common"
+import {NGonClass} from "../models/ngon"
+import {
+    DocClass,
+    DrawableClass,
+    DrawableShape,
+    FamilyPropChanged,
+    PageClass,
+    PropChanged
+} from "../models/om"
 import {PathShapeClass, PathShapeDef} from "../models/pathshape"
-import {canvasToModel, findShapeInPage, MouseHandlerProtocol} from "./editing"
-import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
+import {GlobalState} from "../models/state"
+import {lookup_dpi, Unit} from "../models/unit"
 import {DragHandler} from "./DragHandler"
-import "./PageView.css"
-import {NGonClass} from "../models/ngon";
-import {lookup_dpi, Unit} from "../models/unit";
-import {ScaledDrawingSurface} from "./scaled_drawing";
-import {FloatingPalette} from "./FloatingPalette";
+import { findShapeInPage, MouseHandlerProtocol} from "./editing"
+import {FloatingPalette} from "./FloatingPalette"
+import {EditState, PathShapeEditHandler} from "./PathShapeEditHandler"
+import {ScaledDrawingSurface} from "./scaled_drawing"
 
 
 function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, state: GlobalState, handler:MouseHandlerProtocol, zoomLevel:number, docUnit:Unit) {
-    let ctx = canvas.getContext('2d') as CanvasRenderingContext2D
-    let can_scale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    const can_scale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
     ctx.save()
     ctx.fillStyle = '#be2424'
     ctx.fillRect(0,0,canvas.width,canvas.height)
     const pageSize = page.getPropValue('size') as Size
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,pageSize.w*can_scale,pageSize.h*can_scale)
-    let surf = new ScaledDrawingSurface(ctx,zoomLevel,docUnit)
+    const surf = new ScaledDrawingSurface(ctx,zoomLevel,docUnit)
     page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(surf))
-    let selected = state.getSelectedObjects()
-    for(let sel of selected) {
-        ctx.strokeStyle = 'rgba(255,100,255,0.5)';
-        ctx.lineWidth = 10;
-        if (sel instanceof DrawableClass) sel.drawSelected(surf);
+    const selected = state.getSelectedObjects()
+    for(const sel of selected) {
+        ctx.strokeStyle = 'rgba(255,100,255,0.5)'
+        ctx.lineWidth = 10
+        if (sel instanceof DrawableClass) sel.drawSelected(surf)
     }
     //draw the handles
-    for(let sel of selected) {
+    for(const sel of selected) {
         if (sel instanceof DrawableClass) {
-            let h = sel.getHandle()
+            const h = sel.getHandle()
             if(h) surf.overlayHandle(h)
         }
     }
@@ -68,20 +70,20 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     const {doc, page, state} = props
     const pageSize:Size = page.getPropValue('size')
     const docUnit:Unit = doc.getPropValue('unit')
-    const canvasRef = useRef<HTMLCanvasElement>();
+    const canvasRef = useRef<HTMLCanvasElement>(null)
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     const [zoomLevel, setZoomLevel ] = useState(0)
 
-    const drawScale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
+    // const drawScale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
     const canvasToModel = (e: React.MouseEvent<HTMLCanvasElement>) => {
-        let ept = new Point(e.clientX, e.clientY)
-        let rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
-        let cpt = ept.subtract(new Point(rect.x, rect.y))
+        const ept = new Point(e.clientX, e.clientY)
+        const rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
+        const cpt = ept.subtract(new Point(rect.x, rect.y))
         let pt = cpt.scale(window.devicePixelRatio)
         pt = pt.scale(1/Math.pow(2,zoomLevel))
         pt = pt.scale(1/lookup_dpi(docUnit))
         return pt
-    };
+    }
 
     const redraw = () => {
         if(canvasRef.current) drawCanvas(canvasRef.current, page, doc, state, handler, zoomLevel, docUnit)
@@ -101,20 +103,20 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         return () => handler.removeEventListener('redraw', hand)
     }, [handler])
     const onMouseDown = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        const pt = canvasToModel(e)
         await handler.mouseDown(pt, e, props.state)
     }
     const onMouseMove = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        const pt = canvasToModel(e)
         await handler.mouseMove(pt,e,props.state)
     }
     const onMouseUp = async (e: MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        const pt = canvasToModel(e)
         await handler.mouseUp(pt, e, props.state)
     }
     const pm = useContext(PopupContext)
     const showContextMenu = async (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
+        const pt = canvasToModel(e)
         await handler.mouseUp(pt, e, props.state)
         e.preventDefault()
         let items:MenuAction[] = []
@@ -130,7 +132,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         }
 
         if(props.state.getSelectedObjects().length === 1) {
-            let sel = props.state.getSelectedObjects()[0]
+            const sel = props.state.getSelectedObjects()[0]
             if(sel instanceof NGonClass) {
                 items.push(ConvertNGonToPath)
             }
@@ -146,15 +148,15 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         const menu = <MenuBox>{items.map((act,i) => {
                     return <MenuActionButton key={`action${i}`} action={act} state={props.state}/>
                 })}</MenuBox>
-        let elem = e.target as HTMLElement
-        let dim = new Size(elem.clientWidth,elem.clientHeight)
+        const elem = e.target as HTMLElement
+        const dim = new Size(elem.clientWidth,elem.clientHeight)
         pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
     }
     const onDoubleClick = (e:MouseEvent<HTMLCanvasElement>) => {
-        let pt = canvasToModel(e)
-        const page = props.state.getSelectedPage();
+        const pt = canvasToModel(e)
+        const page = props.state.getSelectedPage()
         if(!page) return
-        let shape = findShapeInPage(page,pt)
+        const shape = findShapeInPage(page,pt)
         if(shape) {
             if (shape instanceof PathShapeClass) {
                 setHandler(new PathShapeEditHandler(shape as PathShapeClass, EditState.Existing))
@@ -188,7 +190,7 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         </HBox>
         <FloatingPalette visible={pal_vis}>{handler_commands}</FloatingPalette>
         <canvas
-            ref={canvasRef as any}
+            ref={canvasRef}
             width={size.w}
             height={size.h}
             onMouseDown={onMouseDown}
