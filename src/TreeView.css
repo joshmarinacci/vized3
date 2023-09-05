@@ -1,9 +1,21 @@
 .tree-view {
     background-color: var(--panel-background);
+    padding: 0;
+}
+.tree-view header {
+    border: 0px solid red;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    background-color: var(--panel-dark-background);
 }
 .tree-view .tree-item {
     margin-left: 1rem;
-    padding: 0.55rem 0.5rem;
+    padding: 0.5rem 0.5rem;
 }
 .tree-view .tree-item.tree-leaf {
     display: flex;

@@ -138,18 +138,19 @@ export function MenuActionButton(props: { action: MenuAction, state: GlobalState
 }
 
 export function DropdownMenuButton(props: {
-    title: string,
+    title:string,
+    icon:SupportedIcons,
     items: MenuAction[],
     state: GlobalState
 }) {
-    const {title, items, state} = props
+    const {title, icon, items, state} = props
     const pm = useContext(PopupContext)
     const showMenu = (e: MouseEvent<HTMLButtonElement>) => {
         const menu = <MenuBox>{items.map((m, i) => <MenuActionButton key={i} action={m}
                                                                      state={state}/>)}</MenuBox>
         pm.show_at(menu, e.target, "left", new Point(0, 0))
     }
-    return <button onClick={showMenu}>{title}</button>
+    return <IconButton icon={icon} onClick={showMenu}>{title}</IconButton>
 }
 
 export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: PropSchema }) {

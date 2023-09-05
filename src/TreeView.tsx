@@ -11,9 +11,17 @@ import {
     AddNewNumberAssetAction,
     AddNewPageAction,
     AddNewRectAction,
-    DeleteSelection
+    DeleteSelection,
+    MenuAction
 } from "./actions"
-import {MenuActionButton, MenuBox, useObservableChange, ValueThumbnail} from "./common"
+import {
+    DropdownMenuButton,
+    MenuActionButton,
+    MenuBox,
+    useObservableChange,
+    ValueThumbnail
+} from "./common"
+import {SupportedIcons} from "./icons"
 import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
@@ -76,40 +84,62 @@ function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </div>
 }
-export function TreeView(props: { state:GlobalState}) {
-    useObservableChange(props.state,'selection')
-    const selected = props.state.getSelectedObjects()
-    const doc = props.state.getCurrentDocument()
+
+function TreeLeafItem(props: {item:ObjectProxy<ObjectDef>, text:string, state:GlobalState, actions:MenuAction[]}) {
+    const {item, text, state, actions}= props
     const pm = useContext(PopupContext)
-    const select_document = () => {
-        props.state.setSelectedObjects([doc])
-    }
+    return <div
+        className={toClass({
+            selected:state.isSelectedObject(item),
+            'tree-item':true,
+        })}
+        onClick={() => state.setSelectedObjects([item])}
+        onContextMenu={(e) => {
+            e.preventDefault()
+            const menu = <MenuBox>{actions.map((m, i) => {
+                return <MenuActionButton key={i} action={m} state={state}/>
+            })}</MenuBox>
+            pm.show_at(menu, e.target, "left", new Point(0, 0))
+        }}
+    >{text}</div>
+}
+
+export function TreeView(props: { state:GlobalState}) {
+    const {state} = props
+    useObservableChange(state,'selection')
+    const selected = state.getSelectedObjects()
+    const doc = state.getCurrentDocument()
+    const add_assets:MenuAction[] = [
+        AddNewNumberAssetAction,
+        AddNewColorAssetAction,
+        AddNewGradientAssetAction
+    ]
+    const add_page:MenuAction[] = [
+        AddNewPageAction
+    ]
+
     return <div className={'panel left tree-view'}>
-        <h3 onClick={select_document}>document: {props.state.getCurrentDocument().getPropValue('name')}</h3>
-        <h3
-            onContextMenu={(e) => {
-                e.preventDefault()
-                const menu = <MenuBox>
-                    <MenuActionButton key={'add_page'} state={props.state} action={AddNewPageAction}/>
-                </MenuBox>
-                pm.show_at(menu, e.target, "left", new Point(0,0))
-            }}
-        >pages</h3>
+        <TreeLeafItem
+            item={doc} state={state}
+            text={doc.getPropValue('name')}
+            actions={[
+                AddNewPageAction,
+                AddNewNumberAssetAction,
+                AddNewColorAssetAction,
+                AddNewGradientAssetAction,
+            ]}
+        />
+        <header>
+            Pages
+            <DropdownMenuButton icon={SupportedIcons.Add} items={add_page} state={state}/>
+        </header>
         {doc.getListProp('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
         })}
-        <h3
-            onContextMenu={(e) => {
-                e.preventDefault()
-                const menu = <MenuBox>
-                    <MenuActionButton key={'add_num'} state={props.state} action={AddNewNumberAssetAction}/>
-                    <MenuActionButton key={'add_color'} state={props.state} action={AddNewColorAssetAction}/>
-                    <MenuActionButton key={'add_gradient'} state={props.state} action={AddNewGradientAssetAction}/>
-                </MenuBox>
-                pm.show_at(menu, e.target, "left", new Point(0,0))
-            }}
-        >assets</h3>
-
+        <header>
+            Assets
+            <DropdownMenuButton icon={SupportedIcons.Add} items={add_assets} state={state}/>
+        </header>
         {doc.getListProp('assets').map((asset,i) => {
             return <TreeAssetItem key={i} asset={asset} state={props.state} selected={selected}/>
         })}

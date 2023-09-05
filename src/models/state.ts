@@ -83,6 +83,9 @@ export class GlobalState extends ObservableBase {
         this.selected_objects = []
         this.fire('selection', {})
     }
+    isSelectedObject(obj:ObjectProxy<ObjectDef>) :boolean {
+        return this.selected_objects.includes(obj)
+    }
 
     setSelectedPage(page: any) {
         this.selected_page = page
