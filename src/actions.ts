@@ -143,7 +143,7 @@ export const AddNewNGonAction:MenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const shape = state.om.make(NGonDef, {
-            center: new Point(200, 200),
+            center: new Point(1, 1),
         })
         page.appendListProp('children', shape)
     }

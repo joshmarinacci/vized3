@@ -22,7 +22,7 @@ export const NGonDef:ObjectDef = {
             name:'radius',
             base:'number',
             readonly: false,
-            defaultValue: 50
+            defaultValue: 1
         },
         sides: {
             name:'sides',
@@ -40,7 +40,7 @@ export const NGonDef:ObjectDef = {
             name:'starRadius',
             base: "number",
             readonly: false,
-            defaultValue: 20
+            defaultValue: 0.5
         },
         fill: FillDef,
         strokeFill: StrokeFillDef,
@@ -87,11 +87,8 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        const fill = this.getPropValue('fill')
         const points:Point[] = this.drawPath()
-        const center = this.getPosition()
-        const closed = true
-        ctx.strokeLinePath(center,points,closed,fill)
+        ctx.outlineLinePath(this.getPosition(),points,true)
     }
 
     drawSelf(ctx: ScaledSurface): void {
@@ -100,7 +97,7 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
         const center = this.getPosition()
         const closed = true
         ctx.fillLinePath(center,points,closed,fill)
-        ctx.strokeLinePath(center,points,closed,this.getPropValue('strokeFill'))
+        ctx.strokeLinePath(center,points,closed,this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
     }
 
     getHandle(): Handle | null {

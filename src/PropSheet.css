@@ -11,7 +11,7 @@
     align-self: end;
     text-align: end;
 }
-.prop-sheet .proxy-switch {
+.prop-sheet button {
     grid-column-start: 2;
 }
 .prop-sheet input, .prop-sheet .input {
