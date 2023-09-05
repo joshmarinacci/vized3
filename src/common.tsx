@@ -67,13 +67,13 @@ export function ToggleIconButton(props: {
 
 export function IconButton(props: {
     onClick?: () => void,
-    icon: SupportedIcons,
+    icon?: SupportedIcons,
     children?: ReactNode
     disabled?: boolean
 }): JSX.Element {
+    const {icon} = props
     return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>
-        <span
-            className="material-icons">{props.icon}</span>
+        {icon && <span className="material-icons">{icon}</span>}
         {props.children}
     </button>
 }
@@ -139,7 +139,7 @@ export function MenuActionButton(props: { action: MenuAction, state: GlobalState
 
 export function DropdownMenuButton(props: {
     title:string,
-    icon:SupportedIcons,
+    icon?:SupportedIcons,
     items: MenuAction[],
     state: GlobalState
 }) {

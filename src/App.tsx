@@ -11,13 +11,14 @@ import {
     PopupContextImpl,
     Spacer,
 } from "josh_react_util"
-import React, {useContext, useState} from 'react'
+import React, {useContext, useRef, useState} from 'react'
 
 import {
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
     AddNewRectAction,
+    DeleteSelection,
     DownloadPDFAction,
     DownloadPNGAction,
     DownloadSVGAction,
@@ -66,8 +67,22 @@ function Main() {
     const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
     const showOpenDialog = () => dm.show(<ListFilesDialog state={state}/>)
 
+    const keyref = useRef(null)
 
-    return (<FillPage>
+    return (<div
+        ref={keyref}
+        className={'fill-page'}
+                 tabIndex={0}
+                 onKeyDown={(e)=>{
+                     if(e.target === keyref.current) {
+                         if(e.key === 'Backspace') {
+                             DeleteSelection.perform(state).then(() => {
+                                 console.log("deletion is done")
+                             })
+                         }
+                     }
+                 }}
+        >
         <HBox className={'toolbar'}>
             <DropdownMenuButton title={'File'} state={state} items={[
                 NewDocumentAction,
@@ -116,7 +131,7 @@ function Main() {
                 selected={!rightVisible}
             />
         </HBox>
-    </FillPage>)
+    </div>)
 }
 
 function App() {
