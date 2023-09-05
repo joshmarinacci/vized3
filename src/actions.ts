@@ -10,14 +10,7 @@ import {SupportedIcons} from "./icons"
 import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "./models/assets"
 import {CircleDef} from "./models/circle"
 import {NGonClass, NGonDef} from "./models/ngon"
-import {
-    DocClass,
-    DocDef,
-    DrawableClass,
-    ObjectDef,
-    ObjectProxy,
-    PageDef
-} from "./models/om"
+import {DocClass, DocDef, DrawableClass, ObjectDef, ObjectProxy, PageDef} from "./models/om"
 import {PathShapeDef} from "./models/pathshape"
 import {RectDef} from "./models/rect"
 import {GlobalState} from "./models/state"
@@ -316,6 +309,25 @@ export const ConvertNGonToPath:MenuAction = {
     }
 }
 
+export const UndoAction:MenuAction = {
+    title:'UnDo',
+    tags:['undo','action','history','redo'],
+    description:'un-does the previous action',
+    icon: SupportedIcons.Undo,
+    perform: async (state) => {
+        await state.om.performUndo()
+    }
+}
+export const RedoAction:MenuAction = {
+    title:'ReDo',
+    tags:['redo','action','history','undo'],
+    description:'un-does the previous action',
+    icon: SupportedIcons.Redo,
+    perform: async (state) => {
+        await state.om.performRedo()
+    }
+}
+
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,
     NewDocumentAction,
@@ -340,4 +352,7 @@ export const ALL_ACTIONS: MenuAction[] = [
     VCenterAlignShapes,
     HCenterAlignShapes,
     SaveLocalStorageAction,
+
+    UndoAction,
+    RedoAction,
 ]

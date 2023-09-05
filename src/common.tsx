@@ -127,17 +127,18 @@ export function MenuBox(props: { children: ReactNode }) {
     return <div className={'menu-box'}>{props.children}</div>
 }
 
-function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
-    return <button onClick={props.onClick}>{props.children}</button>
+function MenuButton(props: { children: React.ReactNode, onClick: () => void, disabled:boolean}) {
+    return <button className={'menu-button'} onClick={props.onClick} disabled={props.disabled}>{props.children}</button>
 }
 
-export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
+export function MenuActionButton(props: { action: MenuAction, state: GlobalState, disabled?:boolean }) {
+    const {action, state, disabled=false} = props
     let icon = <></>
-    if(props.action.icon) {
-        icon = <span  className="material-icons material-symbols-rounded">{props.action.icon}</span>
+    if(action.icon) {
+        icon = <span  className="material-icons material-symbols-rounded">{action.icon}</span>
     }
     return <MenuButton
-        onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>
+        onClick={() => action.perform(state)} disabled={disabled}>{icon}{action.title}</MenuButton>
 }
 
 export function DropdownMenuButton(props: {

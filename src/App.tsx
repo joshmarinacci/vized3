@@ -23,13 +23,16 @@ import {
     DownloadSVGAction,
     ExportCanvasJSAction,
     NewDocumentAction,
-    SaveLocalStorageAction
+    RedoAction,
+    SaveLocalStorageAction,
+    UndoAction
 } from "./actions"
 import {ActionSearchBox} from "./actionsearch"
 import {
     DropdownMenuButton,
     IconButton,
     MainLayout,
+    MenuActionButton,
     ToggleIconButton,
     useObjectManagerChange,
     useObservableChange
@@ -57,6 +60,17 @@ const state = new GlobalState()
 //     }
 // }
 
+async function handle_shortcuts(e: React.KeyboardEvent, state: GlobalState) {
+    if (e.key === 'Backspace') return await DeleteSelection.perform(state)
+    if (e.key === 'z' && e.metaKey) {
+        if(e.shiftKey) {
+            return await RedoAction.perform(state)
+        } else {
+            return await UndoAction.perform(state)
+        }
+    }
+}
+
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
@@ -72,13 +86,9 @@ function Main() {
         ref={keyref}
         className={'fill-page'}
                  tabIndex={0}
-                 onKeyDown={(e)=>{
-                     if(e.target === keyref.current) {
-                         if(e.key === 'Backspace') {
-                             DeleteSelection.perform(state).then(() => {
-                                 console.log("deletion is done")
-                             })
-                         }
+                 onKeyDown={async (e) => {
+                     if (e.target === keyref.current) {
+                         await handle_shortcuts(e, state)
                      }
                  }}
         >
@@ -100,8 +110,8 @@ function Main() {
                 AddNewNGonAction,
             ]}/>
             <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
-            <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
-            <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
+            <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
+            <MenuActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
             <IconButton icon={SupportedIcons.SaveDocument} onClick={async () => showOpenDialog()}>Open List</IconButton>
             <Spacer/>
             <ActionSearchBox state={state}/>
