@@ -25,22 +25,22 @@ import {SupportedIcons} from "./icons"
 import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
-function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
-    const shape = props.shape
+function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState}) {
+    const {shape, state} = props
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
-        selected:props.selected.find(s => s === props.shape),
+        selected:state.isSelectedObject(shape),
     })
     const pm = useContext(PopupContext)
     return <div className={classes}
-                onClick={()=> props.state.setSelectedObjects([props.shape])}
+                onClick={()=> state.setSelectedObjects([shape])}
                 onContextMenu={(e) => {
                     e.preventDefault()
                     const menu = <MenuBox>
-                        <MenuActionButton key={'rect'} state={props.state} action={AddNewRectAction}/>
-                        <MenuActionButton key='circle' state={props.state} action={AddNewCircleAction}/>
-                        <MenuActionButton key='delete' state={props.state} action={DeleteSelection}/>
+                        <MenuActionButton key={'rect'} state={state} action={AddNewRectAction}/>
+                        <MenuActionButton key='circle' state={state} action={AddNewCircleAction}/>
+                        <MenuActionButton key='delete' state={state} action={DeleteSelection}/>
                     </MenuBox>
                     pm.show_at(menu, e.target, "left", new Point(0,0))
                 }}
@@ -49,7 +49,7 @@ function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState
     </div>
 }
 
-function TreePageItem(props: { page: PageClass, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreePageItem(props: { page: PageClass, state:GlobalState}) {
     const {page, state} = props
     const classes = toClass({
         'selectable':true,
@@ -60,26 +60,23 @@ function TreePageItem(props: { page: PageClass, state:GlobalState, selected:Obje
         state.setSelectedObjects([page])
     }
     return <div className={'tree-item'}>
-        <b className={classes} onClick={select_page}>page {props.page.getPropValue('name')}</b>
+        <b className={classes} onClick={select_page}>{page.getPropValue('name')}</b>
         {
             page.getListProp('children').map((shape:ObjectProxy<ObjectDef>,i:number) =>
-                <TreeShapeItem key={i} shape={shape}
-                               state={state} selected={props.selected}/>)
+                <TreeShapeItem key={i} shape={shape} state={state}/>)
         }
     </div>
 }
 
-function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState, selected:ObjectProxy<ObjectDef>[] }) {
+function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState}) {
     const {asset, state} = props
     const classes = toClass({
         'tree-item':true,
         'selectable':true,
         'tree-leaf':true,
-        selected:state.getSelectedObjects().find(s => s === asset),
+        selected:state.isSelectedObject(asset),
     })
-    return <div className={classes} onClick={() => {
-        state.setSelectedObjects([asset])
-    }}>
+    return <div className={classes} onClick={() => state.setSelectedObjects([asset])}>
         <label>{asset.getPropValue('name')}</label>
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </div>
