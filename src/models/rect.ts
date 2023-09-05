@@ -1,6 +1,7 @@
 import {Bounds, Point} from "josh_js_util"
 
 import {
+    BoundsDef,
     DrawableClass,
     FillDef,
     Handle,
@@ -16,45 +17,7 @@ export const RectDef: ObjectDef = {
     name: 'rect',
     props: {
         name: NameDef,
-        bounds: {
-            name: 'bounds',
-            base: 'object',
-            readonly: false,
-            setter: (obj, name, value) => {
-                const old_bounds = obj as Bounds
-                const new_bounds = old_bounds.copy()
-                // @ts-ignore
-                new_bounds[name] = value
-                return new_bounds
-            },
-            subProps: {
-                x: {
-                    name: 'x',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0
-                },
-                y: {
-                    name: 'y',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 0,
-                },
-                w: {
-                    name: 'w',
-                    base: 'number',
-                    readonly: false,
-                    defaultValue: 100,
-                },
-                h: {
-                    name: 'h',
-                    base: "number",
-                    readonly: false,
-                    defaultValue: 100,
-                },
-            },
-            defaultValue: new Bounds(0, 0, 0, 0),
-        },
+        bounds: BoundsDef,
         fill: FillDef,
         strokeFill: StrokeFillDef,
         strokeWidth: StrokeWidthDef,
@@ -73,7 +36,7 @@ export const RectDef: ObjectDef = {
     }
 }
 
-class RectResizeHandle implements Handle {
+export class RectResizeHandle implements Handle {
     private obj: RectClass
 
     constructor(obj: RectClass) {

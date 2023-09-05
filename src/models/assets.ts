@@ -80,7 +80,6 @@ export class LinearColorGradient {
         return new LinearColorGradient()
     }
 }
-
 export const GradientAssetDef:ObjectDef = {
     name:'gradient-asset',
     props: {
@@ -95,8 +94,6 @@ export const GradientAssetDef:ObjectDef = {
         }
     }
 }
-
-
 export class GradientAssetClass extends ObjectProxy<typeof GradientAssetDef> {
     constructor(om:ObjectManager, opts: Record<keyof typeof GradientAssetDef.props, any>) {
         super(om, GradientAssetDef, opts)

@@ -54,6 +54,46 @@ export const CenterPositionDef:PropSchema = {
     defaultValue: new Point(0, 0)
 }
 
+export const BoundsDef:PropSchema = {
+        name: 'bounds',
+        base: 'object',
+        readonly: false,
+        setter: (obj, name, value) => {
+            const old_bounds = obj as Bounds
+            const new_bounds = old_bounds.copy()
+            // @ts-ignore
+            new_bounds[name] = value
+            return new_bounds
+        },
+        subProps: {
+            x: {
+                name: 'x',
+                base: 'number',
+                readonly: false,
+                defaultValue: 0
+            },
+            y: {
+                name: 'y',
+                base: 'number',
+                readonly: false,
+                defaultValue: 0,
+            },
+            w: {
+                name: 'w',
+                base: 'number',
+                readonly: false,
+                defaultValue: 1,
+            },
+            h: {
+                name: 'h',
+                base: "number",
+                readonly: false,
+                defaultValue: 1,
+            },
+        },
+        defaultValue: new Bounds(0, 0, 1, 1),
+}
+
 export const SizeDef:PropSchema = {
     name:'size',
     base:'object',
@@ -193,6 +233,8 @@ export interface ScaledSurface {
     overlayPoint(point: Point, green: string): void;
 
     overlayLine(startPoint: Point, endPoint: Point, color: string): void;
+
+    fillImage(bounds: Bounds, img: any): void
 }
 
 export interface DrawableShape {

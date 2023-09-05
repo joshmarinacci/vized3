@@ -37,6 +37,14 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.restore()
     }
 
+    fillImage(bounds: Bounds, img: CanvasImageSource): void {
+        this.ctx.save()
+        const b = bounds.scale(this.scale)
+        this.ctx.drawImage(img,b.x,b.y,b.w,b.h)
+        this.ctx.restore()
+    }
+
+
     outlineRect(bounds: Bounds) {
         this.ctx.strokeRect(bounds.x * this.scale, bounds.y * this.scale, bounds.w * this.scale, bounds.h * this.scale)
     }
