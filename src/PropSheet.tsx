@@ -159,8 +159,8 @@ function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<ObjectD
 function ProxyValueThumbnail(props: { prop: PropSchema, target: ObjectProxy<ObjectDef> }) {
     const {prop, target} = props
     return <div className={'proxy-value-thumbnail'}>
-        <b>{target.getPropProxySource(prop.name).getPropValue('name')}</b>
         <ValueThumbnail target={target} prop={prop}/>
+        <b>{target.getPropProxySource(prop.name).getPropValue('name')}</b>
     </div>
 }
 
@@ -179,8 +179,8 @@ function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef>, s
 
     const the_label = <label>{prop.name}</label>
     const proxy_button = <ToggleIconButton
-            regularIcon={SupportedIcons.CheckboxUnchecked}
-            selectedIcon={SupportedIcons.CheckboxChecked}
+            regularIcon={SupportedIcons.Star}
+            selectedIcon={SupportedIcons.Star}
             selected={target.isPropProxySource(prop.name)}
             onClick={() => {
                 dm.show(<ProxySelectionDialog state={state} prop={prop} target={target}/>)

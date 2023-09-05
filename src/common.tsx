@@ -61,19 +61,22 @@ export function ToggleIconButton(props: {
         'borderless': true,
     })} onClick={props.onClick}>
         <span
-            className="material-icons">{props.selected ? props.selectedIcon : props.regularIcon}</span>
+            className={toClass({
+                "material-symbols-rounded":true,
+                filled:props.selected
+            })}>{props.selected ? props.selectedIcon : props.regularIcon}</span>
     </button>
 }
 
 export function IconButton(props: {
-    onClick?: () => void,
+    onClick?: (e:MouseEvent<HTMLButtonElement>) => void,
     icon?: SupportedIcons,
     children?: ReactNode
     disabled?: boolean
 }): JSX.Element {
     const {icon} = props
     return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>
-        {icon && <span className="material-icons">{icon}</span>}
+        {icon && <span className="material-symbols-rounded">{icon}</span>}
         {props.children}
     </button>
 }
@@ -131,7 +134,7 @@ function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
 export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
     let icon = <></>
     if(props.action.icon) {
-        icon = <span  className="material-icons">{props.action.icon}</span>
+        icon = <span  className="material-icons material-symbols-rounded">{props.action.icon}</span>
     }
     return <MenuButton
         onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>

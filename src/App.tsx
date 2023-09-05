@@ -107,7 +107,7 @@ function Main() {
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>
-            <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}>settings</IconButton>
+            <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}/>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}
