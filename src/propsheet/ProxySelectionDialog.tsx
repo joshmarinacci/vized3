@@ -27,6 +27,11 @@ export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchem
             if (prop.custom === 'css-color') {
                 if(a.getPropSchemaNamed('value').custom === 'css-color') return true
                 if(a.getPropSchemaNamed('value').custom === 'css-gradient') return true
+                return false
+            }
+            if (prop.custom === 'image-asset') {
+                if(a.getPropSchemaNamed('value').custom === "image-asset") return true
+                return false
             }
             return (a.getPropSchemaNamed('value').base === prop.base)
         })

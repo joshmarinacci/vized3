@@ -5,9 +5,12 @@ import React, {ChangeEvent, JSX, useContext, useState} from "react"
 import {IconButton, ReactMenuAction} from "../common"
 import {loadPNGJSON} from "../exporters/json"
 import {SupportedIcons} from "../icons"
+import {ImageAssetClass, ImageAssetDef} from "../models/assets"
 import {DocClass, DocDef, PageDef} from "../models/om"
+import {SimpleImageDef} from "../models/simpleimage"
 import {GlobalState} from "../models/state"
 import {lookup_name, Unit} from "../models/unit"
+import {ChooseImageDialog} from "./ChooseImageDialog"
 import {ListFilesDialog} from "./ListFilesDialog"
 import {LoadFileDialog} from "./LoadFileDialog"
 import {SettingsDialog} from "./SettingsDialog"
@@ -107,4 +110,27 @@ export const NewDocumentAction: ReactMenuAction = {
     // description: 'create a new empty document',
     makeComponent: (state) => <NewDocumentButton state={state}/>,
 
+}
+
+function ImportImageButton(props: { state: GlobalState }) {
+    const {state} = props
+    const dm = useContext(DialogContext)
+    const showNewDialog = () => dm.show(<ChooseImageDialog state={props.state} onComplete={async (img, fileName)=>{
+        const asset = state.om.make(ImageAssetDef, {}) as ImageAssetClass
+        await asset.setPropValue('value', img)
+        await asset.setPropValue('name',fileName)
+        state.getCurrentDocument().appendListProp('assets', asset)
+
+        const image = state.om.make(SimpleImageDef, { name:'image'})
+        image.setPropProxySource('image',asset)
+        state.getCurrentPage().appendListProp('children',image)
+    }}/>)
+    return <IconButton icon={SupportedIcons.Image} onClick={showNewDialog}>import image</IconButton>
+}
+
+export const AddNewSimpleimageAction: ReactMenuAction = {
+    title: 'new simple image',
+    icon: SupportedIcons.Image,
+    // tags: ['add', 'shape', 'image'],
+    makeComponent: (state) => <ImportImageButton state={state}/>
 }

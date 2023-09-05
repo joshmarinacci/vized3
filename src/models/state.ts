@@ -36,8 +36,13 @@ export class GlobalState extends ObservableBase {
         super()
         if(opts) {
             this.localStorage = opts.localStorage ? opts.localStorage : localStorage
+        } else {
+            if (typeof localStorage !== 'undefined') {
+                this.localStorage = localStorage
+            } else {
+                this.localStorage = null
+            }
         }
-        if(!this.localStorage && typeof localStorage !== 'undefined') this.localStorage = localStorage
         this.om = new ObjectManager()
         this.om.registerDef(DocDef,DocClass)
         this.om.registerDef(PageDef,PageClass)

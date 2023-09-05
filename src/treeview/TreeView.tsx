@@ -25,6 +25,7 @@ import {
     ValueThumbnail
 } from "../common"
 import {SupportedIcons} from "../icons"
+import {ImageAssetClass, ImageAssetDef} from "../models/assets"
 import {OO, PageClass} from "../models/om"
 import {GlobalState} from "../models/state"
 
@@ -165,7 +166,12 @@ export function TreeView(props: { state:GlobalState}) {
     ]
     const dm = useContext(DialogContext)
     const open_image_dialog = () => {
-        dm.show(<ChooseImageDialog state={state}/>)
+        dm.show(<ChooseImageDialog state={state} onComplete={async (img, fileName) => {
+            const asset = state.om.make(ImageAssetDef, {}) as ImageAssetClass
+            await asset.setPropValue('value', img)
+            await asset.setPropValue('name',fileName)
+            state.getCurrentDocument().appendListProp('assets', asset)
+        }}/>)
     }
 
     return <div className={'panel left tree-view'}>

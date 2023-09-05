@@ -11,12 +11,14 @@ function isValidImageFile(file: File) {
     return false
 }
 
-export function ChooseImageDialog(props:{state:GlobalState}) {
+export function ChooseImageDialog(props:{state:GlobalState, onComplete:(img:HTMLImageElement, fileName:string)=>Promise<void>}) {
+    const {state, onComplete} = props
     const dm = useContext(DialogContext)
     const fileRef = useRef<HTMLInputElement>(null)
     const imgRef = useRef<HTMLImageElement>(null)
     const [src, setSrc] = useState<unknown>("#")
     const [canLoad, setCanLoad] = useState(false)
+    const [fileName, setFileName] = useState("")
     const fileChanged = (e:ChangeEvent<HTMLInputElement>) => {
         if(e.target.files && e.target.files.length === 1) {
             const file = e.target.files[0]
@@ -26,14 +28,13 @@ export function ChooseImageDialog(props:{state:GlobalState}) {
             })
             reader.readAsDataURL(file)
             setCanLoad(isValidImageFile(file))
+            setFileName(file.name)
         }
     }
     const cancel = () => dm.hide()
     const load = async () => {
         if(imgRef.current) {
-            const asset = props.state.om.make(ImageAssetDef,{})
-            await asset.setPropValue('value',imgRef.current)
-            props.state.getCurrentDocument().appendListProp('assets',asset)
+            await onComplete(imgRef.current, fileName)
         }
         dm.hide()
     }
@@ -41,6 +42,8 @@ export function ChooseImageDialog(props:{state:GlobalState}) {
         <header>Choose Image</header>
         <section>
             <input ref={fileRef} type={'file'} onChange={fileChanged} />
+            <b>{fileName}</b>
+            {!canLoad && <p>Invalid File Type</p>}
             <img alt={'preview'} ref={imgRef} src={src as string} style={{
                 maxWidth:'100px',
                 maxHeight:'100px',

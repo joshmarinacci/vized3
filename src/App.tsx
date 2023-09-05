@@ -16,8 +16,7 @@ import {
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
-    AddNewRectAction,
-    AddNewSimpletextAction,
+    AddNewRectAction, AddNewSimpletextAction,
     DeleteSelection,
     DownloadPDFAction,
     DownloadPNGAction,
@@ -30,6 +29,7 @@ import {
 } from "./actions/actions"
 import {ActionSearchBox} from "./actions/actionsearch"
 import {
+    AddNewSimpleimageAction,
     LoadLocalStorageAction,
     NewDocumentAction,
     OpenSettingsAction,
@@ -98,6 +98,7 @@ function Main() {
                 AddNewPathShapeAction,
                 AddNewNGonAction,
                 AddNewSimpletextAction,
+                AddNewSimpleimageAction,
             ]}/>
             <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
             <MenuActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>

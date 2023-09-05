@@ -8,6 +8,7 @@ import {
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewRectAction,
+    AddNewSimpletextAction,
     BottomAlignShapes,
     DeleteSelection,
     HCenterAlignShapes,
@@ -17,6 +18,7 @@ import {
     TopAlignShapes,
     VCenterAlignShapes
 } from "../actions/actions"
+import {AddNewSimpleimageAction} from "../actions/reactactions"
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common"
 import {
     DocClass,
@@ -134,6 +136,8 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
             AddNewRectAction,
             AddNewCircleAction,
             AddNewNGonAction,
+            AddNewSimpletextAction,
+            AddNewSimpleimageAction,
             DeleteSelection
         ])
 
