@@ -1,7 +1,7 @@
 import {forceDownloadBlob} from "josh_web_util"
 
 import {CircleClass} from "../models/circle"
-import {ObjectDef, ObjectProxy} from "../models/om"
+import {OO} from "../models/om"
 import {RectClass} from "../models/rect"
 import {GlobalState} from "../models/state"
 import {traverse} from "./common"
@@ -15,7 +15,7 @@ export async function toSVG(state: GlobalState) {
     const before: string[] = []
     const after: string[] = []
 
-    traverse(state.getCurrentDocument(), (item: ObjectProxy<ObjectDef>) => {
+    traverse(state.getCurrentDocument(), (item: OO) => {
         if (item.def.name === 'document') {
             const template = `<?xml version="1.0" standalone="no"?>
     <svg width="400" height="400" version="1.1" xmlns="http://www.w3.org/2000/svg">`

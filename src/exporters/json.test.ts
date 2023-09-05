@@ -12,7 +12,7 @@ import {
     NumberAssetDef
 } from "../models/assets"
 import {CircleClass} from "../models/circle"
-import {ObjectDef, ObjectProxy, PageClass} from "../models/om"
+import { OO, PageClass} from "../models/om"
 import {PathShapeDef} from "../models/pathshape"
 import {GlobalState} from "../models/state"
 import {
@@ -120,7 +120,7 @@ describe('json', () => {
         const om = state.om
         const grad_asset = om.make(GradientAssetDef, {})
         const grad_json = toJSONObj(grad_asset)
-        const grad = fromJSONObj(om,grad_json) as ObjectProxy<ObjectDef>
+        const grad = fromJSONObj(om,grad_json) as OO
         console.log("restored grad is",grad)
         expect(grad.def).toBe(GradientAssetDef)
     })

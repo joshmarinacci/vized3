@@ -1,11 +1,9 @@
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util"
 
 import {ScaledDrawingSurface} from "../editing/scaled_drawing"
-import {CircleClass} from "../models/circle"
 import {PageClass} from "../models/om"
-import {RectClass} from "../models/rect"
 import {GlobalState} from "../models/state"
-import {lookup_dpi, size_to_pixels} from "../models/unit"
+import {size_to_pixels} from "../models/unit"
 import {traverse} from "./common"
 
 export async function exportPNG(state: GlobalState) {

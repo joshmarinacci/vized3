@@ -6,11 +6,11 @@ import React, {ChangeEvent, useContext, useState} from "react"
 import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "./common"
 import {MINECRAFT, PICO8} from "./exporters/common"
 import {SupportedIcons} from "./icons"
-import {EnumSchema, ObjectDef, ObjectProxy, PropChanged, PropSchema} from "./models/om"
+import {EnumSchema, OO, PropChanged, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
 import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
-function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+function NumberEditor(props: { schema: PropSchema, target:OO }) {
     const {schema, target} = props
     const value = target.getPropValue(schema.name)
     const update = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -20,7 +20,7 @@ function NumberEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef>
     return <input type={"number"} value={value} step={0.1} onChange={update}/>
 }
 
-function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, target:OO }) {
     const {parentSchema, schema, target} = props
     const value = props.target.getPropValue(props.parentSchema.name)
     const update = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -36,7 +36,7 @@ function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, t
     </>
 }
 
-function StringEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+function StringEditor(props: { schema: PropSchema, target:OO }) {
     const {schema, target} = props
     const value = target.getPropValue(schema.name)
     const update = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -45,7 +45,7 @@ function StringEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef>
     return <input type={"text"} value={value} onChange={update}/>
 }
 
-function SubPropEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef> }) {
+function SubPropEditor(props: { schema: PropSchema, target:OO }) {
     const schema = props.schema
     const target = props.target
     const subs = schema.subProps as Record<string,PropSchema>
@@ -57,7 +57,7 @@ function SubPropEditor(props: { schema: PropSchema, target:ObjectProxy<ObjectDef
     </>
 }
 
-function FillSwatchButton(props:{schema: PropSchema, target:ObjectProxy<ObjectDef>, onClick:any}) {
+function FillSwatchButton(props:{schema: PropSchema, target:OO, onClick:()=>void}) {
     return <div className={'color-swatch-button input'}>
         <button
             className={'color-swatch-button'}
@@ -118,20 +118,18 @@ function TabbedColorPicker(props:{value:string, onSelect:(value:string)=>void}) 
                            onSelect={props.onSelect}/>
     </div>
 }
-function FillInput(props:{ schema: PropSchema, target:ObjectProxy<ObjectDef>}) {
+function FillInput(props:{ schema: PropSchema, target:OO}) {
     const { schema, target } = props
     const value = target.getPropValue(schema.name)
     const pm = useContext(PopupContext)
-    const setColor = async (hex:string ) => {
-        await target.setPropValue(schema.name, hex)
-    }
+    const setColor = async (hex:string ) => await target.setPropValue(schema.name, hex)
     const choose = (e:MouseEvent) => {
         pm.show_at(<TabbedColorPicker value={value} onSelect={setColor}/>,e.target,'below')
     }
     return <FillSwatchButton schema={schema} target={target} onClick={choose}/>
 }
 
-function BooleanEditor(props: { schema: PropSchema, target: ObjectProxy<ObjectDef> }) {
+function BooleanEditor(props: { schema: PropSchema, target: OO }) {
     const {schema, target} = props
     const value = target.getPropValue(schema.name)
     const update = async (e:ChangeEvent<HTMLInputElement>) => {
@@ -140,7 +138,7 @@ function BooleanEditor(props: { schema: PropSchema, target: ObjectProxy<ObjectDe
     return <input type={"checkbox"} value={value} onChange={update}/>
 }
 
-function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<ObjectDef> }) {
+function EnumPropEditor(props: { schema: EnumSchema, target: OO }) {
     const {schema, target} = props
     const value = target.getPropValue(schema.name)
     const sch = schema as EnumSchema
@@ -156,7 +154,7 @@ function EnumPropEditor(props: { schema: EnumSchema, target: ObjectProxy<ObjectD
     </>
 }
 
-function ProxyValueThumbnail(props: { prop: PropSchema, target: ObjectProxy<ObjectDef> }) {
+function ProxyValueThumbnail(props: { prop: PropSchema, target: OO }) {
     const {prop, target} = props
     return <div className={'proxy-value-thumbnail'}>
         <ValueThumbnail target={target} prop={prop}/>
@@ -164,7 +162,7 @@ function ProxyValueThumbnail(props: { prop: PropSchema, target: ObjectProxy<Obje
     </div>
 }
 
-function PropEditor(props: { prop: PropSchema, target: ObjectProxy<ObjectDef>, state:GlobalState }) {
+function PropEditor(props: { prop: PropSchema, target: OO, state:GlobalState }) {
     const { prop, target , state} = props
     const dm = useContext(DialogContext)
     const isProxied = target.isPropProxySource(prop.name)
@@ -207,7 +205,7 @@ export function PropSheet(props:{state:GlobalState}) {
     if(selected.length > 1) return <div>multiple items selected</div>
     return <InnerPropSheet state={props.state} selected={selected[0]}/>
 }
-export function InnerPropSheet(props:{state:GlobalState, selected:ObjectProxy<ObjectDef>}) {
+export function InnerPropSheet(props:{state:GlobalState, selected:OO}) {
     useObjectProxyChange(props.selected,PropChanged)
     useObservableChange(props.state,'selection')
     const schemas = (props.selected)?props.selected.getPropSchemas():[]

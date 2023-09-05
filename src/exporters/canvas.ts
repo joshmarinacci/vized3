@@ -2,7 +2,7 @@ import {Bounds, Point} from "josh_js_util"
 import {forceDownloadBlob} from "josh_web_util"
 
 import {CircleClass} from "../models/circle"
-import {ObjectDef, ObjectProxy} from "../models/om"
+import {OO} from "../models/om"
 import {RectClass} from "../models/rect"
 import {GlobalState} from "../models/state"
 import {traverse} from "./common"
@@ -11,7 +11,7 @@ export async function exportCanvasJS(state: GlobalState) {
     const before:string[] = []
     const after:string[] = []
 
-    traverse(state.getCurrentDocument(), (item: ObjectProxy<ObjectDef>) => {
+    traverse(state.getCurrentDocument(), (item: OO) => {
         if (item.def.name === 'document') {
             // const doc = item.obj as DocClass
             before.push(`const canvas = document.createElement('canvas')`)
@@ -23,13 +23,13 @@ export async function exportCanvasJS(state: GlobalState) {
             before.push(`ctx.fillRect(0, 0, canvas.width, canvas.height)`)
         }
         if (item.def.name === 'rect') {
-            const sq = item.obj as RectClass
+            const sq = item as RectClass
             const bounds = sq.getPropValue('bounds') as Bounds
             before.push(`ctx.fillStyle = '${sq.getPropValue('fill')}'`)
             before.push(`ctx.fillRect(${bounds.x}, ${bounds.y}, ${bounds.w}, ${bounds.h})`)
         }
         if (item.def.name === 'circle') {
-            const c = item.obj as CircleClass
+            const c = item as CircleClass
             const center = c.getPropValue('center') as Point
             const radius = c.getPropValue('radius') as number
             before.push(`

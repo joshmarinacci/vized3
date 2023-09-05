@@ -254,7 +254,6 @@ export type EventHandler = (evt:any) => void
 export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
-
 export class ObjectProxy<T extends ObjectDef> {
     private listeners: Map<EventTypes, any[]>
     parent: ObjectProxy<ObjectDef> | null
@@ -826,3 +825,5 @@ ${changes}`)
         return false
     }
 }
+
+export type OO = ObjectProxy<ObjectDef>

@@ -16,9 +16,8 @@ import {NGonClass, NGonDef} from "./ngon"
 import {
     DocClass,
     DocDef,
-    ObjectDef,
     ObjectManager,
-    ObjectProxy,
+    OO,
     PageClass,
     PageDef
 } from "./om"
@@ -44,7 +43,7 @@ export class GlobalState extends ObservableBase {
     om: ObjectManager
     private _doc: DocClass
     private current_page: PageClass
-    private selected_objects: ObjectProxy<ObjectDef>[]
+    private selected_objects: OO[]
     private selected_page: PageClass | null
 
     constructor() {
@@ -93,15 +92,15 @@ export class GlobalState extends ObservableBase {
         return this.current_page
     }
 
-    getSelectedObjects(): ObjectProxy<any>[] {
+    getSelectedObjects(): OO[] {
         return this.selected_objects
     }
 
-    addSelectedObjects(objs: ObjectProxy<any>[]) {
+    addSelectedObjects(objs: OO[]) {
         this.selected_objects  = this.selected_objects.concat(...objs)
         this.fire('selection', {})
     }
-    setSelectedObjects(objs: ObjectProxy<any>[]) {
+    setSelectedObjects(objs: OO[]) {
         this.selected_objects = objs
         this.fire('selection', {})
     }
@@ -109,11 +108,11 @@ export class GlobalState extends ObservableBase {
         this.selected_objects = []
         this.fire('selection', {})
     }
-    isSelectedObject(obj:ObjectProxy<ObjectDef>) :boolean {
+    isSelectedObject(obj:OO) :boolean {
         return this.selected_objects.includes(obj)
     }
 
-    setSelectedPage(page: any) {
+    setSelectedPage(page: PageClass | null) {
         this.selected_page = page
         this.fire('selection', {})
     }

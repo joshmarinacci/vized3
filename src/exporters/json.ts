@@ -7,7 +7,7 @@ import {
     EnumSchema,
     ObjectDef,
     ObjectManager,
-    ObjectProxy,
+    OO,
     PropSchema
 } from "../models/om"
 import {GlobalState} from "../models/state"
@@ -52,7 +52,7 @@ export type JSONDocIndex = {
     docs:JSONDocReference[]
 }
 
-function propertyToJSON(prop: PropSchema, obj: ObjectProxy<ObjectDef>):JSONProp {
+function propertyToJSON(prop: PropSchema, obj: OO):JSONProp {
     if(obj.isPropProxySource(prop.name)) {
         const ref:JSONPropReference = {
             type:'reference',
@@ -111,7 +111,7 @@ function propertyToJSON(prop: PropSchema, obj: ObjectProxy<ObjectDef>):JSONProp 
     throw new Error(`unhandled toJSON type ${prop.toString()}`)
 }
 
-export function toJSONObj(obj: ObjectProxy<ObjectDef>): JSONObject {
+export function toJSONObj(obj: OO): JSONObject {
     const json: JSONObject = {
         name: obj.def.name,
         props: {},
@@ -198,7 +198,7 @@ function propertyFromJSONV1(om: ObjectManager, prop: PropSchema, obj: JSONObject
 
 }
 
-export function fromJSONObj(om: ObjectManager, obj: JSONObject):ObjectProxy<ObjectDef> {
+export function fromJSONObj(om: ObjectManager, obj: JSONObject):OO {
     const def: ObjectDef = om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, object> = {}
     const refs = []
@@ -221,7 +221,7 @@ export function fromJSONObj(om: ObjectManager, obj: JSONObject):ObjectProxy<Obje
         if(!om.hasObject(vv.reference)) {
             throw new Error("cannot restore JSON because reference not loaded yet")
         }
-        const source = om.getObject(vv.reference) as ObjectProxy<ObjectDef>
+        const source = om.getObject(vv.reference) as OO
         console.log("the source is",source)
         finalObject.setPropProxySource(ref.name,source)
     })

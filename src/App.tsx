@@ -4,7 +4,6 @@ import {
     DialogContainer,
     DialogContext,
     DialogContextImpl,
-    FillPage,
     HBox,
     PopupContainer,
     PopupContext,

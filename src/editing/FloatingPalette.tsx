@@ -1,5 +1,5 @@
-import React, {CSSProperties, MouseEvent, ReactNode, useState} from "react";
-import {Point} from "josh_js_util";
+import {Point} from "josh_js_util"
+import React, {CSSProperties, MouseEvent, ReactNode, useState} from "react"
 
 export function FloatingPalette(props: { children: ReactNode, visible: boolean }) {
     const [position, setPosition] = useState(new Point(0, 0))
@@ -11,7 +11,7 @@ export function FloatingPalette(props: { children: ReactNode, visible: boolean }
     const mouseDown = (e: MouseEvent<HTMLDivElement>) => {
         let pos = position
         const dragger = (e: any) => {
-            let trans = new Point(e.movementX, e.movementY)
+            const trans = new Point(e.movementX, e.movementY)
             pos = pos.add(trans)
             setPosition(pos)
         }

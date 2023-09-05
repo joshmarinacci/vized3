@@ -2,8 +2,8 @@ import {Bounds, Point} from "josh_js_util"
 
 import {
     BoundsDef,
-    CenterPositionDef,
-    DrawableClass, Handle,
+    DrawableClass,
+    Handle,
     NameDef,
     ObjectDef,
     ObjectManager,

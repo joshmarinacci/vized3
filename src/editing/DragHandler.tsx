@@ -6,14 +6,14 @@ import {
     DrawableClass,
     Handle,
     ObjectDef,
-    ObjectProxy,
+    ObjectProxy, OO,
     PageClass,
     ScaledSurface
 } from "../models/om"
 import {GlobalState} from "../models/state"
 import {findHandleInPage, findShapeInPage, MouseHandlerProtocol} from "./editing"
 
-function calcObjPos(target: ObjectProxy<any>) {
+function calcObjPos(target: OO) {
     if (target instanceof DrawableClass) return target.getPosition()
     return new Point(-1, -1)
 }

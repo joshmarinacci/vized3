@@ -24,10 +24,10 @@ import {
     ValueThumbnail
 } from "./common"
 import {SupportedIcons} from "./icons"
-import {ObjectDef, ObjectProxy, PageClass} from "./models/om"
+import {OO, PageClass} from "./models/om"
 import {GlobalState} from "./models/state"
 
-function TreeShapeItem(props: { shape: ObjectProxy<ObjectDef>, state:GlobalState}) {
+function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
     const {shape, state} = props
     const classes = toClass({
         'tree-item':true,
@@ -64,13 +64,13 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
     return <div className={'tree-item'}>
         <b className={classes} onClick={select_page}>{page.getPropValue('name')}</b>
         {
-            page.getListProp('children').map((shape:ObjectProxy<ObjectDef>,i:number) =>
+            page.getListProp('children').map((shape:OO,i:number) =>
                 <TreeShapeItem key={i} shape={shape} state={state}/>)
         }
     </div>
 }
 
-function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState}) {
+function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
     const {asset, state} = props
     const classes = toClass({
         'tree-item':true,
@@ -84,7 +84,7 @@ function TreeAssetItem(props: { asset: ObjectProxy<ObjectDef>, state:GlobalState
     </div>
 }
 
-function TreeLeafItem(props: {item:ObjectProxy<ObjectDef>, text:string, state:GlobalState, actions:MenuAction[]}) {
+function TreeLeafItem(props: {item:OO, text:string, state:GlobalState, actions:MenuAction[]}) {
     const {item, text, state, actions}= props
     const pm = useContext(PopupContext)
     return <div

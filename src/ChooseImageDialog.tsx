@@ -41,7 +41,7 @@ export function ChooseImageDialog(props:{state:GlobalState}) {
         <header>Choose Image</header>
         <section>
             <input ref={fileRef} type={'file'} onChange={fileChanged} />
-            <img ref={imgRef} src={src} style={{
+            <img alt={'preview'} ref={imgRef} src={src as string} style={{
                 maxWidth:'100px',
                 maxHeight:'100px',
                 border:'1px solid black'

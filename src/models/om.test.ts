@@ -7,9 +7,9 @@ import {fromJSONDoc, fromJSONObj, saveJSON, toJSONObj} from "../exporters/json"
 import {ColorAssetDef, GradientAssetDef, NumberAssetDef} from "./assets"
 import {CircleClass, CircleDef} from "./circle"
 import {
-    FamilyPropChanged, ObjectDef,
+    FamilyPropChanged,
     ObjectManager,
-    ObjectProxy,
+    OO,
     PageClass,
     PageDef,
     PropChanged,
@@ -128,7 +128,7 @@ describe('model tests', () => {
         const rectProxy = om.make(RectDef, {bounds:new Bounds(1,2,3,4), fill: 'green'})
         pageProxy.appendListProp('children',rectProxy)
         const json_obj = toJSONObj(pageProxy)
-        const new_root:ObjectProxy<ObjectDef> = fromJSONObj(om,json_obj)
+        const new_root:OO = fromJSONObj(om,json_obj)
         // will restore inner objects using the impl class names
         // correct def
         assert(new_root.def.name === 'page')

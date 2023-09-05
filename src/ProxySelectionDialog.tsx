@@ -4,9 +4,9 @@ import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
 import {ValueThumbnail} from "./common"
-import {ObjectDef, ObjectProxy, PropSchema} from "./models/om"
+import {OO, PropSchema} from "./models/om"
 import {GlobalState} from "./models/state"
-function ProxyAssetView(props: { asset: ObjectProxy<ObjectDef>, source:ObjectProxy<ObjectDef>, onChange:(value:ObjectProxy<ObjectDef>)=>void }) {
+function ProxyAssetView(props: { asset: OO, source:OO, onChange:(value:OO)=>void }) {
     const {source, asset} = props
     return <li>
         <label>
@@ -18,11 +18,11 @@ function ProxyAssetView(props: { asset: ObjectProxy<ObjectDef>, source:ObjectPro
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </li>
 }
-export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchema, target:ObjectProxy<ObjectDef> }) {
+export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchema, target:OO }) {
     const {prop, state, target} = props
     const dm = useContext(DialogContext)
     const [source, setSource] = useState(target)
-    const assets = (state.getCurrentDocument().getListProp('assets') as ObjectProxy<ObjectDef>[])
+    const assets = (state.getCurrentDocument().getListProp('assets') as OO[])
         .filter(a => {
             if (prop.custom === 'css-color') {
                 if(a.getPropSchemaNamed('value').custom === 'css-color') return true

@@ -1,17 +1,18 @@
-import {Observable} from "../models/model";
-import {GlobalState} from "../models/state";
-import {Point} from "josh_js_util";
-import React from "react";
+import {Point} from "josh_js_util"
+import React from "react"
+
+import {Observable} from "../models/model"
 import {
     DrawableClass,
     DrawableShape,
     Handle,
     ObjectDef,
-    ObjectProxy,
+    ObjectProxy, OO,
     PageClass,
     ScaledSurface
-} from "../models/om";
-import {distance_to_pixels, Unit} from "../models/unit";
+} from "../models/om"
+import {GlobalState} from "../models/state"
+import {distance_to_pixels, Unit} from "../models/unit"
 
 export interface MouseHandlerProtocol extends Observable {
     drawOverlay(ctx: ScaledSurface, state: GlobalState): void
@@ -26,13 +27,13 @@ export interface MouseHandlerProtocol extends Observable {
 }
 
 export function findHandleInPage(page: PageClass, pt: Point, state: GlobalState): Handle | null {
-    let selected = state.getSelectedObjects()
-    for (let sel of selected) {
+    const selected = state.getSelectedObjects()
+    for (const sel of selected) {
         if (sel instanceof DrawableClass) {
-            let h = sel.getHandle()
+            const h = sel.getHandle()
             if (h) {
-                let dist = h.getPosition().distance(pt)
-                let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+                const dist = h.getPosition().distance(pt)
+                const unit = state.getCurrentDocument().getPropValue('unit') as Unit
                 const v = distance_to_pixels(dist,unit)
                 if(v < 10) return h
             }
@@ -41,8 +42,8 @@ export function findHandleInPage(page: PageClass, pt: Point, state: GlobalState)
     return null
 }
 
-export function findShapeInPage(page: PageClass, pt: Point): ObjectProxy<ObjectDef> | undefined {
-    let matching = page.getListProp('children').filter(shape => {
+export function findShapeInPage(page: PageClass, pt: Point): OO | undefined {
+    const matching = page.getListProp('children').filter(shape => {
         return (shape as DrawableShape).contains(pt)
     })
     if (matching.length > 0) {

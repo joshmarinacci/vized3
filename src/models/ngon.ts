@@ -122,7 +122,6 @@ export class NGonClass extends DrawableClass<typeof NGonDef> {
     private drawPath():Point[] {
         const n = this.getPropValue('sides') as number
         const r = this.getPropValue('radius') as number
-        const c = this.getPropValue('center') as Point
         const r2 = this.getPropValue('starRadius') as number
         const points:Point[] = []
         if(this.getPropValue('star')) {
