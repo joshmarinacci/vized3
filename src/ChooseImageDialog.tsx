@@ -15,14 +15,14 @@ export function ChooseImageDialog(props:{state:GlobalState}) {
     const dm = useContext(DialogContext)
     const fileRef = useRef<HTMLInputElement>(null)
     const imgRef = useRef<HTMLImageElement>(null)
-    const [src, setSrc] = useState("#")
+    const [src, setSrc] = useState<unknown>("#")
     const [canLoad, setCanLoad] = useState(false)
     const fileChanged = (e:ChangeEvent<HTMLInputElement>) => {
         if(e.target.files && e.target.files.length === 1) {
             const file = e.target.files[0]
             const reader = new FileReader()
             reader.addEventListener('load',() => {
-                setSrc(reader.result)
+                setSrc(reader.result as unknown)
             })
             reader.readAsDataURL(file)
             setCanLoad(isValidImageFile(file))

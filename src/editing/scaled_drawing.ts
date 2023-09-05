@@ -21,12 +21,16 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.save()
         this.ctx.translate(bounds.x*this.scale, bounds.y*this.scale)
         if(fill instanceof LinearColorGradient) {
-            const grad = this.ctx.createLinearGradient(fill.start.x,fill.start.y,fill.end.x,fill.end.y)
+            const grad = this.ctx.createLinearGradient(fill.start.x, fill.start.y, fill.end.x, fill.end.y)
             fill.stops.forEach(stop => {
                 grad.addColorStop(stop.position, stop.color)
             })
             this.ctx.fillStyle = grad
-        } else {
+        }
+        if(fill instanceof Image) {
+            this.ctx.fillStyle = this.ctx.createPattern(fill, 'repeat') as CanvasPattern
+        }
+        if(typeof fill === 'string') {
             this.ctx.fillStyle = fill as string
         }
         this.ctx.fillRect(0,0, bounds.w * this.scale, bounds.h * this.scale)
@@ -43,8 +47,8 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.strokeRect(bounds.x * this.scale, bounds.y * this.scale, bounds.w * this.scale, bounds.h * this.scale)
     }
 
-    fillRoundRect(bounds: Bounds, radius: number, fill: any) {
-        this.ctx.fillStyle = fill
+    fillRoundRect(bounds: Bounds, radius: number, fill: unknown) {
+        this.ctx.fillStyle = fill as string
         this.ctx.beginPath()
         this.ctx.roundRect(bounds.left() * this.scale, bounds.top() * this.scale, bounds.w * this.scale, bounds.h * this.scale, radius)
         this.ctx.closePath()

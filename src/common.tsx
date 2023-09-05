@@ -141,7 +141,7 @@ export function MenuActionButton(props: { action: MenuAction, state: GlobalState
 }
 
 export function DropdownMenuButton(props: {
-    title:string,
+    title?:string,
     icon?:SupportedIcons,
     items: MenuAction[],
     state: GlobalState

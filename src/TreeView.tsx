@@ -106,7 +106,6 @@ function TreeLeafItem(props: {item:ObjectProxy<ObjectDef>, text:string, state:Gl
 export function TreeView(props: { state:GlobalState}) {
     const {state} = props
     useObservableChange(state,'selection')
-    const selected = state.getSelectedObjects()
     const doc = state.getCurrentDocument()
     const add_assets:MenuAction[] = [
         AddNewNumberAssetAction,
@@ -138,7 +137,7 @@ export function TreeView(props: { state:GlobalState}) {
             <DropdownMenuButton icon={SupportedIcons.Add} items={add_page} state={state}/>
         </header>
         {doc.getListProp('pages').map((pg,i) => {
-            return <TreePageItem key={i} page={pg} state={props.state} selected={selected}/>
+            return <TreePageItem key={i} page={pg} state={props.state}/>
         })}
         <header>
             Assets
@@ -146,7 +145,7 @@ export function TreeView(props: { state:GlobalState}) {
             <button onClick={open_image_dialog}>+I</button>
         </header>
         {doc.getListProp('assets').map((asset,i) => {
-            return <TreeAssetItem key={i} asset={asset} state={props.state} selected={selected}/>
+            return <TreeAssetItem key={i} asset={asset} state={props.state}/>
         })}
     </div>
 }
