@@ -26,11 +26,19 @@ import {RectClass, RectDef} from "./rect"
 import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
 import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
+
+
 function make_filled_image(width: number, height: number, fill: string) {
-    const canvas = document.createElement('canvas')
+    let canvas = null
+    if(typeof document !== 'undefined') {
+        canvas = document.createElement('canvas')
+    } else {
+        canvas = PureImage.make(width, height)
+    }
+    // const canvas = document.createElement('canvas')
     canvas.width = width
     canvas.height = height
-    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    const ctx = canvas.getContext('2d') as unknown as any
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,width,height)
     ctx.fillStyle = fill
