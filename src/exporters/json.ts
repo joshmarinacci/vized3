@@ -27,6 +27,7 @@ export type JSONPropValue = {
 export type JSONProp = JSONPropValue | JSONPropReference
 export type JSONObject = {
     name: string
+    uuid: string
     props: Record<string, JSONProp>
 }
 export type JSONObjectV1 = {
@@ -115,6 +116,7 @@ export function toJSONObj(obj: OO): JSONObject {
     const json: JSONObject = {
         name: obj.def.name,
         props: {},
+        uuid: obj.getUUID()
     }
     obj.getPropSchemas().forEach(prop => {
         json.props[prop.name] = propertyToJSON(prop,obj)
@@ -212,7 +214,7 @@ export function fromJSONObj(om: ObjectManager, obj: JSONObject):OO {
             props[key] = propertyFromJSON(om, propSchema, obj)
         }
     }
-    const finalObject = om.make(def, props)
+    const finalObject = om.make(def, props, obj.uuid)
     refs.forEach(ref => {
         console.log("must restore ref",ref)
         const vv = obj.props[ref.name] as JSONPropReference
@@ -225,7 +227,7 @@ export function fromJSONObj(om: ObjectManager, obj: JSONObject):OO {
         console.log("the source is",source)
         finalObject.setPropProxySource(ref.name,source)
     })
-    console.log("final object is",finalObject)
+    // console.log("final object is",finalObject)
     return finalObject
 }
 
@@ -262,7 +264,7 @@ export function fromJSONDoc(om:ObjectManager, json_obj: JSONDoc): DocClass {
         if(propSchema.name === 'assets') continue
         props[key] = propertyFromJSON(om, propSchema,root)
     }
-    return om.make(def, props) as DocClass
+    return om.make(def, props, json_obj.root.uuid) as DocClass
 }
 export function fromJSONDocV1(om:ObjectManager, json_obj:JSONDocV1):DocClass {
     return fromJSONV1(om, json_obj.root) as DocClass

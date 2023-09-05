@@ -20,6 +20,9 @@ import {RectClass, RectDef} from "./rect"
 import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
 import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
+export type StateOpts = {
+    localStorage:Storage
+}
 
 export class GlobalState extends ObservableBase {
     om: ObjectManager
@@ -27,9 +30,14 @@ export class GlobalState extends ObservableBase {
     private current_page: PageClass
     private selected_objects: OO[]
     private selected_page: PageClass | null
+    localStorage: Storage
 
-    constructor() {
+    constructor(opts?:StateOpts) {
         super()
+        if(opts) {
+            this.localStorage = opts.localStorage ? opts.localStorage : localStorage
+        }
+        if(!this.localStorage && typeof localStorage !== 'undefined') this.localStorage = localStorage
         this.om = new ObjectManager()
         this.om.registerDef(DocDef,DocClass)
         this.om.registerDef(PageDef,PageClass)

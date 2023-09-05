@@ -385,6 +385,9 @@ export class ObjectProxy<T extends ObjectDef> {
     }
     refresh(prop:PropSchema){}
 
+    _setUUID(uuid: string) {
+        this.uuid = uuid
+    }
 }
 
 
@@ -711,13 +714,14 @@ export class ObjectManager {
         // @ts-ignore
         this.listeners.get(type).forEach(cb => cb(value))
     }
-    make(def: ObjectDef, props: any) {
+    make(def: ObjectDef, props: any, uuid?:string) {
         const cons = this.lookupConstructor(def.name)
         const obj:ObjectProxy<any> = new cons(def,props)
         const evt = new CreateObjectEvent(this,obj)
         this.changes.push(evt)
         this.current_change_index++
         evt.target.addEventListener(PropChanged, this.global_prop_change_handler)
+        if(uuid) obj._setUUID(uuid)
         return evt.target
     }
 

@@ -40,7 +40,7 @@ export const SaveLocalStorageAction:MenuAction = {
     description:'save the document in the browsers internal storage',
     tags:['save','local'],
     perform:async(state) => {
-        await saveLocalStorage(state)
+        await saveLocalStorage(state, true)
     }
 }
 export const DownloadPNGAction:MenuAction = {

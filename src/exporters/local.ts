@@ -5,8 +5,8 @@ import {GlobalState} from "../models/state"
 import {fromJSONDoc, JSONDoc, JSONDocIndex, saveJSON} from "./json"
 import {stateToCanvas} from "./png"
 
-function loadIndex():JSONDocIndex {
-    const index = localStorage.getItem('index')
+function loadIndex(state:GlobalState):JSONDocIndex {
+    const index = state.localStorage.getItem('index')
     if(index) {
         return JSON.parse(index) as JSONDocIndex
     } else {
@@ -29,20 +29,23 @@ function scaleCropCanvasTo(original_canvas: HTMLCanvasElement, size: Size) {
     return new_canvas
 }
 
-export async function saveLocalStorage(state: GlobalState) {
+export async function saveLocalStorage(state: GlobalState, withThumbnail:boolean) {
     const log = make_logger('local')
     const json_obj =  saveJSON(state)
-    console.log("generated json",json_obj)
+    // console.log("generated json",json_obj)
     const doc = state.getCurrentDocument()
-    log.info('json is',json_obj)
+    // log.info('json is',json_obj)
     //first save the doc itself
-    localStorage.setItem(doc.getUUID(),JSON.stringify(json_obj,null,'    '))
+    state.localStorage.setItem(doc.getUUID(),JSON.stringify(json_obj,null,'    '))
     //now save a thumbnail
-    const canvas = await stateToCanvas(state)
-    const thumbnail = scaleCropCanvasTo(canvas, new Size(64,64))
-    const thumbnail_url = thumbnail.toDataURL('png')
+    let thumbnail_url = ""
+    if(withThumbnail) {
+        const canvas = await stateToCanvas(state)
+        const thumbnail = scaleCropCanvasTo(canvas, new Size(64,64))
+        thumbnail_url = thumbnail.toDataURL('png')
+    }
 
-    const index:JSONDocIndex = loadIndex()
+    const index:JSONDocIndex = loadIndex(state)
     console.log("index before is",index)
     const old_doc = index.docs.find(dr => dr.uuid === doc.getUUID())
     if(old_doc) {
@@ -59,21 +62,19 @@ export async function saveLocalStorage(state: GlobalState) {
         })
     }
     console.log("saving back the index",index)
-    localStorage.setItem('index',JSON.stringify(index,null,'    '))
+    state.localStorage.setItem('index',JSON.stringify(index,null,'    '))
 }
 
 export async function listLocalDocs(state: GlobalState) {
-    const log = make_logger('local')
-    const index:JSONDocIndex = loadIndex()
-    return index.docs
+    return loadIndex(state).docs
 }
 export async function loadLocalDoc(state:GlobalState, uuid:string):Promise<DocClass> {
     const log = make_logger('local')
-    const index:JSONDocIndex = loadIndex()
+    const index:JSONDocIndex = loadIndex(state)
     log.info("the index is",index)
     const docref = index.docs.find(dr => dr.uuid === uuid)
     log.info("docref is",docref)
-    const json = localStorage.getItem(uuid)
+    const json = state.localStorage.getItem(uuid)
     if(json) {
         const obj:JSONDoc = JSON.parse(json)
         return fromJSONDoc(state.om,obj)
