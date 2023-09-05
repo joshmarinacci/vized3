@@ -70,10 +70,10 @@ export class GlobalState extends ObservableBase {
         page.appendListProp("children", this.om.make(SimpleTextDef,{ center: new Point(1,5), name:'text', fill:'#000000'}))
         page.appendListProp("children",this.om.make(PathShapeDef, { center: new Point(1,3), name:'path', fill:'#0000ff'}))
 
-        this._doc.appendListProp('assets', this.om.make(NumberAssetDef,{}))
-        this._doc.appendListProp('assets', this.om.make(ColorAssetDef,{}))
+        this._doc.appendListProp('assets', this.om.make(NumberAssetDef,{ name:'zero'}))
+        this._doc.appendListProp('assets', this.om.make(ColorAssetDef,{ name:'black'}))
         const dummy_img = make_filled_image(10,10,'green')
-        const asset_img = this.om.make(ImageAssetDef, {value:dummy_img})
+        const asset_img = this.om.make(ImageAssetDef, {value:dummy_img, name:'checkerboard'})
         this._doc.appendListProp('assets', asset_img)
         const image = this.om.make(SimpleImageDef, { name:'image'})
         image.setPropProxySource('image',asset_img)

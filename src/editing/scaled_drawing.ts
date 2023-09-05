@@ -17,9 +17,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.unit = unit
     }
 
-    fillRect(bounds: Bounds, fill: unknown) {
-        this.ctx.save()
-        this.ctx.translate(bounds.x*this.scale, bounds.y*this.scale)
+    private set_fill(fill: unknown) {
         if(fill instanceof LinearColorGradient) {
             const grad = this.ctx.createLinearGradient(fill.start.x, fill.start.y, fill.end.x, fill.end.y)
             fill.stops.forEach(stop => {
@@ -30,9 +28,18 @@ export class ScaledDrawingSurface implements ScaledSurface {
         if(fill instanceof Image) {
             this.ctx.fillStyle = this.ctx.createPattern(fill, 'repeat') as CanvasPattern
         }
+        if(fill instanceof HTMLCanvasElement) {
+            this.ctx.fillStyle = this.ctx.createPattern(fill, 'repeat') as CanvasPattern
+        }
         if(typeof fill === 'string') {
             this.ctx.fillStyle = fill as string
         }
+    }
+
+    fillRect(bounds: Bounds, fill: unknown) {
+        this.ctx.save()
+        this.set_fill(fill)
+        this.ctx.translate(bounds.x*this.scale, bounds.y*this.scale)
         this.ctx.fillRect(0,0, bounds.w * this.scale, bounds.h * this.scale)
         this.ctx.restore()
     }
@@ -56,7 +63,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
     }
 
     fillRoundRect(bounds: Bounds, radius: number, fill: unknown) {
-        this.ctx.fillStyle = fill as string
+        this.set_fill(fill)
         this.ctx.beginPath()
         this.ctx.roundRect(bounds.left() * this.scale, bounds.top() * this.scale, bounds.w * this.scale, bounds.h * this.scale, radius)
         this.ctx.closePath()
@@ -73,7 +80,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
     }
 
     fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
-        this.ctx.fillStyle = fill
+        this.set_fill(fill)
         this.ctx.beginPath()
         this.ctx.arc(center.x * this.scale, center.y * this.scale, radius * this.scale, startAngle, endAngle)
         this.ctx.fill()
@@ -90,7 +97,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
     }
 
     fillText(text: string, center: Point, fill: string, fontSize: number) {
-        this.ctx.fillStyle = fill
+        this.set_fill(fill)
         this.ctx.font = this.calcFont(fontSize)
         this.ctx.fillText(text, center.x * this.scale, center.y * this.scale)
     }
@@ -98,7 +105,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
     fillLinePath(position: Point, points: Point[], closed: boolean, fill: string) {
         if (points.length < 3) return
         this.ctx.save()
-        this.ctx.fillStyle = fill
+        this.set_fill(fill)
         this.ctx.translate(position.x * this.scale, position.y * this.scale)
         this.ctx.beginPath()
         this.ctx.moveTo(points[0].x * this.scale, points[0].y * this.scale)
@@ -168,4 +175,5 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.strokeStyle = color
         this.ctx.stroke()
     }
+
 }
