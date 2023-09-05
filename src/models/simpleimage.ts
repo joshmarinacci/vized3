@@ -20,9 +20,9 @@ export const SimpleImageDef: ObjectDef = {
             name:'image',
             base:'string',
             custom:'image-asset',
-            canProxy:false,
+            canProxy:true,
             defaultValue:null,
-            readonly:true,
+            readonly:false,
             hidden:false,
         },
     }

@@ -24,7 +24,21 @@ import {
 } from "./om"
 import {PathShapeClass, PathShapeDef} from "./pathshape"
 import {RectClass, RectDef} from "./rect"
+import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
 import {SimpleTextClass, SimpleTextDef} from "./simpletext"
+
+function make_filled_image(width: number, height: number, fill: string) {
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+    const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0,0,width,height)
+    ctx.fillStyle = fill
+    ctx.fillRect(0,0,width/2,height/2)
+    ctx.fillRect(width/2,height/2,width/2,height/2)
+    return canvas
+}
 
 export class GlobalState extends ObservableBase {
     om: ObjectManager
@@ -41,6 +55,7 @@ export class GlobalState extends ObservableBase {
         this.om.registerDef(RectDef,RectClass)
         this.om.registerDef(CircleDef,CircleClass)
         this.om.registerDef(SimpleTextDef, SimpleTextClass)
+        this.om.registerDef(SimpleImageDef, SimpleImageClass)
         this.om.registerDef(PathShapeDef, PathShapeClass)
         this.om.registerDef(NGonDef, NGonClass)
         this.om.registerDef(NumberAssetDef, NumberAssetClass)
@@ -57,6 +72,13 @@ export class GlobalState extends ObservableBase {
 
         this._doc.appendListProp('assets', this.om.make(NumberAssetDef,{}))
         this._doc.appendListProp('assets', this.om.make(ColorAssetDef,{}))
+        const dummy_img = make_filled_image(10,10,'green')
+        const asset_img = this.om.make(ImageAssetDef, {value:dummy_img})
+        this._doc.appendListProp('assets', asset_img)
+        const image = this.om.make(SimpleImageDef, { name:'image'})
+        image.setPropProxySource('image',asset_img)
+        page.appendListProp('children',image)
+
         // this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
         this.current_page = page
         this.selected_objects = []
