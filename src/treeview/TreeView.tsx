@@ -14,8 +14,8 @@ import {
     AddNewRectAction,
     DeleteSelection,
     MenuAction
-} from "./actions"
-import {ChooseImageDialog} from "./ChooseImageDialog"
+} from "../actions/actions"
+import {ChooseImageDialog} from "../actions/ChooseImageDialog"
 import {
     DropdownMenuButton,
     Icon,
@@ -23,10 +23,10 @@ import {
     MenuBox,
     useObservableChange,
     ValueThumbnail
-} from "./common"
-import {SupportedIcons} from "./icons"
-import {OO, PageClass} from "./models/om"
-import {GlobalState} from "./models/state"
+} from "../common"
+import {SupportedIcons} from "../icons"
+import {OO, PageClass} from "../models/om"
+import {GlobalState} from "../models/state"
 
 function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
     const {shape, state} = props

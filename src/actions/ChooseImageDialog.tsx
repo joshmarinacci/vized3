@@ -1,8 +1,8 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {ChangeEvent, useContext, useRef, useState} from "react"
 
-import {ImageAssetDef} from "./models/assets"
-import {GlobalState} from "./models/state"
+import {ImageAssetDef} from "../models/assets"
+import {GlobalState} from "../models/state"
 
 function isValidImageFile(file: File) {
     if(!file) return false

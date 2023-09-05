@@ -12,7 +12,7 @@ import React, {
     useState
 } from "react"
 
-import {MenuAction} from "./actions"
+import {MenuAction} from "./actions/actions"
 import {SupportedIcons} from "./icons"
 import {Observable} from "./models/model"
 import {

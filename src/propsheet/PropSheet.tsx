@@ -3,11 +3,11 @@ import "./PropSheet.css"
 import {DialogContext, PopupContext, toClass} from "josh_react_util"
 import React, {ChangeEvent, useContext, useState} from "react"
 
-import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "./common"
-import {MINECRAFT, PICO8} from "./exporters/common"
-import {SupportedIcons} from "./icons"
-import {EnumSchema, OO, PropChanged, PropSchema} from "./models/om"
-import {GlobalState} from "./models/state"
+import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "../common"
+import {MINECRAFT, PICO8} from "../exporters/common"
+import {SupportedIcons} from "../icons"
+import {EnumSchema, OO, PropChanged, PropSchema} from "../models/om"
+import {GlobalState} from "../models/state"
 import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
 function NumberEditor(props: { schema: PropSchema, target:OO }) {

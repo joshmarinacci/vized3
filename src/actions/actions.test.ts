@@ -2,6 +2,10 @@ import assert from "assert"
 import {Bounds, Point} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
+import {CircleDef} from "../models/circle"
+import {DocDef, PageDef} from "../models/om"
+import {RectDef} from "../models/rect"
+import {GlobalState} from "../models/state"
 import {
     BottomAlignShapes,
     HCenterAlignShapes,
@@ -10,23 +14,22 @@ import {
     TopAlignShapes,
     VCenterAlignShapes
 } from "./actions"
-import {CircleDef} from "./models/circle"
-import {DocDef, PageDef} from "./models/om"
-import {RectDef} from "./models/rect"
-import {GlobalState} from "./models/state"
 
 async function createThreeRectsDoc() {
     const state = new GlobalState()
-    const page = await state.om.make(PageDef, {})
-    const rect1 = await state.om.make(RectDef, {
-        bounds: new Bounds(100,100,10,10*2), fill:'red' })
-    await page.appendListProp('children',rect1)
-    const rect2 = await state.om.make(RectDef, {
-        bounds: new Bounds(200,200,20,20*2), fill:'green' })
-    await page.appendListProp('children',rect2)
-    const rect3 = await state.om.make(RectDef, {
-        bounds: new Bounds(300,300,30,30*2), fill:'blue' })
-    await page.appendListProp('children',rect3)
+    const page = state.om.make(PageDef, {})
+    const rect1 = state.om.make(RectDef, {
+        bounds: new Bounds(100, 100, 10, 10 * 2), fill: 'red'
+    })
+    page.appendListProp('children', rect1)
+    const rect2 = state.om.make(RectDef, {
+        bounds: new Bounds(200, 200, 20, 20 * 2), fill: 'green'
+    })
+    page.appendListProp('children', rect2)
+    const rect3 = state.om.make(RectDef, {
+        bounds: new Bounds(300, 300, 30, 30 * 2), fill: 'blue'
+    })
+    page.appendListProp('children', rect3)
 
     return {
         state:state,
@@ -61,13 +64,13 @@ export async function createThreeCirclesDoc() {
 
 describe('alignment actions', () => {
     it('should load objects correctly', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').x === 100)
         assert(rects[1].getPropValue('bounds').x === 200)
         assert(rects[2].getPropValue('bounds').x === 300)
     })
     it('should left align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').x === 100)
         assert(rects[1].getPropValue('bounds').x === 200)
         assert(rects[2].getPropValue('bounds').x === 300)
@@ -78,7 +81,7 @@ describe('alignment actions', () => {
         assert(rects[2].getPropValue('bounds').x === 100)
     })
     it('should left align circles', async () => {
-        const {state, page, circs} = await  createThreeCirclesDoc()
+        const {state, circs} = await  createThreeCirclesDoc()
         assert(circs[0].getPropValue('center').x === 100)
         assert(circs[1].getPropValue('center').x === 200)
         assert(circs[2].getPropValue('center').x === 300)
@@ -89,7 +92,7 @@ describe('alignment actions', () => {
         expect(circs[2].getPropValue('center').x).toBe(120)
     })
     it('should right align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').x === 100)
         assert(rects[1].getPropValue('bounds').x === 200)
         assert(rects[2].getPropValue('bounds').x === 300)
@@ -100,7 +103,7 @@ describe('alignment actions', () => {
         assert(rects[2].getPropValue('bounds').x === 80)
     })
     it('should center align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').x === 100)
         assert(rects[1].getPropValue('bounds').x === 200)
         assert(rects[2].getPropValue('bounds').x === 300)
@@ -111,7 +114,7 @@ describe('alignment actions', () => {
         assert(rects[2].getPropValue('bounds').x === 90)
     })
     it('should Top align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').y === 100)
         assert(rects[1].getPropValue('bounds').y === 200)
         assert(rects[2].getPropValue('bounds').y === 300)
@@ -122,7 +125,7 @@ describe('alignment actions', () => {
         assert(rects[2].getPropValue('bounds').top() === 100)
     })
     it('should center vertical align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').y === 100)
         assert(rects[1].getPropValue('bounds').y === 200)
         assert(rects[2].getPropValue('bounds').y === 300)
@@ -133,7 +136,7 @@ describe('alignment actions', () => {
         assert(rects[2].getPropValue('bounds').center().y === 110)
     })
     it('should bottom align rects', async () => {
-        const {state, page, rects} = await  createThreeRectsDoc()
+        const {state, rects} = await  createThreeRectsDoc()
         assert(rects[0].getPropValue('bounds').y === 100)
         assert(rects[1].getPropValue('bounds').y === 200)
         assert(rects[2].getPropValue('bounds').y === 300)

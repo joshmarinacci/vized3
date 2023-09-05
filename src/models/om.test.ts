@@ -2,7 +2,7 @@ import assert from "assert"
 import {Bounds} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
-import {createThreeCirclesDoc} from "../actions.test"
+import {createThreeCirclesDoc} from "../actions/actions.test"
 import {fromJSONDoc, fromJSONObj, saveJSON, toJSONObj} from "../exporters/json"
 import {ColorAssetDef, GradientAssetDef, NumberAssetDef} from "./assets"
 import {CircleClass, CircleDef} from "./circle"

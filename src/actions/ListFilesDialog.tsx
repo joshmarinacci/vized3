@@ -1,9 +1,9 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useEffect, useState} from "react"
 
-import {JSONDocReference} from "./exporters/json"
-import {listLocalDocs, loadLocalDoc} from "./exporters/local"
-import {GlobalState} from "./models/state"
+import {JSONDocReference} from "../exporters/json"
+import {listLocalDocs, loadLocalDoc} from "../exporters/local"
+import {GlobalState} from "../models/state"
 
 export function ListFilesDialog(props: { state: GlobalState }) {
     const {state} = props

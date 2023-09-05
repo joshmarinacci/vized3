@@ -2,10 +2,10 @@ import {Point} from "josh_js_util"
 import {PopupContext} from "josh_react_util"
 import React, {useContext, useRef, useState} from "react"
 
+import {IconButton, MenuBox} from "../common"
+import {SupportedIcons} from "../icons"
+import {GlobalState} from "../models/state"
 import {ALL_ACTIONS, MenuAction} from "./actions"
-import {IconButton, MenuBox} from "./common"
-import {SupportedIcons} from "./icons"
-import {GlobalState} from "./models/state"
 
 function actionMatches(action: MenuAction, query: string) {
     query = query.toLowerCase()

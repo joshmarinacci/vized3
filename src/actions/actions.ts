@@ -1,20 +1,20 @@
 import {Bounds, Point} from "josh_js_util"
 
-import {exportCanvasJS} from "./exporters/canvas"
-import {savePNGJSON} from "./exporters/json"
-import {saveLocalStorage} from "./exporters/local"
-import {exportPDF} from "./exporters/pdf"
-import {exportPNG} from "./exporters/png"
-import {exportSVG} from "./exporters/svg"
-import {SupportedIcons} from "./icons"
-import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "./models/assets"
-import {CircleDef} from "./models/circle"
-import {NGonClass, NGonDef} from "./models/ngon"
-import {DrawableClass, ObjectDef, ObjectProxy, PageDef} from "./models/om"
-import {PathShapeDef} from "./models/pathshape"
-import {RectDef} from "./models/rect"
-import {SimpleTextDef} from "./models/simpletext"
-import {GlobalState} from "./models/state"
+import {exportCanvasJS} from "../exporters/canvas"
+import {savePNGJSON} from "../exporters/json"
+import {saveLocalStorage} from "../exporters/local"
+import {exportPDF} from "../exporters/pdf"
+import {exportPNG} from "../exporters/png"
+import {exportSVG} from "../exporters/svg"
+import {SupportedIcons} from "../icons"
+import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "../models/assets"
+import {CircleDef} from "../models/circle"
+import {NGonDef} from "../models/ngon"
+import {DrawableClass, ObjectDef, ObjectProxy, PageDef} from "../models/om"
+import {PathShapeDef} from "../models/pathshape"
+import {RectDef} from "../models/rect"
+import {SimpleTextDef} from "../models/simpletext"
+import {GlobalState} from "../models/state"
 
 export type MenuAction = {
     title:string
@@ -293,26 +293,6 @@ export const VCenterAlignShapes: MenuAction = {
         for (const obj of objs) {
             await moveObjBy(obj, new Point(0,fbds.center().y - calcObjectBounds(obj).center().y))
         }
-    }
-}
-
-export const ConvertNGonToPath:MenuAction = {
-    title:'Convert to Path',
-    icon:SupportedIcons.Settings,
-    tags:['path','convert','ngon'],
-    description:"convert an N-gon shape to an editable path",
-    perform: async (state) => {
-        const page = state.getSelectedPage()
-        if (!page) return console.warn("no page selected")
-        const ngon = state.getSelectedObjects()[0] as NGonClass
-        const line_path = ngon.toSinglePath()
-        const parent = ngon.parent as unknown as ObjectProxy<ObjectDef>
-        await parent.removeListPropByValue('children', ngon)
-        const path = state.om.make(PathShapeDef,{
-            points:line_path.points,
-            closed: line_path.closed
-        })
-        page.appendListProp('children', path)
     }
 }
 

@@ -3,7 +3,7 @@ import {Point} from "josh_js_util"
 import pureimage, {Bitmap} from "pureimage"
 import {describe, expect,it} from "vitest"
 
-import {createThreeCirclesDoc} from "../actions.test"
+import {createThreeCirclesDoc} from "../actions/actions.test"
 import {
     GradientAssetClass,
     GradientAssetDef,

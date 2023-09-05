@@ -1,6 +1,6 @@
 import {describe, expect,it} from "vitest"
 
-import {createThreeCirclesDoc} from "../actions.test"
+import {createThreeCirclesDoc} from "../actions/actions.test"
 import {toSVG} from "./svg"
 
 describe('svg', () => {

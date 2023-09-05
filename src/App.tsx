@@ -27,8 +27,14 @@ import {
     SaveLocalStorageAction,
     SavePNGJSONAction,
     UndoAction
-} from "./actions"
-import {ActionSearchBox} from "./actionsearch"
+} from "./actions/actions"
+import {ActionSearchBox} from "./actions/actionsearch"
+import {
+    LoadLocalStorageAction,
+    NewDocumentAction,
+    OpenSettingsAction,
+    UploadAction
+} from "./actions/reactactions"
 import {
     DropdownMenuButton,
     MainLayout,
@@ -41,14 +47,8 @@ import {PageView,} from "./editing/PageView"
 import {SupportedIcons} from "./icons"
 import {HistoryChanged} from "./models/om"
 import {GlobalState} from "./models/state"
-import {PropSheet} from "./PropSheet"
-import {
-    LoadLocalStorageAction,
-    NewDocumentAction,
-    OpenSettingsAction,
-    UploadAction
-} from "./reactactions"
-import {TreeView} from "./TreeView"
+import {PropSheet} from "./propsheet/PropSheet"
+import {TreeView} from "./treeview/TreeView"
 
 const state = new GlobalState()
 

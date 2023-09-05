@@ -1,7 +1,7 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext} from "react"
 
-import {GlobalState} from "./models/state"
+import {GlobalState} from "../models/state"
 
 export function SettingsDialog(props: { state: GlobalState }) {
     const dm = useContext(DialogContext)

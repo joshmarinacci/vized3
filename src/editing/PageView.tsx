@@ -17,7 +17,7 @@ import {
     RightAlignShapes,
     TopAlignShapes,
     VCenterAlignShapes
-} from "../actions"
+} from "../actions/actions"
 import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common"
 import {NGonClass} from "../models/ngon"
 import {

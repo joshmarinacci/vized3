@@ -3,9 +3,9 @@ import "./ProxySelectionDialog.css"
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
-import {ValueThumbnail} from "./common"
-import {OO, PropSchema} from "./models/om"
-import {GlobalState} from "./models/state"
+import {ValueThumbnail} from "../common"
+import {OO, PropSchema} from "../models/om"
+import {GlobalState} from "../models/state"
 function ProxyAssetView(props: { asset: OO, source:OO, onChange:(value:OO)=>void }) {
     const {source, asset} = props
     return <li>
