@@ -5,9 +5,6 @@ import {
     DialogContext,
     DialogContextImpl,
     HBox,
-    PopupContainer,
-    PopupContext,
-    PopupContextImpl,
     Spacer,
 } from "josh_react_util"
 import React, {useRef, useState} from 'react'
@@ -47,6 +44,7 @@ import {PageView,} from "./editing/PageView"
 import {SupportedIcons} from "./icons"
 import {HistoryChanged} from "./models/om"
 import {GlobalState} from "./models/state"
+import {PopupContainer, PopupContext, PopupContextImpl} from "./propsheet/popup"
 import {PropSheet} from "./propsheet/PropSheet"
 import {TreeView} from "./treeview/TreeView"
 

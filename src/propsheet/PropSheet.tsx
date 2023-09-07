@@ -1,6 +1,6 @@
 import "./PropSheet.css"
 
-import {DialogContext, PopupContext, toClass} from "josh_react_util"
+import {DialogContext,toClass} from "josh_react_util"
 import React, {ChangeEvent, useContext, useState} from "react"
 
 import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "../common"
@@ -8,6 +8,7 @@ import {DAWNBRINGER32, MINECRAFT, PICO8} from "../exporters/common"
 import {SupportedIcons} from "../icons"
 import {EnumSchema, OO, PropChanged, PropSchema} from "../models/om"
 import {GlobalState} from "../models/state"
+import {PopupContext} from "./popup"
 import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
 function NumberEditor(props: { schema: PropSchema, target:OO }) {
@@ -129,7 +130,7 @@ function FillInput(props:{ schema: PropSchema, target:OO}) {
     const pm = useContext(PopupContext)
     const setColor = async (hex:string ) => await target.setPropValue(schema.name, hex)
     const choose = (e:MouseEvent) => {
-        pm.show_at(<TabbedColorPicker value={value} onSelect={setColor}/>,e.target,'below')
+        pm.show_at(<TabbedColorPicker value={value} onSelect={setColor}/>,e.target,'right')
     }
     return <FillSwatchButton schema={schema} target={target} onClick={choose}/>
 }

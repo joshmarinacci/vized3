@@ -1,7 +1,7 @@
 import "./PageView.css"
 
 import {Point, Size} from "josh_js_util"
-import {HBox, PopupContext} from "josh_react_util"
+import {HBox} from "josh_react_util"
 import React, {MouseEvent, useContext, useEffect, useRef, useState} from "react"
 
 import {
@@ -33,6 +33,7 @@ import {
 import {PathShapeClass, PathShapeDef} from "../models/pathshape"
 import {GlobalState} from "../models/state"
 import {lookup_dpi, Unit} from "../models/unit"
+import {PopupContext} from "../propsheet/popup"
 import {DragHandler} from "./DragHandler"
 import { findShapeInPage, MouseHandlerProtocol} from "./editing"
 import {FloatingPalette} from "./FloatingPalette"

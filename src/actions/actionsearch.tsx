@@ -1,10 +1,10 @@
 import {Point} from "josh_js_util"
-import {PopupContext} from "josh_react_util"
 import React, {useContext, useRef, useState} from "react"
 
 import {IconButton, MenuBox} from "../common"
 import {SupportedIcons} from "../icons"
 import {GlobalState} from "../models/state"
+import {PopupContext} from "../propsheet/popup"
 import {ALL_ACTIONS, MenuAction} from "./actions"
 
 function actionMatches(action: MenuAction, query: string) {

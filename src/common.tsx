@@ -1,7 +1,7 @@
 import './common.css'
 
 import {Point} from "josh_js_util"
-import {PopupContext, toClass} from "josh_react_util"
+import {toClass} from "josh_react_util"
 import React, {
     ChangeEvent,
     CSSProperties,
@@ -25,6 +25,7 @@ import {
     PropSchema
 } from "./models/om"
 import {GlobalState} from "./models/state"
+import {PopupContext} from "./propsheet/popup"
 
 export function MainLayout(props: {
     leftVisible: boolean,
