@@ -148,9 +148,8 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         const menu = <MenuBox>{items.map((act,i) => {
                     return <MenuActionButton key={`action${i}`} action={act} state={props.state}/>
                 })}</MenuBox>
-        const elem = e.target as HTMLElement
-        const dim = new Size(elem.clientWidth,elem.clientHeight)
-        pm.show_at(menu, e.target, "below", new Point(0,-dim.h).add(pt.scale(0.5)).add(new Point(-5,5)))
+        const ept = new Point(e.clientX, e.clientY)
+        pm.show_at(menu, e.target, "inside-top-left",ept)
     }
     const onDoubleClick = (e:MouseEvent<HTMLCanvasElement>) => {
         const pt = canvasToModel(e)
