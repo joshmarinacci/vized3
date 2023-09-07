@@ -296,6 +296,35 @@ export const VCenterAlignShapes: MenuAction = {
     }
 }
 
+export const RaiseShapeAction:MenuAction = {
+    title:'Raise',
+    perform: async (state) => {
+        if(state.getSelectedObjects().length !== 1) return
+        const shape = state.getSelectedObjects()[0]
+        const page = state.getCurrentPage()
+        if(shape.parent !== page) return
+        const list = page.getPropValue('children')
+        const index = list.indexOf(shape)
+        if(index >= list.length-1) return
+        await page.removeListPropAt('children',index)
+        await page.insertListPropAt('children',index+1,shape)
+    }
+}
+export const LowerShapeAction:MenuAction = {
+    title:'Lower',
+    perform: async (state) => {
+        if(state.getSelectedObjects().length !== 1) return
+        const shape = state.getSelectedObjects()[0]
+        const page = state.getCurrentPage()
+        if(shape.parent !== page) return
+        const list = page.getPropValue('children')
+        const index = list.indexOf(shape)
+        if(index < 1) return
+        await page.removeListPropAt('children',index)
+        await page.insertListPropAt('children',index-1,shape)
+    }
+}
+
 export const UndoAction:MenuAction = {
     title:'UnDo',
     tags:['undo','action','history','redo'],
@@ -341,6 +370,9 @@ export const ALL_ACTIONS: MenuAction[] = [
     BottomAlignShapes,
     VCenterAlignShapes,
     HCenterAlignShapes,
+    RaiseShapeAction,
+    LowerShapeAction,
+
     SaveLocalStorageAction,
 
     UndoAction,

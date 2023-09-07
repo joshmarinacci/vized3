@@ -13,7 +13,9 @@ import {
     DeleteSelection,
     HCenterAlignShapes,
     LeftAlignShapes,
+    LowerShapeAction,
     MenuAction,
+    RaiseShapeAction,
     RightAlignShapes,
     TopAlignShapes,
     VCenterAlignShapes
@@ -138,6 +140,8 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
             AddNewNGonAction,
             AddNewSimpletextAction,
             AddNewSimpleimageAction,
+            RaiseShapeAction,
+            LowerShapeAction,
             DeleteSelection
         ])
 
