@@ -4,7 +4,7 @@ import {DialogContext, PopupContext, toClass} from "josh_react_util"
 import React, {ChangeEvent, useContext, useState} from "react"
 
 import {ToggleIconButton, useObjectProxyChange, useObservableChange, ValueThumbnail} from "../common"
-import {MINECRAFT, PICO8} from "../exporters/common"
+import {DAWNBRINGER32, MINECRAFT, PICO8} from "../exporters/common"
 import {SupportedIcons} from "../icons"
 import {EnumSchema, OO, PropChanged, PropSchema} from "../models/om"
 import {GlobalState} from "../models/state"
@@ -93,6 +93,10 @@ const PALETTES:PALETTE[] = [
     {
         name:'Pico8',
         colors:PICO8
+    },
+    {
+        name:'Dawnbringer32',
+        colors:DAWNBRINGER32
     }
 ]
 
