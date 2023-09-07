@@ -25,3 +25,16 @@
 .dialog section.scroll {
     overflow: scroll;
 }
+
+
+.std-form {
+    border: 0px solid red;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+}
+.std-form label {
+    grid-column-start: 1;
+}
+.std-form > * {
+    margin: 0.5rem;
+}

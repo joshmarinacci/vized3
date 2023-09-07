@@ -3,6 +3,7 @@ import './common.css'
 import {Point} from "josh_js_util"
 import {PopupContext, toClass} from "josh_react_util"
 import React, {
+    ChangeEvent,
     CSSProperties,
     JSX,
     MouseEvent,
@@ -204,7 +205,8 @@ export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: Pr
     return <div>some kind of value</div>
 }
 
-type ItemRenderer<T> = (item: T) => JSX.Element
+export type ItemRenderer<T> = (item: T) => JSX.Element
+export type ItemToKey<T> = (item: T) => string
 
 export function ListView<T>(props: { data: T[], renderer: ItemRenderer<T> }) {
     const {data, renderer} = props
@@ -213,4 +215,20 @@ export function ListView<T>(props: { data: T[], renderer: ItemRenderer<T> }) {
             return <div className={'list-item'} key={i}>{renderer(file)}</div>
         })}
     </div>
+}
+export function SelectView<T>(props: {
+    toKey:ItemToKey<T>,
+    data:T[],
+    renderer:ItemRenderer<T>,
+    selected:T,
+    onSelect:(t:T)=>void
+}) {
+    const { toKey, data, selected, onSelect, renderer} = props
+    return <select value={toKey(selected)} onChange={(e:ChangeEvent<HTMLSelectElement>)=>{
+        onSelect(data.find(d => toKey(d) === e.target.value) as T)
+    }}>
+        {data.map((d:T) => {
+            return <option key={toKey(d)} value={toKey(d)}>{renderer(d)}</option>
+        })}
+    </select>
 }
