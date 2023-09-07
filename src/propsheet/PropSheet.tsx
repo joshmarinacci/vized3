@@ -17,7 +17,8 @@ function NumberEditor(props: { schema: PropSchema, target:OO }) {
         const num = parseFloat(e.target.value)
         await target.setPropValue(schema.name, num)
     }
-    return <input type={"number"} value={value} step={0.1} onChange={update}/>
+    const displayUnit = schema.displayUnit?schema.displayUnit:''
+    return <><input type={"number"} value={value} step={0.1} onChange={update}/><i>{displayUnit}</i></>
 }
 
 function SubNumberEditor(props: { parentSchema:PropSchema, schema: PropSchema, target:OO }) {

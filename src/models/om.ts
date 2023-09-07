@@ -17,6 +17,7 @@ export type PropSchema = {
     setter?:PropSetter
     hidden?:boolean
     canProxy?:boolean
+    displayUnit?:'pt'
 }
 
 export type EnumSchema = PropSchema & {
@@ -142,6 +143,7 @@ export const StrokeWidthDef:PropSchema = {
     base: 'number',
     readonly: false,
     defaultValue:1,
+    displayUnit:'pt'
 }
 export const NameDef:PropSchema = {
     name:'name',
@@ -214,10 +216,11 @@ export interface ScaledSurface {
     strokeRect(bounds: Bounds, strokeFill: string, strokeWidth: number): void;
     outlineRect(bounds: Bounds): void;
 
-    fillRoundRect(bounds: Bounds, roundedCornersRadius: number, fill: any): void;
+    fillRoundRect(bounds: Bounds, roundedCornersRadius: number, fill: string): void;
     strokeRoundRect(bounds: Bounds, roundedCornersRadius: number, strokeFill: string, strokeWidth: number): void;
 
     fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, strokeFill: string, strokeWidth: number): void;
     outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
 
     fillText(text: string, center: Point, fill: string, fontSize: number): void;

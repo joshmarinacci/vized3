@@ -85,6 +85,14 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.arc(center.x * this.scale, center.y * this.scale, radius * this.scale, startAngle, endAngle)
         this.ctx.fill()
     }
+    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, strokeFill: string, strokeWidth:number) {
+        this.ctx.strokeStyle = strokeFill
+        this.ctx.lineWidth = strokeWidth*this.scale/72
+        this.ctx.beginPath()
+        this.ctx.arc(center.x * this.scale, center.y * this.scale, radius * this.scale, startAngle, endAngle)
+        this.ctx.closePath()
+        this.ctx.stroke()
+    }
 
     outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
         this.ctx.beginPath()

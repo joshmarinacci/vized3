@@ -67,6 +67,7 @@ export class CircleClass extends DrawableClass<typeof CircleDef> {
 
     drawSelf(ctx: ScaledSurface): void {
         ctx.fillArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.getPropValue('fill'))
+        ctx.strokeArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
     }
 
     contains(pt: Point): boolean {
