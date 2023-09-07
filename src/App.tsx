@@ -70,6 +70,12 @@ function Main() {
     useObservableChange(state,'selection')
 
     const keyref = useRef(null)
+    let pageView = <div>No page selected</div>
+    const page = state.getSelectedPage()
+    if(page !== null) {
+        pageView =  <PageView doc={state.getCurrentDocument()} page={page} state={state}/>
+    }
+
     return (<div
         ref={keyref}
         className={'fill-page'}
@@ -111,7 +117,7 @@ function Main() {
             rightVisible={rightVisible}
             leftVisible={leftVisible}
             left={<TreeView state={state}/>}
-            center={<PageView doc={state.getCurrentDocument()} page={state.getCurrentPage()} state={state}/>}
+            center={pageView}
             right={<PropSheet state={state}/>}
         />
         <HBox>

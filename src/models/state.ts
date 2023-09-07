@@ -27,7 +27,6 @@ export type StateOpts = {
 export class GlobalState extends ObservableBase {
     om: ObjectManager
     private _doc: DocClass
-    private current_page: PageClass
     private selected_objects: OO[]
     private selected_page: PageClass | null
     localStorage: Storage
@@ -74,17 +73,12 @@ export class GlobalState extends ObservableBase {
         page.appendListProp('children',image)
 
         // this._doc.appendListProp('assets', this.om.make(GradientAssetDef,{}))
-        this.current_page = page
         this.selected_objects = []
         this.selected_page = page
     }
 
     getCurrentDocument(): DocClass {
         return this._doc
-    }
-
-    getCurrentPage():PageClass {
-        return this.current_page
     }
 
     getSelectedObjects(): OO[] {
@@ -97,6 +91,12 @@ export class GlobalState extends ObservableBase {
     }
     setSelectedObjects(objs: OO[]) {
         this.selected_objects = objs
+        if(this.selected_objects.length > 0) {
+            const first = this.selected_objects[0]
+            if(first.parent instanceof PageClass) {
+                this.setSelectedPage(first.parent)
+            }
+        }
         this.fire('selection', {})
     }
     clearSelectedObjects() {
@@ -108,8 +108,11 @@ export class GlobalState extends ObservableBase {
     }
 
     setSelectedPage(page: PageClass | null) {
+        const old = this.selected_page
         this.selected_page = page
-        this.fire('selection', {})
+        if(old !== this.selected_page) {
+            this.fire('selection', {})
+        }
     }
 
     getSelectedPage() {
@@ -120,9 +123,6 @@ export class GlobalState extends ObservableBase {
         this._doc = doc
         this.clearSelectedObjects()
         this.setSelectedPage(this._doc.getListPropAt('pages',0))
-        if(this.selected_page) {
-            this.current_page = this.selected_page
-        }
         this.fire('selection', {})
     }
 

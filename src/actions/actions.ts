@@ -301,7 +301,8 @@ export const RaiseShapeAction:MenuAction = {
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
         const shape = state.getSelectedObjects()[0]
-        const page = state.getCurrentPage()
+        const page = state.getSelectedPage()
+        if(!page) return
         if(shape.parent !== page) return
         const list = page.getPropValue('children')
         const index = list.indexOf(shape)
@@ -315,7 +316,8 @@ export const LowerShapeAction:MenuAction = {
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
         const shape = state.getSelectedObjects()[0]
-        const page = state.getCurrentPage()
+        const page = state.getSelectedPage()
+        if(!page) return
         if(shape.parent !== page) return
         const list = page.getPropValue('children')
         const index = list.indexOf(shape)

@@ -76,7 +76,6 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     const [handler, setHandler] = useState<MouseHandlerProtocol>(new DragHandler())
     const [zoomLevel, setZoomLevel ] = useState(0)
 
-    // const drawScale = Math.pow(2,zoomLevel) * lookup_dpi(docUnit)
     const canvasToModel = (e: React.MouseEvent<HTMLCanvasElement>) => {
         const ept = new Point(e.clientX, e.clientY)
         const rect = (e.target as HTMLCanvasElement).getBoundingClientRect()
@@ -171,7 +170,8 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
 
     const startNewPath = () => {
         const shape = state.om.make(PathShapeDef,{points:[]}) as PathShapeClass
-        const page = state.getCurrentPage()
+        const page = state.getSelectedPage()
+        if(!page) return
         page.appendListProp('children',shape)
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }

@@ -85,7 +85,8 @@ function ImportImageButton(props: { state: GlobalState }) {
         const image = state.om.make(SimpleImageDef, { name:'image'}) as SimpleImageClass
         image.setPropProxySource('image',asset)
         await image.setPropValue('bounds', new Bounds(0, 0, 1, 1 * ratio))
-        state.getCurrentPage().appendListProp('children',image)
+        const page = state.getSelectedPage()
+        if(page) page.appendListProp('children',image)
     }}/>)
     return <IconButton icon={SupportedIcons.Image} onClick={showNewDialog}>import image</IconButton>
 }
