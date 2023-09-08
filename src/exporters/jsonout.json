@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "root": {
+    "name": "document",
+    "props": {
+      "name": "unnamed",
+      "unit": "Inch",
+      "pages": [
+        {
+          "name": "page",
+          "props": {
+            "name": "unnamed",
+            "size": {
+              "w": 8.5,
+              "h": 11
+            },
+            "children": [
+              {
+                "name": "circle",
+                "props": {
+                  "name": "unnamed",
+                  "center": {
+                    "x": 100,
+                    "y": 100
+                  },
+                  "radius": 10,
+                  "fill": "#cccccc",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              },
+              {
+                "name": "circle",
+                "props": {
+                  "name": "unnamed",
+                  "center": {
+                    "x": 200,
+                    "y": 200
+                  },
+                  "radius": 20,
+                  "fill": "#cccccc",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              },
+              {
+                "name": "circle",
+                "props": {
+                  "name": "unnamed",
+                  "center": {
+                    "x": 300,
+                    "y": 300
+                  },
+                  "radius": 30,
+                  "fill": "#cccccc",
+                  "strokeFill": "black",
+                  "strokeWidth": 1
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

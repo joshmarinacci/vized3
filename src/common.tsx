@@ -1,11 +1,31 @@
-import React, {CSSProperties, JSX, ReactNode, useEffect, useState} from "react";
-import {toClass} from "josh_react_util";
-import {Observable} from "./models/model";
-import {EventTypes, ObjectDef, ObjectManager, ObjectProxy, OMEventTypes} from "./models/om";
-import {MenuAction} from "./actions";
-import {GlobalState} from "./models/state";
-import './common.css';
-import {SupportedIcons} from "./icons";
+import './common.css'
+
+import {Point} from "josh_js_util"
+import {toClass} from "josh_react_util"
+import React, {
+    ChangeEvent,
+    CSSProperties,
+    JSX,
+    MouseEvent,
+    ReactNode,
+    useContext,
+    useEffect,
+    useState
+} from "react"
+
+import {MenuAction} from "./actions/actions"
+import {SupportedIcons} from "./icons"
+import {Observable} from "./models/model"
+import {
+    EventTypes,
+    ObjectDef,
+    ObjectManager,
+    ObjectProxy,
+    OMEventTypes,
+    PropSchema
+} from "./models/om"
+import {GlobalState} from "./models/state"
+import {PopupContext} from "./propsheet/popup"
 
 export function MainLayout(props: {
     leftVisible: boolean,
@@ -43,21 +63,28 @@ export function ToggleIconButton(props: {
         'borderless': true,
     })} onClick={props.onClick}>
         <span
-            className="material-symbols-rounded">{props.selected ? props.selectedIcon : props.regularIcon}</span>
+            className={toClass({
+                "material-symbols-rounded":true,
+                filled:props.selected
+            })}>{props.selected ? props.selectedIcon : props.regularIcon}</span>
     </button>
 }
 
 export function IconButton(props: {
-    onClick?: () => any,
-    icon: SupportedIcons,
-    children: ReactNode
+    onClick?: (e:MouseEvent<HTMLButtonElement>) => void,
+    icon?: SupportedIcons,
+    children?: ReactNode
     disabled?: boolean
 }): JSX.Element {
+    const {icon} = props
     return <button onClick={props.onClick} className={'icon-button'} disabled={props.disabled}>
-        <span
-            className="material-symbols-rounded">{props.icon}</span>
+        {icon && <span className="material-symbols-rounded">{icon}</span>}
         {props.children}
     </button>
+}
+
+export function Icon(props:{ icon:SupportedIcons }) {
+    return <span className={'material-symbols-rounded'}>{props.icon}</span>
 }
 
 export function useObservableChange(ob: Observable | undefined, eventType: string) {
@@ -106,15 +133,103 @@ export function MenuBox(props: { children: ReactNode }) {
     return <div className={'menu-box'}>{props.children}</div>
 }
 
-function MenuButton(props: { children: React.ReactNode, onClick: () => void }) {
-    return <button onClick={props.onClick}>{props.children}</button>
+export type ReactMenuAction = {
+    title:string
+    icon?:SupportedIcons,
+    makeComponent: (state:GlobalState) => JSX.Element
 }
 
-export function MenuActionButton(props: { action: MenuAction, state: GlobalState }) {
-    let icon = <></>
-    if(props.action.icon) {
-        icon = <span  className="material-symbols-rounded">{props.action.icon}</span>
+export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, state: GlobalState, disabled?:boolean }):JSX.Element {
+    const {action, state, disabled=false} = props
+    if('makeComponent' in action) {
+        return (action as ReactMenuAction).makeComponent(state) as JSX.Element
     }
-    return <MenuButton
-        onClick={() => props.action.perform(props.state)}>{icon}{props.action.title}</MenuButton>
+    let icon = <></>
+    if(action.icon) {
+        icon = <span  className="material-icons material-symbols-rounded">{action.icon}</span>
+    }
+    const perform = async () => {
+        await (action as MenuAction).perform(state)
+    }
+    return <button className={'menu-button'} onClick={perform} disabled={disabled}>{icon}{action.title}</button>
+}
+
+export function DropdownMenuButton(props: {
+    title?:string,
+    icon?:SupportedIcons,
+    items: (MenuAction|ReactMenuAction)[],
+    state: GlobalState
+}) {
+    const {title, icon, items, state} = props
+    const pm = useContext(PopupContext)
+    const showMenu = (e: MouseEvent<HTMLButtonElement>) => {
+        const menu = <MenuBox>{items.map((m, i) => {
+            return <MenuActionButton key={i} action={m} state={state}/>
+        })}</MenuBox>
+        pm.show_at(menu, e.target, "left", new Point(0, 0))
+    }
+    return <IconButton icon={icon} onClick={showMenu}>{title}</IconButton>
+}
+
+export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: PropSchema }) {
+    const schema = props.prop
+    const value = props.target.getPropValue(props.prop.name)
+    if (typeof value === 'undefined') {
+        return <div>undefined</div>
+    }
+    if (schema.custom === 'css-color') {
+        return <div style={{
+            width: '32px',
+            height: '32px',
+            border: '1px solid black',
+            backgroundColor: value as string
+        }}></div>
+    }
+    if(schema.custom === 'image-asset') {
+        const img:ImageData = value
+        return <div>image: size:{img.width} x {img.height}</div>
+    }
+    if (schema.custom === 'css-gradient') {
+        return <div style={{
+            width: '32px',
+            height: '32px',
+            border: '1px solid black',
+            backgroundColor: 'green',
+        }}></div>
+    }
+    if (typeof value === 'string') {
+        return <div>{value}</div>
+    }
+    if (schema.base === 'number') {
+        return <div>{value}</div>
+    }
+    return <div>some kind of value</div>
+}
+
+export type ItemRenderer<T> = (item: T) => JSX.Element
+export type ItemToKey<T> = (item: T) => string
+
+export function ListView<T>(props: { data: T[], renderer: ItemRenderer<T> }) {
+    const {data, renderer} = props
+    return <div className={'list-view'}>
+        {data.map((file, i) => {
+            return <div className={'list-item'} key={i}>{renderer(file)}</div>
+        })}
+    </div>
+}
+export function SelectView<T>(props: {
+    toKey:ItemToKey<T>,
+    data:T[],
+    renderer:ItemRenderer<T>,
+    selected:T,
+    onSelect:(t:T)=>void
+}) {
+    const { toKey, data, selected, onSelect, renderer} = props
+    return <select value={toKey(selected)} onChange={(e:ChangeEvent<HTMLSelectElement>)=>{
+        onSelect(data.find(d => toKey(d) === e.target.value) as T)
+    }}>
+        {data.map((d:T) => {
+            return <option key={toKey(d)} value={toKey(d)}>{renderer(d)}</option>
+        })}
+    </select>
 }

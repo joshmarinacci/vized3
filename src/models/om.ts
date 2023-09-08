@@ -1,37 +1,168 @@
-import {Bounds, genId, Point, toRadians} from "josh_js_util";
+import {Bounds, genId, Point, Size} from "josh_js_util"
+
+import {JSONObject} from "../exporters/json"
+import {lookup_name, Unit} from "./unit"
 
 export type PropSetter = (oldObj:any, propname:string, propvalue:any) => any
+export type PropRenderer = (oldObj:ObjectProxy<ObjectDef>, propname:string, propvalue:any) => any
+export type PropLoader = (obj:JSONObject, propname:string, propvalue:any) => any
 
 export type PropSchema = {
     name: string,
-    base: 'number' | 'string' | 'object' | 'list' | 'boolean',
+    base: 'number' | 'string' | 'object' | 'list' | 'boolean' | 'enum',
+    defaultValue:any,
     readonly:boolean,
-    custom?:'css-color',
-    subProps?:Record<string,PropSchema>,
-    setter?:PropSetter,
+    custom?:'css-color'|'css-gradient' | 'points' | 'image-asset',
+    subProps?:Record<string,PropSchema>
+    setter?:PropSetter
+    hidden?:boolean
+    canProxy?:boolean
+    displayUnit?:'pt'
 }
 
-const UUIDDef:PropSchema = {
-    name: 'uuid',
-    base: 'string',
-    readonly: true,
+export type EnumSchema = PropSchema & {
+    base:'enum'
+    possibleValues:any[]
+    renderer:PropRenderer,
+    fromJSONValue:PropLoader,
 }
-const FillDef:PropSchema = {
+
+export const CenterPositionDef:PropSchema = {
+    name:'center',
+    base: 'object',
+    readonly: false,
+    setter: (obj, name, value) => {
+        const pt = obj as Point
+        const pt2 = pt.copy()
+        // @ts-ignore
+        pt2[name] = value
+        return pt2
+    },
+    subProps: {
+        x: {
+            name: 'x',
+            base: "number",
+            readonly: false,
+            defaultValue: 0,
+        },
+        y: {
+            name: 'y',
+            base: 'number',
+            readonly: false,
+            defaultValue: 0,
+        },
+    },
+    defaultValue: new Point(0, 0)
+}
+
+export const BoundsDef:PropSchema = {
+        name: 'bounds',
+        base: 'object',
+        readonly: false,
+        setter: (obj, name, value) => {
+            const old_bounds = obj as Bounds
+            const new_bounds = old_bounds.copy()
+            // @ts-ignore
+            new_bounds[name] = value
+            return new_bounds
+        },
+        subProps: {
+            x: {
+                name: 'x',
+                base: 'number',
+                readonly: false,
+                defaultValue: 0
+            },
+            y: {
+                name: 'y',
+                base: 'number',
+                readonly: false,
+                defaultValue: 0,
+            },
+            w: {
+                name: 'w',
+                base: 'number',
+                readonly: false,
+                defaultValue: 1,
+            },
+            h: {
+                name: 'h',
+                base: "number",
+                readonly: false,
+                defaultValue: 1,
+            },
+        },
+        defaultValue: new Bounds(0, 0, 1, 1),
+}
+
+export const SizeDef:PropSchema = {
+    name:'size',
+    base:'object',
+    readonly:false,
+    subProps: {
+        w: {
+            name:'w',
+            base:'number',
+            readonly:false,
+            defaultValue: 8.5,
+        },
+        h: {
+            name:'h',
+            base:"number",
+            readonly:false,
+            defaultValue: 11,
+        }
+    },
+    setter: (obj, name, value) => {
+        const s_old =obj as Size
+        const snew = new Size(s_old.w,s_old.h)
+        // @ts-ignore
+        snew[name] = value
+        return snew
+    },
+    defaultValue: new Size(8.5,11)
+}
+
+export const FillDef:PropSchema = {
     name:'fill',
     base: 'string',
     readonly: false,
     custom:'css-color',
+    defaultValue: '#cccccc',
+    canProxy:true
 }
-const StrokeFillDef:PropSchema = {
+export const StrokeFillDef:PropSchema = {
     name:'strokeFill',
     base: 'string',
     readonly: false,
     custom:'css-color',
+    defaultValue: 'black'
 }
-const StrokeWidthDef:PropSchema = {
+export const StrokeWidthDef:PropSchema = {
     name:'strokeWidth',
     base: 'number',
     readonly: false,
+    defaultValue:1,
+    displayUnit:'pt'
+}
+export const NameDef:PropSchema = {
+    name:'name',
+    base:'string',
+    readonly:false,
+    defaultValue: 'unnamed',
+}
+export const UnitDef:EnumSchema = {
+    name:'unit',
+    base:'enum',
+    readonly: false,
+    possibleValues: Object.keys(Unit),
+    defaultValue: Unit.Inch,
+    renderer: (target, name, value:keyof typeof Unit) => {
+        return Unit[value]
+    },
+    fromJSONValue: (o,n,v) => {
+        return lookup_name(v)
+    }
 }
 
 export type ObjectDef = {
@@ -42,384 +173,84 @@ export type ObjectDef = {
 export const DocDef:ObjectDef = {
     name:'document',
     props: {
-        uuid: UUIDDef,
-        name: {
-            name:'name',
-            base:"string",
-            readonly: false,
-        },
+        name: NameDef,
+        unit: UnitDef,
         pages: {
             name:'pages',
             base:'list',
             readonly: false,
+            hidden:true,
+            defaultValue:()=>[],
+        },
+        assets: {
+            name:'assets',
+            base:'list',
+            hidden:true,
+            readonly:false,
+            defaultValue:()=>[],
         }
     }
 }
-export type DocType = {
-    pages:[]
-    name:string,
-}
-export class DocClass {
-    type:'document'
-    uuid: string
-    name: string
-    pages: []
-    private unit: string;
-    constructor(opts: Record<keyof typeof DocDef.props, any>) {
-        this.type = 'document'
-        this.name = 'unnamed'
-        this.pages = []
-        this.unit = "mm"
-        this.uuid = genId('document')
-    }
-}
-
 export const PageDef: ObjectDef = {
     name: 'page',
     props: {
-        uuid: UUIDDef,
-        name: {
-            name:'name',
-            base:"string",
-            readonly: false,
-        },
+        name: NameDef,
+        size: SizeDef,
         children: {
             name: 'children',
             base: 'list',
             readonly: false,
+            defaultValue:()=>[],
         }
     }
 }
-export type  PageType = {
-    name:string,
-    children:any[]
+
+export interface Handle {
+    getPosition(): Point;
+    setPosition(pos: Point): Promise<void>;
+    contains(pt: Point): boolean;
 }
-export class PageClass {
-    type: 'page'
-    children: any[]
-    uuid: string
-    name: string
 
-    constructor(opts: Record<keyof typeof PageDef.props, any>) {
-        this.type = 'page'
-        this.name = 'unnamed'
-        this.uuid = genId('page')
-        this.children = []
-    }
+export interface ScaledSurface {
+    fillRect(bounds: Bounds, fill: "string"): void;
+    strokeRect(bounds: Bounds, strokeFill: string, strokeWidth: number): void;
+    outlineRect(bounds: Bounds): void;
 
-    hasChildren(): boolean {
-        return this.children.length > 0
-    }
+    fillRoundRect(bounds: Bounds, roundedCornersRadius: number, fill: string): void;
+    strokeRoundRect(bounds: Bounds, roundedCornersRadius: number, strokeFill: string, strokeWidth: number): void;
+
+    fillArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+    strokeArc(center: Point, radius: number, startAngle: number, endAngle: number, strokeFill: string, strokeWidth: number): void;
+    outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string): void;
+
+    fillText(text: string, center: Point, fill: string, fontSize: number): void;
+
+    fillLinePath(position: Point, points: Point[], closed: boolean, fill: string): void;
+    strokeLinePath(position: Point, points: Point[], closed: boolean, strokeFill: string, strokeWidth: number): void;
+    outlineLinePath(position: Point, points: Point[], closed: boolean): void;
+
+    dragRect(dragRect: Bounds): void;
+
+    overlayFillText(s: string, point: Point): void;
+
+    overlayHandle(hand: Handle, color:string): void;
+
+    overlayPoint(point: Point, green: string): void;
+
+    overlayLine(startPoint: Point, endPoint: Point, color: string): void;
+
+    fillImage(bounds: Bounds, img: any): void
 }
 
 export interface DrawableShape {
-    drawSelf(ctx:CanvasRenderingContext2D):void
+    drawSelf(ctx:ScaledSurface):void
     contains(pt:Point):boolean
-    drawSelected(ctx:CanvasRenderingContext2D):void
+    drawSelected(ctx:ScaledSurface):void
+    getHandle():Handle|null
+    intersects(bounds:Bounds):boolean
+    getPosition():Point
+    setPosition(pos:Point):Promise<void>
 }
-
-
-export const RectDef: ObjectDef = {
-    name: 'rect',
-    props: {
-        uuid: UUIDDef,
-        bounds: {
-            name: 'bounds',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let old_bounds = obj as Bounds;
-                let new_bounds = old_bounds.copy()
-                // @ts-ignore
-                new_bounds[name] = value
-                return new_bounds;
-            },
-            subProps:{
-                x:{
-                    name:'x',
-                    base:'number',
-                    readonly:false,
-                },
-                y:{
-                    name:'y',
-                    base:'number',
-                    readonly:false,
-                },
-                w:{
-                    name:'w',
-                    base:'number',
-                    readonly:false,
-                },
-                h:{
-                    name:'h',
-                    base:"number",
-                    readonly:false,
-                },
-            }
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-        roundedCornersEnabled: {
-            name:'roundedCornersEnabled',
-            base:'boolean',
-            readonly:false,
-        },
-        roundedCornersRadius: {
-            name:'roundedCornersRadius',
-            base:'number',
-            readonly:false,
-        }
-    }
-}
-export type RectType = {
-    bounds:Bounds,
-    fill:string,
-    strokeFill:string,
-    strokeWidth:number,
-    roundedCornersEnabled:boolean,
-    roundedCornersRadius:0,
-}
-export class RectClass implements DrawableShape {
-    type: 'square'
-    bounds: Bounds
-    uuid: string
-    name: string
-    fill: string
-    strokeWidth: number;
-    strokeFill: string;
-    private roundedCornersEnabled: boolean;
-    private roundedCornersRadius: number;
-    constructor(opts: Record<keyof typeof RectDef.props, any>) {
-        this.type = 'square'
-        this.uuid = genId('square')
-        this.name = 'unnamed'
-        this.bounds = opts.bounds || new Bounds(0, 0, 1, 1)
-        this.fill = opts.fill || "#888"
-        this.strokeWidth = 1
-        this.strokeFill = 'black'
-        this.roundedCornersEnabled = false
-        this.roundedCornersRadius = 0
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        if(this.roundedCornersEnabled) {
-            let b = this.bounds
-            let r = this.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.fill()
-        } else {
-            ctx.fillRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
-        }
-        ctx.strokeStyle = this.strokeFill
-        ctx.lineWidth = this.strokeWidth
-        if(this.roundedCornersEnabled) {
-            let b = this.bounds
-            let r = this.roundedCornersRadius
-            ctx.beginPath()
-            ctx.roundRect(b.left(),b.top(),b.w,b.h,r)
-            ctx.closePath()
-            ctx.stroke()
-        } else {
-            ctx.strokeRect(this.bounds.x, this.bounds.y, this.bounds.w, this.bounds.h)
-        }
-    }
-    contains(pt: Point): boolean {
-        return this.bounds.contains(pt)
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.strokeRect(this.bounds.x,this.bounds.y,this.bounds.w,this.bounds.h)
-    }
-}
-
-export const CircleDef: ObjectDef = {
-    name: 'circle',
-    props: {
-        uuid: UUIDDef,
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps:{
-                x: {
-                    name:'x',
-                    base: "number",
-                    readonly: false,
-                },
-                y: {
-                    name:'y',
-                    base: 'number',
-                    readonly: false,
-                },
-            }
-        },
-        radius: {
-            name: 'radius',
-            base: "number",
-            readonly: false,
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-    }
-}
-export type CircleType = {
-    center: Point,
-    radius:number,
-    fill:string,
-}
-export class CircleClass implements DrawableShape {
-    private type: string;
-    private uuid: string;
-    private name: string;
-    center: Point;
-    radius: number;
-    fill: string;
-    strokeWidth: number;
-    strokeFill: string;
-    constructor(opts: Record<keyof typeof CircleDef.props, any>) {
-        this.type = 'circle'
-        this.uuid = genId('circle')
-        this.name = 'unnamed'
-        this.center = opts.center || new Point(50,50)
-        this.radius = 20
-        this.fill = "#ccc"
-        this.strokeWidth = 1
-        this.strokeFill = 'black'
-    }
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        ctx.beginPath()
-        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
-        ctx.fill()
-        ctx.strokeStyle = this.strokeFill
-        ctx.lineWidth = this.strokeWidth
-        ctx.stroke()
-    }
-    contains(pt: Point): boolean {
-        return pt.subtract(this.center).magnitude() < this.radius
-    }
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        ctx.beginPath()
-        ctx.arc(this.center.x,this.center.y,this.radius,0,toRadians(360))
-        ctx.stroke()
-    }
-}
-
-export const SimpleTextDef: ObjectDef = {
-    name:'simple-text',
-    props: {
-        uuid:UUIDDef,
-        center: {
-            name: 'center',
-            base: 'object',
-            readonly: false,
-            setter: (obj,name,value) => {
-                let pt = obj as Point;
-                let pt2 = pt.clone()
-                // @ts-ignore
-                pt2[name] = value
-                return pt2;
-            },
-            subProps:{
-                x: {
-                    name:'x',
-                    base: "number",
-                    readonly: false,
-                },
-                y: {
-                    name:'y',
-                    base: 'number',
-                    readonly: false,
-                },
-            }
-        },
-        text: {
-            name:'text',
-            readonly: false,
-            base: 'string',
-        },
-        fontSize: {
-            name:'fontSize',
-            base: 'number',
-            readonly: false
-        },
-        fill: FillDef,
-    }
-}
-export type SimpleTextType = {
-    center: Point,
-    text: string,
-    fill:string,
-    fontSize:number
-}
-export class SimpleTextClass implements DrawableShape {
-    private type: string;
-    private uuid: string;
-    private name: string;
-    private text: string;
-    private center: any;
-    private fill: string;
-    private metrics: TextMetrics;
-    private can: HTMLCanvasElement;
-    private ctx: CanvasRenderingContext2D;
-    private fontSize: number;
-    constructor(opts: Record<keyof typeof SimpleTextDef.props, any>) {
-        this.fill = opts.fill || "#888"
-        this.type = 'simple-text'
-        this.uuid = genId('simple-text')
-        this.text = opts.text || "no text"
-        this.name = 'unnamed'
-        this.fontSize = opts.fontSize || 24
-        this.center = opts.center || new Point(50,50)
-        this.can = document.createElement('canvas')
-        this.can.width = 100
-        this.can.height = 100
-        this.ctx = this.can.getContext('2d') as CanvasRenderingContext2D
-        this.ctx.font = this.calcFont()
-        this.metrics = this.ctx.measureText(this.text)
-    }
-    private calcHeight() {
-        return this.metrics.actualBoundingBoxAscent + this.metrics.actualBoundingBoxDescent
-    }
-    contains(pt: Point): boolean {
-        let h = this.calcHeight()
-        let bds = new Bounds(this.center.x,this.center.y-h,this.metrics.width,h)
-        return bds.contains(pt)
-    }
-
-    drawSelected(ctx: CanvasRenderingContext2D): void {
-        let h = this.calcHeight()
-        ctx.strokeRect(this.center.x,this.center.y-h,this.metrics.width,h)
-    }
-
-    drawSelf(ctx: CanvasRenderingContext2D): void {
-        ctx.fillStyle = this.fill
-        ctx.font = this.calcFont()
-        ctx.fillText(this.text, this.center.x,this.center.y)
-    }
-
-    refresh(prop:PropSchema) {
-        if(prop.name === 'text' || prop.name === 'fontSize') {
-            this.ctx.font = this.calcFont()
-            this.metrics = this.ctx.measureText(this.text)
-        }
-    }
-
-    private calcFont() {
-        return `${this.fontSize}pt sans-serif`
-    }
-}
-
 
 export const PropChanged = 'PropChanged'
 export const FamilyPropChanged = 'FamilyPropChanged'
@@ -428,70 +259,94 @@ export type EventHandler = (evt:any) => void
 export const HistoryChanged = 'HistoryChanged'
 export type OMEventTypes = typeof HistoryChanged
 
-
-export class ObjectProxy<T> {
-    obj: any;
-    private listeners: Map<EventTypes, any[]>;
+export class ObjectProxy<T extends ObjectDef> {
+    private listeners: Map<EventTypes, any[]>
     parent: ObjectProxy<ObjectDef> | null
-    def: ObjectDef;
-    private uuid: string;
+    def: ObjectDef
+    private uuid: string
+    props:Record<keyof T['props'], any>
+    private proxies: Map<keyof T['props'], ObjectProxy<any>>
+    private om: ObjectManager
 
-    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
-        this.uuid = genId('proxy')
-        let cons = om.lookupConstructor(def.name)
-        this.obj = new cons(props)
+    constructor(om: ObjectManager, def: T, opts: Record<keyof T['props'],any>) {
+        this.om = om
+        this.uuid = genId('object')
         this.def = def
-        Object.entries(props).forEach(([a, b], i) => {
-            this.obj[a] = b
-        })
         this.listeners = new Map<EventTypes, any[]>()
         this.parent = null
+        this.props = {} as Record<keyof T['props'], any>
+        Object.keys(def.props).forEach(name => {
+            const prop = def.props[name]
+            let val = prop.defaultValue
+            if(prop.defaultValue instanceof Function) val = val()
+            if(opts[prop.name]) val = opts[prop.name]
+            // @ts-ignore
+            this.props[prop.name] = val
+        })
+        this.proxies = new Map()
     }
 
-    getPropValue<K extends keyof T>(key: K):T[K] {
-        return this.obj[key]
+    getPropValue<K extends keyof T['props']>(key: K):any {
+        if(this.proxies.has(key)) {
+            // @ts-ignore
+            return this.proxies.get(key).getPropValue('value')
+        }
+        return this.props[key]
     }
 
-    async setPropValue<K extends keyof T>(prop: K, value: T[K]) {
+    async setPropValue<K extends keyof T['props']>(prop: K, value: any) {
         // @ts-ignore
         const evt = new PropChangeEvent<T>(this, this.def.props[prop], value)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
 
-    getListProp<K extends keyof T>(prop: K):any[] {
+    getListProp<K extends keyof T['props']>(prop: K):any[] {
         // @ts-ignore
         if(this.def.props[prop].base !== 'list') throw new Error(`prop not a list: ${prop.name}`)
-        return this.obj[prop]
+        return this.props[prop]
     }
-    appendListProp<K extends keyof T>(prop: K, obj: any) {
+    appendListProp<K extends keyof T['props']>(prop: K, obj: any) {
         // @ts-ignore
         const evt:AppendListEvent<T> = new AppendListEvent<T>(this, this.def.props[prop], obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
-    async removeListPropByValue<K extends keyof T>(prop: K, obj: any) {
+    async removeListPropByValue<K extends keyof T['props']>(prop: K, obj: any) {
         // @ts-ignore
         const evt:DeleteListEvent<T> = new DeleteListEvent<T>(this, this.def.props[prop], obj)
         this._fire(PropChanged, evt)
         if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
-    getListPropAt<K extends keyof T>(prop: K, index: number) {
-        return this.obj[prop][index]
+    getListPropAt<K extends keyof T['props']>(prop: K, index: number) {
+        return this.props[prop][index]
+    }
+    async setListPropAt<K extends keyof T['props']>(prop: K, index: number, value:any) {
+        const evt:SetListItemEvent<T> = new SetListItemEvent<T>(this, this.def.props[prop], index, value)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
+    async insertListPropAt<K extends keyof T['props']>(prop: K, index: number, value: any) {
+        const evt:InsertListItemEvent<T> = new InsertListItemEvent<T>(this, this.def.props[prop], index, value)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
+    }
+    async removeListPropAt<K extends keyof T['props']>(prop: K, index: number) {
+        const evt:RemoveListItemEvent<T> = new RemoveListItemEvent<T>(this, this.def.props[prop], index)
+        this._fire(PropChanged, evt)
+        if (this.parent) this.parent._fire(FamilyPropChanged, evt)
     }
 
     private _get_listeners(type: EventTypes):EventHandler[] {
         if(!this.listeners.has(type)) this.listeners.set(type,[])
         return this.listeners.get(type) as EventHandler[]
     }
-
     addEventListener(type: EventTypes, handler: EventHandler) {
         this._get_listeners(type).push(handler)
     }
     removeEventListener(type: EventTypes, handler: EventHandler) {
         this.listeners.set(type, this._get_listeners(type).filter(h => h !== handler))
     }
-
     private _fire(type: EventTypes, value: any) {
         if (!this.listeners.get(type)) this.listeners.set(type, [])
         // @ts-ignore
@@ -505,105 +360,65 @@ export class ObjectProxy<T> {
     getPropSchemas() {
         return Object.values(this.def.props)
     }
-
+    getPropSchemaNamed(name:string) {
+        return this.def.props[name]
+    }
     hasPropNamed(uuid: string) {
         return this.def.props.hasOwnProperty(uuid)
     }
-
-    getPropNamed(name: string) {
-        return this.obj[this.def.props[name].name]
+    setPropProxySource(name:string, source:ObjectProxy<any>) {
+        this.proxies.set(name,source)
     }
-
+    getPropProxySource(name: string):ObjectProxy<any> {
+        return this.proxies.get(name)
+    }
+    removePropProxySource<K extends keyof T['props']>(key:K) {
+        if(this.proxies.has(key)) {
+            // @ts-ignore
+            const value =  this.proxies.get(key).getPropValue('value')
+            this.props[key] = value
+            this.proxies.delete(key)
+        }
+    }
+    isPropProxySource<K extends keyof T['props']>(key:K) {
+        return this.proxies.has(key)
+    }
     getUUID() {
         return this.uuid
     }
-}
+    refresh(prop:PropSchema){}
 
-export type JSONObject = {
-    name: string
-    props: Record<string, any>
-}
-export type JSONDoc = {
-    version: number
-    root: JSONObject
-}
-
-function toJSON(obj: ObjectProxy<any>): JSONObject {
-    const json: JSONObject = {
-        name: obj.def.name,
-        props: {},
+    _setUUID(uuid: string) {
+        this.uuid = uuid
     }
-    obj.getPropSchemas().forEach(prop => {
-        // console.log("prop is",pop)
-        if (prop.base === 'string') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        if (prop.base === 'list') {
-            let arr: JSONObject[] = []
-            let list = obj.getPropValue(prop.name)
-            list.forEach((val: ObjectProxy<ObjectDef>) => {
-                arr.push(toJSON(val))
-            })
-            json.props[prop.name] = arr
-            return
-        }
-        if (prop.base === 'object') {
-            let val = obj.getPropValue(prop.name)
-            if (val instanceof Bounds) {
-                json.props[prop.name] = val.toJSON()
-                return
-            }
-            if (val instanceof Point) {
-                json.props[prop.name] = val.toJSON()
-                return
-            }
-            throw new Error(`unhandled toJSON object type ${prop.name}`)
-        }
-        if(prop.base === 'number') {
-            json.props[prop.name] = obj.getPropValue(prop.name)
-            return
-        }
-        throw new Error(`unhandled toJSON type ${prop.base}`)
-    })
-    return json
 }
 
-async function fromJSON<T>(om: ObjectManager, obj: JSONObject): Promise<ObjectProxy<T>> {
-    const def: ObjectDef = await om.lookupDef(obj.name) as ObjectDef
-    const props: Record<string, any> = {}
-    for (let key of Object.keys(def.props)) {
-        const propSchema = def.props[key]
-        if (propSchema.base === 'string') {
-            props[key] = obj.props[key]
-            continue
-        }
-        if (propSchema.base === 'number') {
-            props[key] = obj.props[key]
-            continue
-        }
-        if (propSchema.base === 'list') {
-            props[key] = []
-            const vals = obj.props[key] as JSONObject[]
-            for (let val of vals) {
-                let obj_val = await fromJSON(om, val)
-                props[key].push(obj_val)
-            }
-            continue
-        }
-        if (propSchema.base === 'object') {
-            if (key === 'bounds') {
-                props[key] = Bounds.fromJSON(obj.props[key])
-                continue
-            }
-            if (key === 'center') {
-                props[key] = Point.fromJSON(obj.props[key])
-                continue
-            }
-        }
-        throw new Error(`cant restore property ${key}`)
+
+export abstract class DrawableClass<T extends ObjectDef> extends ObjectProxy<T> implements DrawableShape {
+    abstract contains(pt: Point): boolean;
+    abstract drawSelected(ctx: ScaledSurface): void;
+    abstract drawSelf(ctx: ScaledSurface): void;
+    abstract getHandle(): Handle | null;
+    abstract intersects(bounds: Bounds): boolean;
+    abstract getPosition(): Point;
+    abstract setPosition(pos: Point): Promise<void>;
+    abstract getAlignmentBounds():Bounds;
+    abstract translateBy(offset: Point): Promise<void>
+}
+
+export class PageClass extends ObjectProxy<typeof PageDef> {
+    constructor(om:ObjectManager, opts: Record<keyof typeof PageDef.props, any>) {
+        super(om, PageDef, opts)
     }
-    return await om.make<T>(def, props as Partial<T>)
+    hasChildren(): boolean {
+        return this.props.children.length > 0
+    }
+}
+
+export class DocClass extends ObjectProxy<typeof DocDef>{
+    constructor(om:ObjectManager, opts: Record<keyof typeof DocDef.props, any>) {
+        super(om, DocDef, opts)
+    }
 }
 
 
@@ -622,9 +437,9 @@ class AppendListEvent<T> implements HistoryEvent {
     oldValue:any
     newValue:any
     obj: ObjectProxy<ObjectDef>
-    desc: string;
-    uuid: string;
-    compressable: boolean;
+    desc: string
+    uuid: string
+    compressable: boolean
     constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, obj: ObjectProxy<ObjectDef>) {
         this.uuid = genId('event:appendlist')
         this.target = target
@@ -632,10 +447,10 @@ class AppendListEvent<T> implements HistoryEvent {
         this.prop = prop
         this.obj = obj
 
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         const oldList = list.slice()
         list.push(this.obj)
-        this.obj.setParent(this.target)
+        if(this.obj.setParent) this.obj.setParent(this.target)
         const newList = list.slice()
         this.oldValue = oldList
         this.newValue = newList
@@ -645,15 +460,93 @@ class AppendListEvent<T> implements HistoryEvent {
 
 
     async redo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getListProp(this.prop.name)
         list.push(this.obj)
         this.obj.setParent(this.target)
     }
 
     async undo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getListProp(this.prop.name)
         list.splice(list.length-1,1)
         this.obj.setParent(null)
+    }
+}
+class SetListItemEvent<T> implements HistoryEvent {
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number, value:ObjectProxy<ObjectDef>) {
+        this.uuid = genId('event:setlistelement')
+        this.target = target
+        this.prop = prop
+        const list = this.target.getPropValue(this.prop.name)
+        const oldList = list.slice()
+        const newList = list.slice()
+        list[index] = value
+        this.desc = `set element`
+        this.compressable = false
+    }
+
+    redo(): Promise<void> {
+        return Promise.resolve(undefined)
+    }
+
+    undo(): Promise<void> {
+        return Promise.resolve(undefined)
+    }
+}
+class InsertListItemEvent<T> implements HistoryEvent {
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number, value:ObjectProxy<ObjectDef>) {
+        this.uuid = genId('event:setlistelement')
+        this.target = target
+        this.prop = prop
+        const list = this.target.getPropValue(this.prop.name)
+        console.log("inserting at", index)
+        const oldList = list.slice()
+        const newList = list.slice()
+        list.splice(index,0,value)
+        this.desc = `set element`
+        this.compressable = false
+    }
+    redo(): Promise<void> {
+        return Promise.resolve(undefined)
+    }
+    undo(): Promise<void> {
+        return Promise.resolve(undefined)
+    }
+}
+class RemoveListItemEvent<T> implements HistoryEvent {
+    uuid: string
+    private target: ObjectProxy<ObjectDef>
+    private prop: PropSchema
+    compressable: boolean
+    desc: string
+    constructor(target:ObjectProxy<ObjectDef>, prop: PropSchema, index:number) {
+        this.uuid = genId('event:dellistelement')
+        this.target = target
+        this.prop = prop
+        const list = this.target.getPropValue(this.prop.name)
+        console.log("deleting at", index)
+        const oldList = list.slice()
+        const newList = list.slice()
+        list.splice(index,1)
+        this.desc = `del element`
+        this.compressable = false
+    }
+
+    redo(): Promise<void> {
+        return Promise.resolve(undefined)
+    }
+
+    undo(): Promise<void> {
+        return Promise.resolve(undefined)
     }
 }
 class DeleteListEvent<T> implements HistoryEvent {
@@ -662,11 +555,11 @@ class DeleteListEvent<T> implements HistoryEvent {
     prop: PropSchema
     oldValue:any
     newValue:any
-    desc: string;
-    uuid: string;
+    desc: string
+    uuid: string
     index: number
     obj: ObjectProxy<any>
-    compressable: boolean;
+    compressable: boolean
     constructor(target:ObjectProxy<any>, prop:PropSchema, obj:ObjectProxy<any>) {
         this.uuid = genId('event:deletelist')
         this.target = target
@@ -674,7 +567,7 @@ class DeleteListEvent<T> implements HistoryEvent {
         this.prop = prop
         this.desc = `deleted element`
 
-        const list = target.obj[prop.name]
+        const list = target.getPropValue(prop.name)
         const oldList = list.slice()
         this.obj = obj
         this.index = list.indexOf(this.obj)
@@ -684,36 +577,35 @@ class DeleteListEvent<T> implements HistoryEvent {
         const newList = list.slice()
         this.oldValue = oldList
         this.newValue = newList
-        this.obj.setParent(null)
+        if(this.obj.setParent) this.obj.setParent(null)
         this.compressable = false
     }
 
     async redo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         list.splice(this.index,1)
         this.obj.setParent(null)
     }
 
     async undo(): Promise<void> {
-        const list = this.target.obj[this.prop.name]
+        const list = this.target.getPropValue(this.prop.name)
         list.splice(this.index,0,this.obj)
         this.obj.setParent(this.target)
     }
 }
-class CreateObjectEvent<T> implements HistoryEvent {
-    desc: string;
-    uuid: string;
-    target: ObjectProxy<T>;
-    private om: ObjectManager;
-    compressable: boolean;
+class CreateObjectEvent<T extends ObjectDef> implements HistoryEvent {
+    desc: string
+    uuid: string
+    target: ObjectProxy<T>
+    private om: ObjectManager
+    compressable: boolean
 
-    constructor(om: ObjectManager, def: ObjectDef, props: Partial<T>) {
+    constructor(om: ObjectManager, obj:ObjectProxy<any>) {
         this.om = om
-        let proxy:ObjectProxy<T> = new ObjectProxy<T>(om,def, props)
-        this.om.addObject(proxy)
+        this.om.addObject(obj)
         this.uuid = genId('event:createobject')
         this.desc = 'not implemented'
-        this.target = proxy
+        this.target = obj
         this.desc = `created object from def ${this.target.def.name}`
         this.compressable = false
     }
@@ -725,10 +617,9 @@ class CreateObjectEvent<T> implements HistoryEvent {
         await this.om.removeObject(this.target)
     }
 }
-
 class DeleteObjectEvent<T> implements HistoryEvent {
-    desc: string;
-    uuid: string;
+    desc: string
+    uuid: string
     compressable: boolean
     constructor() {
         this.uuid = genId('event:deleteobject')
@@ -745,34 +636,35 @@ class DeleteObjectEvent<T> implements HistoryEvent {
     }
 
 }
-class PropChangeEvent<T> implements HistoryEvent {
+class PropChangeEvent<T extends ObjectDef> implements HistoryEvent {
     target: ObjectProxy<T>
     def: ObjectDef
     prop: PropSchema
     oldValue:any
     newValue:any
-    desc: string;
-    uuid: string;
-    compressable: boolean;
+    desc: string
+    uuid: string
+    compressable: boolean
     constructor(target:ObjectProxy<T>, prop:PropSchema, value:any) {
         this.uuid = genId('event:propchange')
         this.target = target
         this.def = target.def
         this.prop = prop
-        this.oldValue = target.obj[prop.name]
+        this.oldValue = target.getPropValue(prop.name)
         this.newValue = value
-        this.desc = `${prop.name} ${target.obj[prop.name]} => ${value}`
-        this.target.obj[prop.name] = value
-        if(target.obj.refresh) target.obj.refresh(prop)
+        this.desc = `${prop.name} ${this.oldValue} => ${value}`
+        // @ts-ignore
+        this.target.props[prop.name] = value
+        if(target.refresh) target.refresh(prop)
         this.compressable = true
     }
 
     async redo(): Promise<void> {
-        await this.target.setPropValue(this.prop.name as keyof T, this.newValue)
+        await this.target.setPropValue(this.prop.name as keyof T['props'], this.newValue)
     }
 
     async undo(): Promise<void> {
-        await this.target.setPropValue(this.prop.name as keyof T, this.oldValue)
+        await this.target.setPropValue(this.prop.name as keyof T['props'], this.oldValue)
     }
 
     compressWithSelf(recent: PropChangeEvent<T>) {
@@ -784,12 +676,12 @@ export class ObjectManager {
     private defs: Map<string, ObjectDef>
     private classes: Map<string, any>
     private _proxies: Map<string, ObjectProxy<ObjectDef>>
-    private global_prop_change_handler: (e:any) => void;
+    private global_prop_change_handler: (e:any) => void
     private changes: HistoryEvent[]
-    private _undoing: boolean;
-    private current_change_index: number;
+    private _undoing: boolean
+    private current_change_index: number
     private listeners:Map<OMEventTypes,[]>
-    private compressing: boolean;
+    private compressing: boolean
 
     constructor() {
         this.listeners = new Map()
@@ -825,34 +717,24 @@ export class ObjectManager {
         // @ts-ignore
         this.listeners.get(type).forEach(cb => cb(value))
     }
-    make<T>(def: ObjectDef, props: Partial<T>):ObjectProxy<T> {
-        const evt = new CreateObjectEvent<T>(this,def,props)
+    make(def: ObjectDef, props: any, uuid?:string) {
+        const cons = this.lookupConstructor(def.name)
+        const obj:ObjectProxy<any> = new cons(def,props)
+        const evt = new CreateObjectEvent(this,obj)
         this.changes.push(evt)
         this.current_change_index++
         evt.target.addEventListener(PropChanged, this.global_prop_change_handler)
+        if(uuid) obj._setUUID(uuid)
         return evt.target
     }
 
-    async lookupDef(name: string) {
+    lookupDef(name: string) {
         if (!this.defs.has(name)) throw new Error(`cannot restore without def for ${name}`)
         return this.defs.get(name)
     }
     lookupConstructor(name: string) {
         if (!this.classes.has(name)) throw new Error(`cannot restore without class for ${name}`)
         return this.classes.get(name)
-    }
-
-    async toJSON(root: ObjectProxy<any>) {
-        const doc: JSONDoc = {
-            version: 1,
-            root: toJSON(root),
-        }
-        return Promise.resolve(doc)
-    }
-
-    async fromJSON<T>(json_obj: JSONDoc): Promise<ObjectProxy<T>> {
-        const root: ObjectProxy<T> = await fromJSON<T>(this, json_obj.root)
-        return root
     }
 
     registerDef(def: ObjectDef, clazz:any) {
@@ -872,7 +754,7 @@ export class ObjectManager {
 
     async performUndo() {
         if(!this.canUndo()) return
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         this._undoing = true
         await recent.undo()
         this._undoing = false
@@ -883,7 +765,7 @@ export class ObjectManager {
     async performRedo() {
         if(!this.canRedo()) return
         this.current_change_index++
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         this._undoing = true
         await recent.redo()
         this._undoing = false
@@ -892,7 +774,7 @@ export class ObjectManager {
 
     dumpHistory() {
         console.log("len",this.changes.length, "current",this.current_change_index)
-        let changes = this.changes.map((ch,i) => {
+        const changes = this.changes.map((ch,i) => {
             const active = (i === this.current_change_index)
             return `${active?'*':' '} ${ch.uuid}: ${ch.desc} ${ch.compressable?'!':'_'}`
         }).join("\n")
@@ -909,6 +791,9 @@ ${changes}`)
     hasObject(uuid: string) {
         return this._proxies.has(uuid)
     }
+    getObject(uuid:string) {
+        return this._proxies.get(uuid)
+    }
 
     async removeObject(target: ObjectProxy<any>) {
         this._proxies.delete(target.getUUID())
@@ -923,7 +808,7 @@ ${changes}`)
         if(!compressing) {
             while(this.compressHistory()) { }
             // console.log("compressing")
-            let last = this.changes[this.current_change_index]
+            const last = this.changes[this.current_change_index]
             if(last instanceof PropChangeEvent) {
                 last.compressable = false
             }
@@ -932,10 +817,10 @@ ${changes}`)
     }
 
     private compressHistory() {
-        let recent = this.changes[this.current_change_index]
+        const recent = this.changes[this.current_change_index]
         if(recent instanceof PropChangeEvent) {
             if(this.current_change_index-1 > 0) {
-                let prev = this.changes[this.current_change_index - 1]
+                const prev = this.changes[this.current_change_index - 1]
                 if(prev instanceof PropChangeEvent && (prev as PropChangeEvent<any>).compressable) {
                     if(prev.prop.name === recent.prop.name) {
                         prev.compressWithSelf(recent)
@@ -949,3 +834,5 @@ ${changes}`)
         return false
     }
 }
+
+export type OO = ObjectProxy<ObjectDef>

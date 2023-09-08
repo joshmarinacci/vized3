@@ -1,0 +1,16 @@
+ul.assets-list {
+    border: 0px solid red;
+    list-style: none;
+    padding: 0;
+    margin:0;
+}
+ul.assets-list li {
+    display: flex;
+    flex-direction: row;
+    border: 1px solid black;
+    background-color: #c9c8c8;
+    border-radius: 0.5rem;
+}
+ul.assets-list li label {
+    padding-right: 1rem;
+}

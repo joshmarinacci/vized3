@@ -1,0 +1,13 @@
+.page-view {
+    position: relative;
+    overflow: scroll;
+}
+.floating-palette {
+    border: 5px solid black;
+    position: absolute;
+    background-color: black;
+    color: white;
+}
+.floating-palette header {
+    background-color: #666666;
+}

@@ -1,12 +1,16 @@
-import {Bounds, genId, Point, toRadians} from "josh_js_util"
 export type OEvent = string
 type ObservableListener = (type: OEvent) => void
 
-export class Observable {
+export interface Observable {
+    addEventListener(type: OEvent, cb: ObservableListener):void
+    removeEventListener(type: OEvent, cb: ObservableListener):void
+}
+
+export class ObservableBase implements Observable {
     private listeners: Map<OEvent, Array<ObservableListener>>
 
     constructor() {
-        this.listeners = new Map<OEvent, Array<ObservableListener>>();
+        this.listeners = new Map<OEvent, Array<ObservableListener>>()
     }
 
     protected _get_listeners(type: OEvent): ObservableListener[] {

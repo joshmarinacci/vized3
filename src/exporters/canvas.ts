@@ -1,41 +1,47 @@
-import {canvas_to_blob, forceDownloadBlob} from "josh_web_util";
-import {traverse} from "./common";
-import {toRadians} from "josh_js_util";
-import {GlobalState} from "../models/state";
-import {CircleClass, DocClass, ObjectDef, ObjectProxy, PageClass, RectClass} from "../models/om";
+import {Bounds, Point} from "josh_js_util"
+import {forceDownloadBlob} from "josh_web_util"
+
+import {CircleClass} from "../models/circle"
+import {OO} from "../models/om"
+import {RectClass} from "../models/rect"
+import {GlobalState} from "../models/state"
+import {traverse} from "./common"
 
 export async function exportCanvasJS(state: GlobalState) {
     const before:string[] = []
     const after:string[] = []
 
-    traverse(state.getCurrentDocument(), (item: ObjectProxy<ObjectDef>) => {
+    traverse(state.getCurrentDocument(), (item: OO) => {
         if (item.def.name === 'document') {
-            const doc = item.obj as DocClass
+            // const doc = item.obj as DocClass
             before.push(`const canvas = document.createElement('canvas')`)
             before.push(`const ctx = canvas.getContext('2d')`)
         }
         if (item.def.name === 'page') {
-            const page = item.obj as PageClass
+            // const page = item.obj as PageClass
             before.push(`ctx.fillStyle = 'white'`)
             before.push(`ctx.fillRect(0, 0, canvas.width, canvas.height)`)
         }
         if (item.def.name === 'rect') {
-            const sq = item.obj as RectClass
-            before.push(`ctx.fillStyle = '${sq.fill}'`)
-            before.push(`ctx.fillRect(${sq.bounds.x}, ${sq.bounds.y}, ${sq.bounds.w}, ${sq.bounds.h})`)
+            const sq = item as RectClass
+            const bounds = sq.getPropValue('bounds') as Bounds
+            before.push(`ctx.fillStyle = '${sq.getPropValue('fill')}'`)
+            before.push(`ctx.fillRect(${bounds.x}, ${bounds.y}, ${bounds.w}, ${bounds.h})`)
         }
         if (item.def.name === 'circle') {
-            const c = item.obj as CircleClass
+            const c = item as CircleClass
+            const center = c.getPropValue('center') as Point
+            const radius = c.getPropValue('radius') as number
             before.push(`
-            ctx.fillStyle = '${c.fill}'
+            ctx.fillStyle = '${c.getPropValue('fill')}'
             ctx.beginPath()
-            ctx.arc(${c.center.x},${c.center.y},${c.radius},0,360.0*Math.PI/180)
+            ctx.arc(${center.x},${center.y},${radius},0,360.0*Math.PI/180)
             ctx.fill()`)
         }
     })
-    let output = before.join("\n")+after.join("\n")
+    const output = before.join("\n")+after.join("\n")
     console.log("generated",output)
 
-    let blog = new Blob([output])
+    const blog = new Blob([output])
     forceDownloadBlob('demo.js', blog)
 }

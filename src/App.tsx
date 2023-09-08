@@ -1,88 +1,121 @@
-import React, {MouseEvent, useContext, useState} from 'react';
+import './App.css'
+
 import {
     DialogContainer,
     DialogContext,
     DialogContextImpl,
-    FillPage,
     HBox,
-    PopupContainer,
-    PopupContext,
-    PopupContextImpl,
     Spacer,
 } from "josh_react_util"
-import './App.css';
-import {TreeView} from "./TreeView";
-import {PageView,} from "./PageView";
-import {PropSheet} from "./PropSheet";
-import {
-    IconButton,
-    MainLayout,
-    MenuActionButton,
-    MenuBox,
-    ToggleIconButton,
-    useObjectManagerChange,
-    useObservableChange
-} from "./common";
-import {GlobalState} from "./models/state";
-import {HistoryChanged} from "./models/om";
+import React, {useRef, useState} from 'react'
+
 import {
     AddNewCircleAction,
-    AddNewRectAction,
+    AddNewNGonAction,
+    AddNewPathShapeAction,
+    AddNewRectAction, AddNewSimpletextAction,
+    DeleteSelection,
+    DownloadPDFAction,
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
-    SavePNGJSONAction
-} from "./actions";
-import {LoadFileDialog} from "./LoadFileDialog";
-import {SettingsDialog} from "./SettingsDialog";
-import {Point} from "josh_js_util";
-import {SupportedIcons} from "./icons";
-import {ActionSearchBox} from "./actionsearch";
+    RedoAction,
+    SaveLocalStorageAction,
+    SavePNGJSONAction,
+    UndoAction
+} from "./actions/actions"
+import {ActionSearchBox} from "./actions/actionsearch"
+import {
+    AddNewSimpleimageAction,
+    LoadLocalStorageAction,
+    NewDocumentAction,
+    OpenSettingsAction,
+    UploadAction
+} from "./actions/reactactions"
+import {
+    DropdownMenuButton,
+    MainLayout,
+    MenuActionButton,
+    ToggleIconButton,
+    useObjectManagerChange,
+    useObservableChange
+} from "./common"
+import {PageView,} from "./editing/PageView"
+import {SupportedIcons} from "./icons"
+import {HistoryChanged} from "./models/om"
+import {GlobalState} from "./models/state"
+import {PopupContainer, PopupContext, PopupContextImpl} from "./propsheet/popup"
+import {PropSheet} from "./propsheet/PropSheet"
+import {TreeView} from "./treeview/TreeView"
 
 const state = new GlobalState()
+
+async function handle_shortcuts(e: React.KeyboardEvent, state: GlobalState) {
+    if (e.key === 'Backspace') return await DeleteSelection.perform(state)
+    if (e.key === 'z' && e.metaKey) {
+        if(e.shiftKey) {
+            return await RedoAction.perform(state)
+        } else {
+            return await UndoAction.perform(state)
+        }
+    }
+}
 
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
     useObjectManagerChange(state.om, HistoryChanged)
     useObservableChange(state,'selection')
-    const dm = useContext(DialogContext)
-    const showLoadDialog = () => dm.show(<LoadFileDialog state={state}/>)
-    const pm = useContext(PopupContext)
-    const showFileMenu = (e:MouseEvent<HTMLButtonElement>) => {
-        const menu = <MenuBox>
-            <MenuActionButton state={state} action={SavePNGJSONAction}/>
-            <MenuActionButton state={state} action={DownloadPNGAction}/>
-            <MenuActionButton state={state} action={DownloadSVGAction}/>
-            <MenuActionButton state={state} action={ExportCanvasJSAction}/>
-        </MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0,0))
+
+    const keyref = useRef(null)
+    let pageView = <div>No page selected</div>
+    const page = state.getSelectedPage()
+    if(page !== null) {
+        pageView =  <PageView doc={state.getCurrentDocument()} page={page} state={state}/>
     }
-    const showAddMenu = (e:MouseEvent<HTMLButtonElement>) => {
-        const menu = <MenuBox>
-            <MenuActionButton action={AddNewRectAction} state={state} />
-            <MenuActionButton action={AddNewCircleAction} state={state}/>
-        </MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0,0))
-    }
-    return (<FillPage>
+
+    return (<div
+        ref={keyref}
+        className={'fill-page'}
+                 tabIndex={0}
+                 onKeyDown={async (e) => {
+                     if (e.target === keyref.current) {
+                         await handle_shortcuts(e, state)
+                     }
+                 }}
+        >
         <HBox className={'toolbar'}>
-            <button onClick={showFileMenu}>File</button>
-            <button onClick={showAddMenu}>Add</button>
-            <IconButton icon={SupportedIcons.NewDocument} onClick={()=>{  console.log("pretending to make new document");  }}>new</IconButton>
-            <IconButton icon={SupportedIcons.UploadDocument} onClick={async () => showLoadDialog()}>load</IconButton>
-            <IconButton icon={SupportedIcons.Undo} disabled={!state.om.canUndo()} onClick={() => state.om.performUndo()}>Undo</IconButton>
-            <IconButton icon={SupportedIcons.Redo} disabled={!state.om.canRedo()} onClick={() => state.om.performRedo()}>Redo</IconButton>
+            <DropdownMenuButton title={'File'} state={state} items={[
+                NewDocumentAction,
+                LoadLocalStorageAction,
+                SaveLocalStorageAction,
+                UploadAction,
+                SavePNGJSONAction,
+                DownloadPNGAction,
+                DownloadSVGAction,
+                DownloadPDFAction,
+                ExportCanvasJSAction
+            ]}/>
+            <DropdownMenuButton title={'Add'} state={state} items={[
+                AddNewRectAction,
+                AddNewCircleAction,
+                AddNewPathShapeAction,
+                AddNewNGonAction,
+                AddNewSimpletextAction,
+                AddNewSimpleimageAction,
+            ]}/>
+            <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
+            <MenuActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>
-            <IconButton icon={SupportedIcons.Settings} onClick={()=>dm.show(<SettingsDialog state={state}/>)}>settings</IconButton>
+            <MenuActionButton action={OpenSettingsAction} state={state}/>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}
             leftVisible={leftVisible}
             left={<TreeView state={state}/>}
-            center={<PageView page={state.getCurrentPage()} state={state}/>}
+            center={pageView}
             right={<PropSheet state={state}/>}
         />
         <HBox>
@@ -93,8 +126,6 @@ function Main() {
                 selected={!leftVisible}
             />
             <Spacer/>
-            {/*<IconButton name={SupportedIcons.RightPanelCloseIcon}*/}
-            {/*            onClick={() => setRightVisible(!rightVisible)}/>*/}
             <ToggleIconButton
                 regularIcon={SupportedIcons.RightPanelCloseIcon}
                 selectedIcon={SupportedIcons.RightPanelOpenIcon}
@@ -102,7 +133,7 @@ function Main() {
                 selected={!rightVisible}
             />
         </HBox>
-    </FillPage>)
+    </div>)
 }
 
 function App() {
@@ -116,4 +147,4 @@ function App() {
         </DialogContext.Provider>
     )
 }
-export default App;
+export default App
