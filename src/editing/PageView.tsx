@@ -178,15 +178,23 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     }
     const size = new Size(1200,800)
     const dom_size = size.scale(1/window.devicePixelRatio)
-    const zoomIn = () => setZoomLevel(zoomLevel - 1)
-    const zoomOut = () => setZoomLevel(zoomLevel + 1)
+    const zoomIn = () => setZoomLevel(zoomLevel + 1)
+    const zoomOut = () => setZoomLevel(zoomLevel - 1)
+
+    useObservableChange(state,'zoom-in',async (e) => {
+        setZoomLevel(zoomLevel+1)
+    })
+    useObservableChange(state,'zoom-out',async (e) => {
+        setZoomLevel(zoomLevel-1)
+    })
+
     return <div className={'panel page-view'}>
-        <HBox>
+        <HBox className={'toolbar'}>
             <label>{pageSize.w} {docUnit} x {pageSize.h} {docUnit}</label>
             <button onClick={startNewPath}>draw path</button>
-            <button onClick={zoomIn}>-</button>
+            <button onClick={zoomOut}>-</button>
             <label>{zoomLevel}</label>
-            <button onClick={zoomOut}>+</button>
+            <button onClick={zoomIn}>+</button>
         </HBox>
         <FloatingPalette visible={pal_vis}>{handler_commands}</FloatingPalette>
         <canvas

@@ -18,8 +18,12 @@ import {
     OpenSearchMenu,
     RedoAction,
     SaveLocalStorageAction,
-    SavePNGJSONAction, SimpleMenuAction,
-    UndoAction
+    SavePNGJSONAction,
+    SelectAllInPage,
+    SimpleMenuAction,
+    UndoAction,
+    ZoomInAction,
+    ZoomOutAction
 } from "./actions/actions"
 import {ActionSearchBox} from "./actions/actionsearch"
 import {
@@ -33,8 +37,8 @@ import {
     ActionRegistryContext,
     DropdownMenuButton,
     MainLayout,
-    MenuActionButton,
     ToggleIconButton,
+    ToolbarActionButton,
     useObjectManagerChange,
     useObservableChange
 } from "./common"
@@ -54,8 +58,27 @@ AR.register([
     RedoAction,
     UndoAction,
     OpenSearchMenu,
+    SelectAllInPage,
+    OpenSettingsAction,
+    ZoomInAction,
+    ZoomOutAction,
+
     NewDocumentAction,
     LoadLocalStorageAction,
+    SaveLocalStorageAction,
+    UploadAction,
+    SavePNGJSONAction,
+    DownloadPNGAction,
+    DownloadSVGAction,
+    DownloadPDFAction,
+    ExportCanvasJSAction,
+
+    AddNewRectAction,
+    AddNewCircleAction,
+    AddNewPathShapeAction,
+    AddNewNGonAction,
+    AddNewSimpletextAction,
+    AddNewSimpleimageAction,
 ])
 
 function Main() {
@@ -112,12 +135,12 @@ function Main() {
                 AddNewSimpletextAction,
                 AddNewSimpleimageAction,
             ]}/>
-            <MenuActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
-            <MenuActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
+            <ToolbarActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
+            <ToolbarActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>
-            <MenuActionButton action={OpenSettingsAction} state={state}/>
+            <ToolbarActionButton action={OpenSettingsAction} state={state}/>
         </HBox>
         <MainLayout
             rightVisible={rightVisible}

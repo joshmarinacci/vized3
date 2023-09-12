@@ -63,7 +63,12 @@ function OpenSettingsButton(props: { state: GlobalState }): JSX.Element {
 export const OpenSettingsAction: ReactMenuAction = {
     type: "react",
     title: 'Open Settings',
-    makeComponent: (state: GlobalState) => <OpenSettingsButton state={state}/>
+    makeComponent: (state: GlobalState) => <OpenSettingsButton state={state}/>,
+    shortcut: {
+        key:',',
+        meta:true,
+        shift:false,
+    }
 }
 
 function NewDocumentButton(props:{state:GlobalState}):JSX.Element {

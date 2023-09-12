@@ -11,7 +11,7 @@ import {SupportedIcons} from "../icons"
 import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "../models/assets"
 import {CircleDef} from "../models/circle"
 import {NGonDef} from "../models/ngon"
-import {DrawableClass, ObjectDef, ObjectProxy, PageDef} from "../models/om"
+import {DrawableClass, ObjectDef, ObjectProxy, OO, PageDef} from "../models/om"
 import {PathShapeDef} from "../models/pathshape"
 import {RectDef} from "../models/rect"
 import {SimpleTextDef} from "../models/simpletext"
@@ -444,7 +444,7 @@ export const OpenSearchMenu:SimpleMenuAction = {
     description:'opens the action search',
     perform: async (state) => {
         console.log("opening the search")
-        await state.fireCommandEvent('open-search',{})
+        await state.sendCommand('open-search',{})
     },
     shortcut: {
         key: '/',
@@ -452,38 +452,54 @@ export const OpenSearchMenu:SimpleMenuAction = {
         shift:false
     }
 }
-export const ALL_ACTIONS: MenuAction[] = [
-    SavePNGJSONAction,
-    DownloadPNGAction,
-    DownloadSVGAction,
-    DownloadPDFAction,
-    ExportCanvasJSAction,
 
-    AddNewPageAction,
-    AddNewRectAction,
-    AddNewCircleAction,
-    AddNewNGonAction,
-    AddNewPathShapeAction,
-    AddNewSimpletextAction,
 
-    AddNewNumberAssetAction,
-    AddNewColorAssetAction,
-    AddNewGradientAssetAction,
-    AddNewImageAssetAction,
+export const SelectAllInPage:SimpleMenuAction = {
+    type:'simple',
+    title:'Select All',
+    shortcut: {
+        key:'a',
+        shift:false,
+        meta:true,
+    },
+    tags:['selection'],
+    description:'selects all objects in the current page',
+    perform: async (state) => {
+        const page = state.getSelectedPage()
+        if(!page) return
+        const children = page.getListProp('children') as OO[]
+        state.setSelectedObjects(children)
+    }
 
-    DeleteSelection,
-    RightAlignShapes,
-    LeftAlignShapes,
-    TopAlignShapes,
-    BottomAlignShapes,
-    VCenterAlignShapes,
-    HCenterAlignShapes,
-    RaiseShapeAction,
-    LowerShapeAction,
+}
 
-    SaveLocalStorageAction,
 
-    UndoAction,
-    RedoAction,
-]
+export const ZoomInAction:SimpleMenuAction = {
+    type:'simple',
+    title:'zoom in',
+    shortcut: {
+        key:'=',
+        meta:true,
+        shift:false,
+    },
+    tags:['zoom','view'],
+    description:'zooms in the current drawing view',
+    perform: async (state) => {
+        await state.sendCommand('zoom-in',{})
+    }
+}
 
+export const ZoomOutAction:SimpleMenuAction = {
+    type:'simple',
+    title:'zoom out',
+    shortcut: {
+        key:'-',
+        meta:true,
+        shift:false,
+    },
+    tags:['zoom','view'],
+    description:'zooms out the current drawing view',
+    perform: async (state) => {
+        await state.sendCommand('zoom-out',{})
+    }
+}

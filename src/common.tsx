@@ -161,6 +161,20 @@ export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, st
     }
     return <button className={'menu-button'} onClick={perform} disabled={disabled}> {icon} {shortcut} {action.title}</button>
 }
+export function ToolbarActionButton(props:{action:MenuAction, state:GlobalState, disabled?:boolean}):JSX.Element {
+    const {action, state, disabled=false} = props
+    if(action.type === 'react') {
+        return (action as ReactMenuAction).makeComponent(state) as JSX.Element
+    }
+    let icon = <></>
+    if(action.icon) {
+        icon = <span  className="material-icons material-symbols-rounded">{action.icon}</span>
+    }
+    const perform = async () => {
+        if(action.type === 'simple') await (action as SimpleMenuAction).perform(state)
+    }
+    return <button className={'menu-button'} onClick={perform} disabled={disabled}> {icon} {action.title}</button>
+}
 
 export function DropdownMenuButton(props: {
     title?:string,

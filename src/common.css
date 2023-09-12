@@ -42,6 +42,7 @@ button.primary:disabled {
     flex-direction: row;
     border: 0.5px solid black;
     background-color: var(--slate-500);
+    align-items: center;
 }
 .toolbar > * {
     margin: 0;
