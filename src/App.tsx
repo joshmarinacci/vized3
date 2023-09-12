@@ -15,7 +15,9 @@ import {
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
+    LowerShapeAction,
     OpenSearchMenu,
+    RaiseShapeAction,
     RedoAction,
     SaveLocalStorageAction,
     SavePNGJSONAction,
@@ -79,6 +81,9 @@ AR.register([
     AddNewNGonAction,
     AddNewSimpletextAction,
     AddNewSimpleimageAction,
+
+    RaiseShapeAction,
+    LowerShapeAction,
 ])
 
 function Main() {

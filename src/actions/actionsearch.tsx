@@ -19,7 +19,7 @@ function actionMatches(action: MenuAction, query: string) {
     return false
 }
 
-function ShortcutView(props: {shortcut?: Shortcut}) {
+export function ShortcutView(props: {shortcut?: Shortcut}) {
     if(!props.shortcut) return <p></p>
     return <p>
         {props.shortcut.shift?'shift +':''}

@@ -68,7 +68,8 @@ button.primary:disabled {
     display: flex;
     flex-direction: column;
     max-height:  80vh;
-    overflow: scroll;
+    overflow: auto;
+    align-items: stretch;
 }
 .menu-box button, .menu-button {
     padding: 0.5rem 1.0rem;
@@ -76,7 +77,7 @@ button.primary:disabled {
     flex-direction: row;
     margin:0;
     align-items: center;
-    justify-content: start;
+    justify-content: space-between;
 }
 .menu-box button:hover, .menu-button:hover {
     background-color: var(--button-default-background-hover);

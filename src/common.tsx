@@ -14,6 +14,7 @@ import React, {
 } from "react"
 
 import {ActionRegistry, MenuAction, SimpleMenuAction} from "./actions/actions"
+import {ShortcutView} from "./actions/actionsearch"
 import {SupportedIcons} from "./icons"
 import {Observable, ObservableListener, OEvent} from "./models/model"
 import {
@@ -157,7 +158,7 @@ export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, st
     }
     let shortcut = <></>
     if(action.shortcut) {
-        shortcut = <b>SHORTCUT</b>
+        shortcut = <ShortcutView shortcut={action.shortcut}/>
     }
     return <button className={'menu-button'} onClick={perform} disabled={disabled}> {icon} {shortcut} {action.title}</button>
 }

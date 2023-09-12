@@ -375,6 +375,12 @@ export const VCenterAlignShapes: SimpleMenuAction = {
 export const RaiseShapeAction:SimpleMenuAction = {
     type:'simple',
     title:'Raise',
+    tags:['selection','shape'],
+    shortcut: {
+        key:']',
+        meta:true,
+        shift:false
+    },
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
         const shape = state.getSelectedObjects()[0]
@@ -391,6 +397,12 @@ export const RaiseShapeAction:SimpleMenuAction = {
 export const LowerShapeAction:SimpleMenuAction = {
     type:'simple',
     title:'Lower',
+    tags:['selection','shape'],
+    shortcut: {
+        key:'[',
+        meta:true,
+        shift:false
+    },
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
         const shape = state.getSelectedObjects()[0]
