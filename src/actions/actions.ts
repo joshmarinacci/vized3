@@ -23,13 +23,17 @@ export type Shortcut = {
     shift:boolean,
 }
 export type MenuAction = {
+    type:string,
     title:string
+    shortcut?:Shortcut,
     description?:string
     icon?:SupportedIcons,
     tags?:string[],
-    perform: (state:GlobalState) => Promise<void>,
-    shortcut?:Shortcut,
 }
+export type SimpleMenuAction = {
+    type:'simple',
+    perform: (state:GlobalState) => Promise<void>,
+} & MenuAction
 
 export class ActionRegistry {
     private actions: MenuAction[]
@@ -62,19 +66,25 @@ export class ActionRegistry {
             }
         })
     }
+
+    all():MenuAction[] {
+        return this.actions.slice()
+    }
 }
 
-export const SavePNGJSONAction:MenuAction = {
+export const SavePNGJSONAction:SimpleMenuAction = {
+    type:'simple',
     icon:SupportedIcons.SaveDocument,
     title:'Save As doc.JSON.PNG',
     description:'Save the document as a PNG with the document embedded inside of the PNG as JSON.',
     tags:['save','export','download','png'],
     perform:async (state) => {
         await savePNGJSON(state)
-    }
+    },
 }
 
-export const SaveLocalStorageAction:MenuAction = {
+export const SaveLocalStorageAction:SimpleMenuAction = {
+    type:'simple',
     icon:SupportedIcons.SaveDocument,
     title:'Save',
     description:'save the document in the browsers internal storage',
@@ -83,16 +93,18 @@ export const SaveLocalStorageAction:MenuAction = {
         await saveLocalStorage(state, true)
     }
 }
-export const DownloadPNGAction:MenuAction = {
+export const DownloadPNGAction:SimpleMenuAction = {
+    type:'simple',
     icon:SupportedIcons.Download,
     title:'export as PNG',
     tags:['save','export','download','png'],
     description:"Export the document as a PNG file",
-    perform: async (state) => {
+    perform: async (state:GlobalState) => {
         await exportPNG(state)
     }
 }
-export const DownloadSVGAction:MenuAction = {
+export const DownloadSVGAction:SimpleMenuAction = {
+    type:'simple',
     title:'export as SVG',
     tags:['save','export','download','svg'],
     icon:SupportedIcons.Download,
@@ -101,7 +113,8 @@ export const DownloadSVGAction:MenuAction = {
         await exportSVG(state)
     }
 }
-export const DownloadPDFAction:MenuAction = {
+export const DownloadPDFAction:SimpleMenuAction = {
+    type:'simple',
     title:'export as PDF',
     tags:['save','export','download','pdf'],
     icon:SupportedIcons.Download,
@@ -111,7 +124,8 @@ export const DownloadPDFAction:MenuAction = {
     }
 }
 
-export const ExportCanvasJSAction:MenuAction = {
+export const ExportCanvasJSAction:SimpleMenuAction = {
+    type:'simple',
     title:'Canvas JS',
     description:'export to javascript code using HTML Canvas',
     tags:['save','export','download','code'],
@@ -121,7 +135,8 @@ export const ExportCanvasJSAction:MenuAction = {
     }
 }
 
-export const AddNewPageAction:MenuAction = {
+export const AddNewPageAction:SimpleMenuAction = {
+    type:'simple',
     title:'add new page',
     icon:SupportedIcons.Add,
     tags:['add','page'],
@@ -131,7 +146,8 @@ export const AddNewPageAction:MenuAction = {
         state.getCurrentDocument().appendListProp('pages',page)
     }
 }
-export const AddNewRectAction:MenuAction = {
+export const AddNewRectAction:SimpleMenuAction = {
+    type:'simple',
     title: 'new rect',
     icon: SupportedIcons.Add,
     tags:['add','shape','rect','rectangle'],
@@ -144,7 +160,8 @@ export const AddNewRectAction:MenuAction = {
         page.appendListProp('children', rect)
     }
 }
-export const AddNewCircleAction:MenuAction = {
+export const AddNewCircleAction:SimpleMenuAction = {
+    type:'simple',
     title: 'new circle',
     icon: SupportedIcons.Add,
     tags:['add','shape','circle'],
@@ -158,7 +175,8 @@ export const AddNewCircleAction:MenuAction = {
         page.appendListProp('children', circle)
     }
 }
-export const AddNewPathShapeAction:MenuAction = {
+export const AddNewPathShapeAction:SimpleMenuAction = {
+    type:'simple',
     title: 'new path shape',
     icon: SupportedIcons.Add,
     tags:['add','shape','curve','path'],
@@ -169,7 +187,8 @@ export const AddNewPathShapeAction:MenuAction = {
         page.appendListProp('children', shape)
     }
 }
-export const AddNewNGonAction:MenuAction = {
+export const AddNewNGonAction:SimpleMenuAction = {
+    type:'simple',
     title: 'new N-gon',
     icon: SupportedIcons.Add,
     tags:['add','shape','polygon','ngon','n-gon'],
@@ -183,7 +202,8 @@ export const AddNewNGonAction:MenuAction = {
     }
 }
 
-export const AddNewSimpletextAction:MenuAction = {
+export const AddNewSimpletextAction:SimpleMenuAction = {
+    type:'simple',
     title: 'new simple text',
     icon: SupportedIcons.Add,
     tags:['add','shape','text'],
@@ -197,7 +217,8 @@ export const AddNewSimpletextAction:MenuAction = {
     }
 }
 
-export const AddNewNumberAssetAction:MenuAction = {
+export const AddNewNumberAssetAction:SimpleMenuAction = {
+    type:'simple',
     title:'add number asset',
     icon: SupportedIcons.Number,
     perform: async (state)=> {
@@ -205,7 +226,8 @@ export const AddNewNumberAssetAction:MenuAction = {
         state.getCurrentDocument().appendListProp('assets',asset)
     }
 }
-export const AddNewColorAssetAction:MenuAction = {
+export const AddNewColorAssetAction:SimpleMenuAction = {
+    type:'simple',
     title:'add color asset',
     icon:SupportedIcons.Color,
     perform: async (state)=> {
@@ -214,7 +236,8 @@ export const AddNewColorAssetAction:MenuAction = {
     }
 
 }
-export const AddNewGradientAssetAction:MenuAction = {
+export const AddNewGradientAssetAction:SimpleMenuAction = {
+    type:'simple',
     title:'add gradient asset',
     icon:SupportedIcons.Gradient,
     perform: async (state)=> {
@@ -222,7 +245,8 @@ export const AddNewGradientAssetAction:MenuAction = {
         state.getCurrentDocument().appendListProp('assets',asset)
     }
 }
-export const AddNewImageAssetAction:MenuAction = {
+export const AddNewImageAssetAction:SimpleMenuAction = {
+    type:'simple',
     title:'add image asset',
     icon:SupportedIcons.Image,
     perform: async (state)=> {
@@ -231,7 +255,8 @@ export const AddNewImageAssetAction:MenuAction = {
     }
 }
 
-export const DeleteSelection:MenuAction = {
+export const DeleteSelection:SimpleMenuAction = {
+    type:'simple',
     title: 'delete',
     icon:SupportedIcons.Delete,
     tags:['delete','shape'],
@@ -267,7 +292,8 @@ async function moveObjBy(obj: ObjectProxy<ObjectDef>, diff: Point) {
     throw new Error("object has no bounds to move ")
 }
 
-export const BottomAlignShapes: MenuAction = {
+export const BottomAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'align bottom',
     tags:['align','shape'],
     perform: async (state) => {
@@ -279,7 +305,8 @@ export const BottomAlignShapes: MenuAction = {
         }
     }
 }
-export const LeftAlignShapes: MenuAction = {
+export const LeftAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'align left',
     tags:['align','shape'],
     perform: async (state) => {
@@ -291,7 +318,8 @@ export const LeftAlignShapes: MenuAction = {
         }
     }
 }
-export const RightAlignShapes: MenuAction = {
+export const RightAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'align right',
     tags:['align','shape'],
     perform: async (state) => {
@@ -304,7 +332,8 @@ export const RightAlignShapes: MenuAction = {
         }
     }
 }
-export const TopAlignShapes: MenuAction = {
+export const TopAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'Align Top',
     tags:['align','shape'],
     perform: async (state) => {
@@ -316,7 +345,8 @@ export const TopAlignShapes: MenuAction = {
         }
     }
 }
-export const HCenterAlignShapes: MenuAction = {
+export const HCenterAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'align hcenter',
     tags:['align','shape'],
     perform: async (state) => {
@@ -328,7 +358,8 @@ export const HCenterAlignShapes: MenuAction = {
         }
     }
 }
-export const VCenterAlignShapes: MenuAction = {
+export const VCenterAlignShapes: SimpleMenuAction = {
+    type:'simple',
     title: 'align vcenter',
     tags:['align','shape'],
     perform: async (state) => {
@@ -341,7 +372,8 @@ export const VCenterAlignShapes: MenuAction = {
     }
 }
 
-export const RaiseShapeAction:MenuAction = {
+export const RaiseShapeAction:SimpleMenuAction = {
+    type:'simple',
     title:'Raise',
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
@@ -356,7 +388,8 @@ export const RaiseShapeAction:MenuAction = {
         await page.insertListPropAt('children',index+1,shape)
     }
 }
-export const LowerShapeAction:MenuAction = {
+export const LowerShapeAction:SimpleMenuAction = {
+    type:'simple',
     title:'Lower',
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
@@ -372,7 +405,8 @@ export const LowerShapeAction:MenuAction = {
     }
 }
 
-export const UndoAction:MenuAction = {
+export const UndoAction:SimpleMenuAction = {
+    type:'simple',
     title:'UnDo',
     tags:['undo','action','history','redo'],
     description:'un-does the previous action',
@@ -386,7 +420,8 @@ export const UndoAction:MenuAction = {
         shift:false,
     }
 }
-export const RedoAction:MenuAction = {
+export const RedoAction:SimpleMenuAction = {
+    type:'simple',
     title:'ReDo',
     tags:['redo','action','history','undo'],
     description:'un-does the previous action',
@@ -402,7 +437,8 @@ export const RedoAction:MenuAction = {
 }
 
 
-export const OpenSearchMenu:MenuAction = {
+export const OpenSearchMenu:SimpleMenuAction = {
+    type:'simple',
     title: 'Action Search',
     tags:['action'],
     description:'opens the action search',

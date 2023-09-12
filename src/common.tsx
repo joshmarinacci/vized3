@@ -13,7 +13,7 @@ import React, {
     useState
 } from "react"
 
-import {MenuAction} from "./actions/actions"
+import {ActionRegistry, MenuAction, SimpleMenuAction} from "./actions/actions"
 import {SupportedIcons} from "./icons"
 import {Observable, ObservableListener, OEvent} from "./models/model"
 import {
@@ -27,6 +27,8 @@ import {
 import {GlobalState} from "./models/state"
 import {PopupContext} from "./propsheet/popup"
 
+const AR = new ActionRegistry()
+export const ActionRegistryContext =  React.createContext(AR)
 export function MainLayout(props: {
     leftVisible: boolean,
     rightVisible: boolean,
@@ -135,14 +137,15 @@ export function MenuBox(props: { children: ReactNode }) {
 }
 
 export type ReactMenuAction = {
+    type:'react',
     title:string
     icon?:SupportedIcons,
     makeComponent: (state:GlobalState) => JSX.Element
-}
+} & MenuAction
 
 export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, state: GlobalState, disabled?:boolean }):JSX.Element {
     const {action, state, disabled=false} = props
-    if('makeComponent' in action) {
+    if(action.type === 'react') {
         return (action as ReactMenuAction).makeComponent(state) as JSX.Element
     }
     let icon = <></>
@@ -150,15 +153,19 @@ export function MenuActionButton(props: { action: MenuAction|ReactMenuAction, st
         icon = <span  className="material-icons material-symbols-rounded">{action.icon}</span>
     }
     const perform = async () => {
-        await (action as MenuAction).perform(state)
+        if(action.type === 'simple') await (action as SimpleMenuAction).perform(state)
     }
-    return <button className={'menu-button'} onClick={perform} disabled={disabled}>{icon}{action.title}</button>
+    let shortcut = <></>
+    if(action.shortcut) {
+        shortcut = <b>SHORTCUT</b>
+    }
+    return <button className={'menu-button'} onClick={perform} disabled={disabled}> {icon} {shortcut} {action.title}</button>
 }
 
 export function DropdownMenuButton(props: {
     title?:string,
     icon?:SupportedIcons,
-    items: (MenuAction|ReactMenuAction)[],
+    items: (MenuAction)[],
     state: GlobalState
 }) {
     const {title, icon, items, state} = props
@@ -167,7 +174,7 @@ export function DropdownMenuButton(props: {
         const menu = <MenuBox>{items.map((m, i) => {
             return <MenuActionButton key={i} action={m} state={state}/>
         })}</MenuBox>
-        pm.show_at(menu, e.target, "left", new Point(0, 0))
+        pm.show_at(menu, e.target as HTMLElement, "left", new Point(0, 0))
     }
     return <IconButton icon={icon} onClick={showMenu}>{title}</IconButton>
 }

@@ -1,11 +1,11 @@
 import {Point} from "josh_js_util"
 import React, {useContext, useRef, useState} from "react"
 
-import {IconButton, MenuBox, useObservableChange} from "../common"
+import {ActionRegistryContext, IconButton, MenuBox, useObservableChange} from "../common"
 import {SupportedIcons} from "../icons"
 import {GlobalState} from "../models/state"
 import {PopupContext} from "../propsheet/popup"
-import {ALL_ACTIONS, MenuAction, Shortcut} from "./actions"
+import {MenuAction, Shortcut, SimpleMenuAction} from "./actions"
 
 function actionMatches(action: MenuAction, query: string) {
     query = query.toLowerCase()
@@ -33,7 +33,11 @@ function MenuActionDescription(props: { action: MenuAction, state: GlobalState }
         <b>{action.title}</b>
         <p>{action.description}</p>
         <ShortcutView shortcut={action.shortcut}/>
-        <button onClick={async () => await action.perform(state)}>perform</button>
+        <button onClick={async () => {
+            if(action.type === 'simple') {
+                await (action as SimpleMenuAction).perform(state)
+            }
+        }}>perform</button>
     </div>
 }
 
@@ -48,10 +52,11 @@ export function ActionSearchBox(props: { state: GlobalState }) {
     const pm = useContext(PopupContext)
     const ref = useRef<HTMLDivElement>(null)
     const input = useRef<HTMLInputElement>(null)
+    const ar = useContext(ActionRegistryContext)
     const showSearch = async (text:string) => {
         setQuery(text)
         if (query.length >= 1) {
-            const acts = ALL_ACTIONS.filter((a) => actionMatches(a, query))
+            const acts = ar.all().filter((a) => actionMatches(a, query))
             acts.sort((a, b) => compare_strings(a.title, b.title))
             const menu = <MenuBox>{acts.map((a, i) => <MenuActionDescription
                 key={'action' + i} action={a} state={props.state}/>)}</MenuBox>

@@ -18,7 +18,7 @@ import {
     OpenSearchMenu,
     RedoAction,
     SaveLocalStorageAction,
-    SavePNGJSONAction,
+    SavePNGJSONAction, SimpleMenuAction,
     UndoAction
 } from "./actions/actions"
 import {ActionSearchBox} from "./actions/actionsearch"
@@ -30,6 +30,7 @@ import {
     UploadAction
 } from "./actions/reactactions"
 import {
+    ActionRegistryContext,
     DropdownMenuButton,
     MainLayout,
     MenuActionButton,
@@ -53,6 +54,8 @@ AR.register([
     RedoAction,
     UndoAction,
     OpenSearchMenu,
+    NewDocumentAction,
+    LoadLocalStorageAction,
 ])
 
 function Main() {
@@ -73,9 +76,19 @@ function Main() {
         className={'fill-page'}
                  tabIndex={0}
                  onKeyDown={async (e) => {
+                     console.log(e.key, e.code, e.metaKey)
                      if (e.target === keyref.current) {
                          const action = AR.match(e)
-                         if(action) await action.perform(state)
+                         if(action) {
+                             console.log("matched the action",action)
+                             e.preventDefault()
+                             e.stopPropagation()
+                             if (action.type == 'simple') {
+                                 await (action as SimpleMenuAction).perform(state)
+                             } else {
+                                 console.log("other type of keyboard action ")
+                             }
+                         }
                      }
                  }}
         >
@@ -135,9 +148,11 @@ function App() {
     return (
         <DialogContext.Provider value={new DialogContextImpl()}>
             <PopupContext.Provider value={new PopupContextImpl()}>
-                <Main/>
-                <PopupContainer/>
-                <DialogContainer/>
+                <ActionRegistryContext.Provider value={AR}>
+                    <Main/>
+                    <PopupContainer/>
+                    <DialogContainer/>
+                </ActionRegistryContext.Provider>
             </PopupContext.Provider>
         </DialogContext.Provider>
     )

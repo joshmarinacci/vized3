@@ -30,6 +30,7 @@ function UploadButton(props: { state: GlobalState }) {
 }
 
 export const UploadAction: ReactMenuAction = {
+    type: "react",
     title: "Import Doc",
     makeComponent: (state: GlobalState) => {
         return <UploadButton state={state}/>
@@ -39,12 +40,18 @@ export const UploadAction: ReactMenuAction = {
 function LoadDocButton(props: { state: GlobalState }): JSX.Element {
     const dm = useContext(DialogContext)
     const showOpenDialog = () => dm.show(<ListFilesDialog state={props.state}/>)
-    return <IconButton icon={SupportedIcons.OpenDocument} onClick={showOpenDialog}>Open</IconButton>
+    return <IconButton icon={SupportedIcons.OpenDocument} onClick={showOpenDialog}><b>Meta + O</b> Open</IconButton>
 }
 
 export const LoadLocalStorageAction: ReactMenuAction = {
+    type: "react",
     title: "Open Doc",
-    makeComponent: (state: GlobalState) => <LoadDocButton state={state}/>
+    makeComponent: (state: GlobalState) => <LoadDocButton state={state}/>,
+    shortcut: {
+        key:'o',
+        meta:true,
+        shift:false
+    }
 }
 
 function OpenSettingsButton(props: { state: GlobalState }): JSX.Element {
@@ -54,6 +61,7 @@ function OpenSettingsButton(props: { state: GlobalState }): JSX.Element {
 }
 
 export const OpenSettingsAction: ReactMenuAction = {
+    type: "react",
     title: 'Open Settings',
     makeComponent: (state: GlobalState) => <OpenSettingsButton state={state}/>
 }
@@ -61,15 +69,20 @@ export const OpenSettingsAction: ReactMenuAction = {
 function NewDocumentButton(props:{state:GlobalState}):JSX.Element {
     const dm = useContext(DialogContext)
     const showNewDialog = () => dm.show(<NewDocumentDialog state={props.state}/>)
-    return <IconButton icon={SupportedIcons.NewDocument} onClick={showNewDialog}>New Document</IconButton>
+    return <IconButton icon={SupportedIcons.NewDocument} onClick={showNewDialog}><b>Meta + N</b> New Document</IconButton>
 }
 export const NewDocumentAction: ReactMenuAction = {
+    type: "react",
     title: 'New Document',
     icon: SupportedIcons.NewDocument,
-    // tags: ['new', 'document'],
-    // description: 'create a new empty document',
+    tags: ['new', 'document'],
+    description: 'create a new empty document',
     makeComponent: (state) => <NewDocumentButton state={state}/>,
-
+    shortcut: {
+        key:'n',
+        meta:true,
+        shift:false
+    }
 }
 
 function ImportImageButton(props: { state: GlobalState }) {
@@ -92,6 +105,7 @@ function ImportImageButton(props: { state: GlobalState }) {
 }
 
 export const AddNewSimpleimageAction: ReactMenuAction = {
+    type: "react",
     title: 'new simple image',
     icon: SupportedIcons.Image,
     // tags: ['add', 'shape', 'image'],
