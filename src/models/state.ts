@@ -129,4 +129,8 @@ export class GlobalState extends ObservableBase {
     fireSelectionChange() {
         this.fire('selection',{})
     }
+
+    async fireCommandEvent(command: string, payload: object) {
+        await this.fire(command, payload)
+    }
 }

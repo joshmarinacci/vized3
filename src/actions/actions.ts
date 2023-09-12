@@ -1,4 +1,5 @@
 import {Bounds, Point} from "josh_js_util"
+import React from "react"
 
 import {exportCanvasJS} from "../exporters/canvas"
 import {savePNGJSON} from "../exporters/json"
@@ -16,12 +17,51 @@ import {RectDef} from "../models/rect"
 import {SimpleTextDef} from "../models/simpletext"
 import {GlobalState} from "../models/state"
 
+export type Shortcut = {
+    key:string,
+    meta:boolean,
+    shift:boolean,
+}
 export type MenuAction = {
     title:string
     description?:string
     icon?:SupportedIcons,
     tags?:string[],
-    perform: (state:GlobalState) => Promise<void>
+    perform: (state:GlobalState) => Promise<void>,
+    shortcut?:Shortcut,
+}
+
+export class ActionRegistry {
+    private actions: MenuAction[]
+    private by_key: Map<string, MenuAction[]>
+
+    constructor() {
+        this.actions = []
+        this.by_key = new Map()
+    }
+
+    match(e: React.KeyboardEvent): MenuAction | null {
+        if (this.by_key.has(e.key)) {
+            let actions = this.by_key.get(e.key)
+            if (!actions) return null
+            actions = actions.filter(a => a.shortcut?.meta === e.metaKey)
+            actions = actions.filter(a => a.shortcut?.shift === e.shiftKey)
+            if (actions.length > 0) return actions[0]
+        }
+        return null
+    }
+
+    register(actions: MenuAction[]) {
+        actions.forEach(a => {
+            this.actions.push(a)
+            if (a.shortcut) {
+                let acts = this.by_key.get(a.shortcut.key)
+                if (!acts) acts = []
+                acts.push(a)
+                this.by_key.set(a.shortcut.key, acts)
+            }
+        })
+    }
 }
 
 export const SavePNGJSONAction:MenuAction = {
@@ -204,6 +244,11 @@ export const DeleteSelection:MenuAction = {
             }
         }
         state.clearSelectedObjects()
+    },
+    shortcut: {
+        key: 'Backspace',
+        meta: false,
+        shift: false,
     }
 }
 
@@ -334,6 +379,11 @@ export const UndoAction:MenuAction = {
     icon: SupportedIcons.Undo,
     perform: async (state) => {
         await state.om.performUndo()
+    },
+    shortcut: {
+        key:'z',
+        meta:true,
+        shift:false,
     }
 }
 export const RedoAction:MenuAction = {
@@ -343,9 +393,29 @@ export const RedoAction:MenuAction = {
     icon: SupportedIcons.Redo,
     perform: async (state) => {
         await state.om.performRedo()
+    },
+    shortcut: {
+        key:'z',
+        meta:true,
+        shift:true,
     }
 }
 
+
+export const OpenSearchMenu:MenuAction = {
+    title: 'Action Search',
+    tags:['action'],
+    description:'opens the action search',
+    perform: async (state) => {
+        console.log("opening the search")
+        await state.fireCommandEvent('open-search',{})
+    },
+    shortcut: {
+        key: '/',
+        meta:true,
+        shift:false
+    }
+}
 export const ALL_ACTIONS: MenuAction[] = [
     SavePNGJSONAction,
     DownloadPNGAction,
@@ -380,3 +450,4 @@ export const ALL_ACTIONS: MenuAction[] = [
     UndoAction,
     RedoAction,
 ]
+

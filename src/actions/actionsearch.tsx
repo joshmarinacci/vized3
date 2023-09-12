@@ -1,11 +1,11 @@
 import {Point} from "josh_js_util"
 import React, {useContext, useRef, useState} from "react"
 
-import {IconButton, MenuBox} from "../common"
+import {IconButton, MenuBox, useObservableChange} from "../common"
 import {SupportedIcons} from "../icons"
 import {GlobalState} from "../models/state"
 import {PopupContext} from "../propsheet/popup"
-import {ALL_ACTIONS, MenuAction} from "./actions"
+import {ALL_ACTIONS, MenuAction, Shortcut} from "./actions"
 
 function actionMatches(action: MenuAction, query: string) {
     query = query.toLowerCase()
@@ -19,15 +19,21 @@ function actionMatches(action: MenuAction, query: string) {
     return false
 }
 
+function ShortcutView(props: {shortcut?: Shortcut}) {
+    if(!props.shortcut) return <p></p>
+    return <p>
+        {props.shortcut.shift?'shift +':''}
+        {props.shortcut.meta?'meta +':''}
+        {props.shortcut.key}
+    </p>
+}
 function MenuActionDescription(props: { action: MenuAction, state: GlobalState }) {
     const {action, state} = props
     return <div className={'menu-action-description'}>
         <b>{action.title}</b>
         <p>{action.description}</p>
-        <button onClick={async () => {
-            console.log("doing",action)
-            await action.perform(state)
-        }}>perform</button>
+        <ShortcutView shortcut={action.shortcut}/>
+        <button onClick={async () => await action.perform(state)}>perform</button>
     </div>
 }
 
@@ -40,21 +46,28 @@ export const compare_strings = (a: string, b: string) => {
 export function ActionSearchBox(props: { state: GlobalState }) {
     const [query, setQuery] = useState("")
     const pm = useContext(PopupContext)
-    const ref = useRef(null)
+    const ref = useRef<HTMLDivElement>(null)
+    const input = useRef<HTMLInputElement>(null)
+    const showSearch = async (text:string) => {
+        setQuery(text)
+        if (query.length >= 1) {
+            const acts = ALL_ACTIONS.filter((a) => actionMatches(a, query))
+            acts.sort((a, b) => compare_strings(a.title, b.title))
+            const menu = <MenuBox>{acts.map((a, i) => <MenuActionDescription
+                key={'action' + i} action={a} state={props.state}/>)}</MenuBox>
+            if(ref.current) pm.show_at(menu, ref.current, 'left', new Point(0, 0))
+        }
+    }
+    useObservableChange(props.state,'open-search', async (e) => {
+        if (input.current) input.current.focus()
+        await showSearch("")
+    })
     return <div className={'action-search-box'} ref={ref}>
         <input type={'text'}
+               ref={input}
                value={query}
                // onBlur={() => pm.hide()}
-               onChange={(e => {
-                   setQuery(e.target.value)
-                   if (query.length >= 1) {
-                       const acts = ALL_ACTIONS.filter((a) => actionMatches(a, query))
-                       acts.sort((a, b) => compare_strings(a.title, b.title))
-                       const menu = <MenuBox>{acts.map((a, i) => <MenuActionDescription
-                           key={'action' + i} action={a} state={props.state}/>)}</MenuBox>
-                       pm.show_at(menu, ref.current, 'left', new Point(0, 0))
-                   }
-               })}
+               onChange={(async e => await showSearch(e.target.value))}
                placeholder={'search actions'}
         />
         <IconButton icon={SupportedIcons.Search}>&nbsp;</IconButton>

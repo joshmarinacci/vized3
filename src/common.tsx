@@ -15,7 +15,7 @@ import React, {
 
 import {MenuAction} from "./actions/actions"
 import {SupportedIcons} from "./icons"
-import {Observable} from "./models/model"
+import {Observable, ObservableListener, OEvent} from "./models/model"
 import {
     EventTypes,
     ObjectDef,
@@ -87,11 +87,12 @@ export function Icon(props:{ icon:SupportedIcons }) {
     return <span className={'material-symbols-rounded'}>{props.icon}</span>
 }
 
-export function useObservableChange(ob: Observable | undefined, eventType: string) {
+export function useObservableChange(ob: Observable | undefined, eventType: string, cb?:ObservableListener) {
     const [count, setCount] = useState(0)
     return useEffect(() => {
-        const hand = () => {
+        const hand = async (e:OEvent) => {
             setCount(count + 1)
+            if(cb) await cb(e)
         }
         if (ob) ob.addEventListener(eventType, hand)
         return () => {

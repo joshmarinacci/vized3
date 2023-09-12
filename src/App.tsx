@@ -1,24 +1,21 @@
 import './App.css'
 
-import {
-    DialogContainer,
-    DialogContext,
-    DialogContextImpl,
-    HBox,
-    Spacer,
-} from "josh_react_util"
+import {DialogContainer, DialogContext, DialogContextImpl, HBox, Spacer,} from "josh_react_util"
 import React, {useRef, useState} from 'react'
 
 import {
+    ActionRegistry,
     AddNewCircleAction,
     AddNewNGonAction,
     AddNewPathShapeAction,
-    AddNewRectAction, AddNewSimpletextAction,
+    AddNewRectAction,
+    AddNewSimpletextAction,
     DeleteSelection,
     DownloadPDFAction,
     DownloadPNGAction,
     DownloadSVGAction,
     ExportCanvasJSAction,
+    OpenSearchMenu,
     RedoAction,
     SaveLocalStorageAction,
     SavePNGJSONAction,
@@ -50,16 +47,13 @@ import {TreeView} from "./treeview/TreeView"
 
 const state = new GlobalState()
 
-async function handle_shortcuts(e: React.KeyboardEvent, state: GlobalState) {
-    if (e.key === 'Backspace') return await DeleteSelection.perform(state)
-    if (e.key === 'z' && e.metaKey) {
-        if(e.shiftKey) {
-            return await RedoAction.perform(state)
-        } else {
-            return await UndoAction.perform(state)
-        }
-    }
-}
+const AR = new ActionRegistry()
+AR.register([
+    DeleteSelection,
+    RedoAction,
+    UndoAction,
+    OpenSearchMenu,
+])
 
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
@@ -80,7 +74,8 @@ function Main() {
                  tabIndex={0}
                  onKeyDown={async (e) => {
                      if (e.target === keyref.current) {
-                         await handle_shortcuts(e, state)
+                         const action = AR.match(e)
+                         if(action) await action.perform(state)
                      }
                  }}
         >

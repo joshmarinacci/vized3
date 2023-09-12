@@ -1,35 +1,46 @@
-export type OEvent = string
-type ObservableListener = (type: OEvent) => void
+export type OEventType = string
+export type OEventPayload = object
+export type OEvent = {
+    type:OEventType,
+    payload?:OEventPayload
+}
+export type ObservableListener = (type: OEvent) => Promise<void>
 
 export interface Observable {
-    addEventListener(type: OEvent, cb: ObservableListener):void
-    removeEventListener(type: OEvent, cb: ObservableListener):void
+    addEventListener(type: OEventType, cb: ObservableListener):void
+    removeEventListener(type: OEventType, cb: ObservableListener):void
 }
 
 export class ObservableBase implements Observable {
-    private listeners: Map<OEvent, Array<ObservableListener>>
+    private listeners: Map<OEventType, Array<ObservableListener>>
 
     constructor() {
-        this.listeners = new Map<OEvent, Array<ObservableListener>>()
+        this.listeners = new Map<OEventType, Array<ObservableListener>>()
     }
 
-    protected _get_listeners(type: OEvent): ObservableListener[] {
+    protected _get_listeners(type: OEventType): ObservableListener[] {
         if (!this.listeners.has(type)) this.listeners.set(type, new Array<ObservableListener>())
         return this.listeners.get(type) as ObservableListener[]
     }
 
-    public addEventListener(type: OEvent, cb: ObservableListener) {
+    public addEventListener(type: OEventType, cb: ObservableListener) {
         this._get_listeners(type).push(cb)
     }
 
-    public removeEventListener(type: OEvent, cb: ObservableListener) {
+    public removeEventListener(type: OEventType, cb: ObservableListener) {
         let list = this._get_listeners(type)
         list = list.filter(l => l !== cb)
         this.listeners.set(type, list)
     }
 
-    protected fire(type: OEvent, payload: any) {
-        this._get_listeners(type).forEach(cb => cb(payload))
+    protected async fire(type: OEventType, payload: OEventPayload) {
+        const evt: OEvent = {
+            type: type,
+            payload: payload
+        }
+        for (const cb of this._get_listeners(type)) {
+            await cb(evt)
+        }
     }
 }
 
