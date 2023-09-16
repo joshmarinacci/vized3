@@ -32,6 +32,11 @@ export class PageClass extends PropsBase<PageType> {
         this._children.push(obj)
         this._fireAll()
     }
+    getShapeChildren():BaseShape<any>[] {
+        return this._children
+            .filter(ch => ch instanceof BaseShape)
+            .map(ch => ch as BaseShape<any>)
+    }
 
     async removeChild<T>(obj: PropsBase<T>) {
         this._children = this._children.filter(ch => ch !==obj)

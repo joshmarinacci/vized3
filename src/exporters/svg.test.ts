@@ -37,7 +37,7 @@ describe('svg', () => {
         const doc = new DocClass()
         state.swapDoc(doc)
         const page = new PageClass()
-        doc.pages.push(page)
+        doc.getPropValue('pages').push(page)
         const ngon = new NGonClass({
             radius: 5,
             center: new Point(50,50),

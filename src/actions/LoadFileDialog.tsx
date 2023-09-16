@@ -3,7 +3,6 @@ import '../dialog.css'
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {ChangeEvent, useContext, useRef, useState} from "react"
 
-import {loadPNGJSON} from "../exporters/json"
 import {GlobalState} from "../models/state"
 
 function isValidJSONPNGFile(file: File) {

@@ -1,4 +1,5 @@
-import {DocClass} from "../models/om"
+import {PropsBase} from "../models/base"
+import {DocClass} from "../models/doc"
 
 export const DAWNBRINGER32 = [
     '#000000',
@@ -74,9 +75,9 @@ export const MINECRAFT = [
 
 export function traverse(doc: DocClass, cb: (item: any) => void) {
     cb(doc)
-    doc.getListProp('pages').forEach(page => {
+    doc.getPropValue('pages').forEach(page => {
         cb(page)
-        page.getListProp('children').forEach((shape:any) => {
+        page._children.forEach((shape) => {
             cb(shape)
         })
     })

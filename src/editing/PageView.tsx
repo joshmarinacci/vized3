@@ -21,16 +21,13 @@ import {
     VCenterAlignShapes
 } from "../actions/actions"
 import {AddNewSimpleimageAction} from "../actions/reactactions"
-import {MenuActionButton, MenuBox, useObjectProxyChange, useObservableChange} from "../common"
-import {
-    DocClass,
-    DrawableClass,
-    DrawableShape,
-    FamilyPropChanged,
-    PageClass,
-    PropChanged
-} from "../models/om"
-import {PathShapeClass, PathShapeDef} from "../models/pathshape"
+import {MenuActionButton, MenuBox, useObservableChange} from "../common"
+import {useWatchAllProps} from "../models/base"
+import {BaseShape} from "../models/defs"
+import {DocClass} from "../models/doc"
+import {DrawableShape} from "../models/drawing"
+import {PageClass} from "../models/page"
+import {PathShapeClass} from "../models/pathshape"
 import {GlobalState} from "../models/state"
 import {lookup_dpi, Unit} from "../models/unit"
 import {PopupContext} from "../propsheet/popup"
@@ -51,19 +48,17 @@ function drawCanvas(canvas: HTMLCanvasElement, page: PageClass, doc: DocClass, s
     ctx.fillStyle = 'white'
     ctx.fillRect(0,0,pageSize.w*can_scale,pageSize.h*can_scale)
     const surf = new ScaledDrawingSurface(ctx,zoomLevel,docUnit)
-    page.getListProp('children').forEach(shape => (shape as DrawableShape).drawSelf(surf))
-    const selected = state.getSelectedObjects()
+    page.getShapeChildren().forEach(shape => shape.drawSelf(surf))
+    const selected = state.getSelectedShapes()
     for(const sel of selected) {
         ctx.strokeStyle = 'rgba(255,100,255,0.5)'
         ctx.lineWidth = 10
-        if (sel instanceof DrawableClass) sel.drawSelected(surf)
+        sel.drawSelected(surf)
     }
     //draw the handles
     for(const sel of selected) {
-        if (sel instanceof DrawableClass) {
-            const h = sel.getHandle()
-            if(h) surf.overlayHandle(h)
-        }
+        const h = sel.getHandle()
+        if(h) surf.overlayHandle(h)
     }
     handler.drawOverlay(surf,state)
     ctx.restore()
@@ -91,16 +86,16 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
         if(canvasRef.current) drawCanvas(canvasRef.current, page, doc, state, handler, zoomLevel, docUnit)
     }
     useEffect(() => redraw())
-    useObjectProxyChange(props.page,FamilyPropChanged)
+    useWatchAllProps(props.page, () => redraw())
     useObservableChange(props.state,'selection')
-    useObjectProxyChange(props.doc,PropChanged)
+    useWatchAllProps(props.doc, () => redraw())
     useEffect(() => {
-        const hand = () => setHandler(new DragHandler())
+        const hand = async () => setHandler(new DragHandler())
         handler.addEventListener('done', hand)
         return () => handler.removeEventListener('done', hand)
     }, [handler])
     useEffect(() => {
-        const hand = () => redraw()
+        const hand = async () => redraw()
         handler.addEventListener('redraw', hand)
         return () => handler.removeEventListener('redraw', hand)
     }, [handler])
@@ -170,10 +165,10 @@ export function PageView(props:{doc:DocClass, page:PageClass, state:GlobalState}
     }
 
     const startNewPath = () => {
-        const shape = state.om.make(PathShapeDef,{points:[]}) as PathShapeClass
+        const shape = new PathShapeClass({points:[]})
         const page = state.getSelectedPage()
         if(!page) return
-        page.appendListProp('children',shape)
+        page.addChild(shape)
         setHandler(new PathShapeEditHandler(shape, EditState.New))
     }
     const size = new Size(1200,800)

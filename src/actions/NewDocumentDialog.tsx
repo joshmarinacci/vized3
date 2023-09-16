@@ -3,7 +3,8 @@ import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
 import {ItemRenderer, ItemToKey, SelectView} from "../common"
-import {DocClass, DocDef, PageDef} from "../models/om"
+import {DocClass} from "../models/doc"
+import {PageClass} from "../models/page"
 import {GlobalState} from "../models/state"
 import {Unit} from "../models/unit"
 
@@ -56,9 +57,9 @@ export function NewDocumentDialog(props: { state: GlobalState }) {
     const cancel = () => dm.hide()
     const create = () => {
         const size = new Size(width,height)
-        const doc = state.om.make(DocDef, {unit: unit}) as DocClass
-        const page = state.om.make(PageDef, {size})
-        doc.appendListProp('pages', page)
+        const doc = new DocClass({name:'new doc', unit:unit})
+        const page = new PageClass({size, name:'new page'})
+        doc.getPropValue('pages').push(page)
         state.swapDoc(doc)
         dm.hide()
     }

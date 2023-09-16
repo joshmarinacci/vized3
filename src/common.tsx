@@ -16,15 +16,8 @@ import React, {
 import {ActionRegistry, MenuAction, SimpleMenuAction} from "./actions/actions"
 import {ShortcutView} from "./actions/actionsearch"
 import {SupportedIcons} from "./icons"
+import {PropDef, PropsBase} from "./models/base"
 import {Observable, ObservableListener, OEvent} from "./models/model"
-import {
-    EventTypes,
-    ObjectDef,
-    ObjectManager,
-    ObjectProxy,
-    OMEventTypes,
-    PropSchema
-} from "./models/om"
 import {GlobalState} from "./models/state"
 import {PopupContext} from "./propsheet/popup"
 
@@ -105,34 +98,6 @@ export function useObservableChange(ob: Observable | undefined, eventType: strin
     }, [ob, count])
 }
 
-export function useObjectManagerChange(ob: ObjectManager, eventType: OMEventTypes) {
-    const [count, setCount] = useState(0)
-    return useEffect(() => {
-        const hand = () => {
-            setCount(count + 1)
-        }
-        if (ob) ob.addEventListener(eventType, hand)
-        return () => {
-            if (ob) ob.removeEventListener(eventType, hand)
-        }
-
-    }, [ob, count])
-}
-
-export function useObjectProxyChange(ob: ObjectProxy<ObjectDef> | null, eventType: EventTypes) {
-    const [count, setCount] = useState(0)
-    return useEffect(() => {
-        const hand = () => {
-            setCount(count + 1)
-        }
-        if (ob) ob.addEventListener(eventType, hand)
-        return () => {
-            if (ob) ob.removeEventListener(eventType, hand)
-        }
-
-    }, [ob, count])
-}
-
 export function MenuBox(props: { children: ReactNode }) {
     return <div className={'menu-box'}>{props.children}</div>
 }
@@ -194,9 +159,13 @@ export function DropdownMenuButton(props: {
     return <IconButton icon={icon} onClick={showMenu}>{title}</IconButton>
 }
 
-export function ValueThumbnail(props: { target: ObjectProxy<ObjectDef>, prop: PropSchema }) {
+export function ValueThumbnail<Type>(props: {
+    target: PropsBase<Type>,
+    prop: PropDef<Type[keyof Type]>
+    name: keyof Type,
+}) {
     const schema = props.prop
-    const value = props.target.getPropValue(props.prop.name)
+    const value = props.target.getPropValue(props.name)
     if (typeof value === 'undefined') {
         return <div>undefined</div>
     }

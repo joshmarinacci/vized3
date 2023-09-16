@@ -1,7 +1,7 @@
 import {Bounds, Point} from "josh_js_util"
 
 import {LinearColorGradient} from "../models/assets"
-import {Handle, ScaledSurface} from "../models/om"
+import {Handle, ScaledSurface} from "../models/drawing"
 import {lookup_dpi, point_to_pixels, Unit} from "../models/unit"
 
 export class ScaledDrawingSurface implements ScaledSurface {
@@ -94,7 +94,7 @@ export class ScaledDrawingSurface implements ScaledSurface {
         this.ctx.stroke()
     }
 
-    outlineArc(center: Point, radius: number, startAngle: number, endAngle: number, fill: string) {
+    outlineArc(center: Point, radius: number, startAngle: number, endAngle: number) {
         this.ctx.beginPath()
         this.ctx.arc(center.x * this.scale, center.y * this.scale, radius * this.scale, startAngle, endAngle)
         this.ctx.stroke()
