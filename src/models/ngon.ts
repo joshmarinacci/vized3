@@ -1,51 +1,46 @@
 import {Bounds, Point} from "josh_js_util"
 
-import {
-    CenterPositionDef,
-    DrawableClass,
-    FillDef,
-    Handle,
-    NameDef,
-    ObjectDef,
-    ObjectManager,
-    ScaledSurface,
-    StrokeFillDef,
-    StrokeWidthDef
-} from "./om"
+import {DefList, PropsBase, PropValues} from "./base"
+import {BaseShape, CenterPositionDef, FillDef, NameDef, StrokeFillDef, StrokeWidthDef} from "./defs"
+import {DrawableShape, Handle, ScaledSurface} from "./drawing"
 
-export const NGonDef:ObjectDef = {
-    name:'ngon',
-    props:{
-        name:NameDef,
-        center: CenterPositionDef,
-        radius: {
-            name:'radius',
-            base:'number',
-            readonly: false,
-            defaultValue: 1
-        },
-        sides: {
-            name:'sides',
-            base:'number',
-            readonly:false,
-            defaultValue: 5,
-        },
-        star: {
-            name:"star",
-            base:"boolean",
-            readonly:false,
-            defaultValue:false,
-        },
-        starRadius: {
-            name:'starRadius',
-            base: "number",
-            readonly: false,
-            defaultValue: 0.5
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef
-    }
+type NGonType = {
+    name:string,
+    center:Point,
+    radius:number,
+    sides:number,
+    star:boolean,
+    starRadius:number,
+    fill:string,
+    strokeFill:string,
+    strokeWidth:number,
+}
+const NGonDef:DefList<NGonType> = {
+    name: NameDef,
+    center: CenterPositionDef,
+    radius: {
+        base: 'number',
+        default:() => 1,
+        readonly: false
+    },
+    sides: {
+        base: 'number',
+        readonly:false,
+        default:() => 5,
+    },
+    star: {
+        base:'boolean',
+        readonly:false,
+        default: ()=>false,
+    },
+    starRadius: {
+        base:'number',
+        readonly:false,
+        default:()=>0.5,
+    },
+    fill:FillDef,
+    strokeFill: StrokeFillDef,
+    strokeWidth:StrokeWidthDef,
 }
 
 class NGonResizeHandle implements Handle {
@@ -77,13 +72,13 @@ class NGonResizeHandle implements Handle {
     }
 }
 
-export class NGonClass extends DrawableClass<typeof NGonDef> {
-    constructor(om: ObjectManager, opts: Record<keyof typeof NGonDef.props, any>) {
-        super(om, NGonDef, opts)
+export class NGonClass extends BaseShape<NGonType> implements DrawableShape {
+    constructor(opts?:PropValues<NGonType>) {
+        super(NGonDef,opts)
     }
 
     contains(pt: Point): boolean {
-        return pt.subtract(this.props.center).magnitude() < this.props.radius
+        return pt.subtract(this.getPropValue('center')).magnitude() < this.getPropValue('radius')
     }
 
     drawSelected(ctx: ScaledSurface): void {

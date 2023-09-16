@@ -1,7 +1,6 @@
 import {DialogContext, Spacer} from "josh_react_util"
 import React, {ChangeEvent, useContext, useRef, useState} from "react"
 
-import {ImageAssetDef} from "../models/assets"
 import {GlobalState} from "../models/state"
 
 function isValidImageFile(file: File) {
@@ -12,7 +11,7 @@ function isValidImageFile(file: File) {
 }
 
 export function ChooseImageDialog(props:{state:GlobalState, onComplete:(img:HTMLImageElement, fileName:string)=>Promise<void>}) {
-    const {state, onComplete} = props
+    const { onComplete} = props
     const dm = useContext(DialogContext)
     const fileRef = useRef<HTMLInputElement>(null)
     const imgRef = useRef<HTMLImageElement>(null)

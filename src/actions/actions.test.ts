@@ -2,9 +2,10 @@ import assert from "assert"
 import {Bounds, Point} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
-import {CircleDef} from "../models/circle"
-import {DocDef, PageDef} from "../models/om"
-import {RectDef} from "../models/rect"
+import {CircleClass} from "../models/circle"
+import {DocClass} from "../models/doc"
+import {PageClass} from "../models/page"
+import {RectClass} from "../models/rect"
 import {GlobalState} from "../models/state"
 import {
     BottomAlignShapes,
@@ -17,19 +18,19 @@ import {
 
 async function createThreeRectsDoc() {
     const state = new GlobalState()
-    const page = state.om.make(PageDef, {})
-    const rect1 = state.om.make(RectDef, {
+    const page = new PageClass()
+    const rect1 = new RectClass({
         bounds: new Bounds(100, 100, 10, 10 * 2), fill: 'red'
     })
-    page.appendListProp('children', rect1)
-    const rect2 = state.om.make(RectDef, {
+    page.addChild(rect1)
+    const rect2 = new RectClass({
         bounds: new Bounds(200, 200, 20, 20 * 2), fill: 'green'
     })
-    page.appendListProp('children', rect2)
-    const rect3 = state.om.make(RectDef, {
+    page.addChild(rect2)
+    const rect3 = new RectClass({
         bounds: new Bounds(300, 300, 30, 30 * 2), fill: 'blue'
     })
-    page.appendListProp('children', rect3)
+    page.addChild(rect3)
 
     return {
         state:state,
@@ -40,19 +41,19 @@ async function createThreeRectsDoc() {
 
 export async function createThreeCirclesDoc() {
     const state = new GlobalState()
-    const doc = state.om.make(DocDef, {})
+    const doc = new DocClass()
     state.swapDoc(doc)
-    const page = state.om.make(PageDef, {})
-    doc.appendListProp('pages', page)
-    const circ1 = state.om.make(CircleDef, {
+    const page = new PageClass()
+    doc.getPropValue('pages').push(page)
+    const circ1 = new CircleClass({
         center: new Point(100,100), radius: 10})
-    page.appendListProp('children', circ1)
-    const circ2 = state.om.make(CircleDef, {
+    page.addChild(circ1)
+    const circ2 = new CircleClass({
         center: new Point(200,200), radius: 20})
-    page.appendListProp('children', circ2)
-    const circ3 = state.om.make(CircleDef, {
+    page.addChild(circ2)
+    const circ3 = new CircleClass({
         center: new Point(300,300), radius: 30})
-    page.appendListProp('children',circ3)
+    page.addChild(circ3)
 
     return {
         state:state,

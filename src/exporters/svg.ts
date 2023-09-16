@@ -1,9 +1,11 @@
 import {Bounds, Point} from "josh_js_util"
 import {forceDownloadBlob} from "josh_web_util"
 
+import {PropsBase} from "../models/base"
 import {CircleClass} from "../models/circle"
+import {DocClass} from "../models/doc"
 import {NGonClass} from "../models/ngon"
-import {OO} from "../models/om"
+import {PageClass} from "../models/page"
 import {PathShapeClass} from "../models/pathshape"
 import {RectClass} from "../models/rect"
 import {SimpleImageClass} from "../models/simpleimage"
@@ -66,7 +68,7 @@ const RectToSVG:SVGSerializer<RectClass> = (item,state) => {
         y: bounds.y,
         width: bounds.w,
         height: bounds.h,
-        fill: item.props.fill,
+        fill: item.getPropValue('fill'),
     })
 }
 SERIALIZERS.set(RectClass,RectToSVG)
@@ -97,7 +99,7 @@ const PathToSVG:SVGSerializer<PathShapeClass> = (item, state) => {
     const unit = doc.getPropValue('unit')
     const dpi = lookup_dpi(unit)
     const center = item.getPosition()
-    const points = item.props.points
+    const points = item.getPropValue('points')
     const fill = item.getPropValue('fill')
     let path = ''
     for(let i=0; i<points.length; i++) {
@@ -119,14 +121,14 @@ export async function toSVG(state: GlobalState) {
     const before: string[] = []
     const after: string[] = []
 
-    traverse(state.getCurrentDocument(), (item: OO) => {
-        if (item.def.name === 'document') {
+    traverse(state.getCurrentDocument(), (item: PropsBase<any>) => {
+        if (item instanceof DocClass) {
             const template = `<?xml version="1.0" standalone="no"?>
     <svg width="640" height="480" version="1.1" xmlns="http://www.w3.org/2000/svg">`
             before.push(template)
             after.push('</svg>')
         }
-        if (item.def.name === 'page') {
+        if (item instanceof PageClass) {
         }
         const ser = SERIALIZERS.get(item.constructor)
         if(ser) before.push(ser(item,state))

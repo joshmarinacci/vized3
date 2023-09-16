@@ -1,30 +1,26 @@
 import {Bounds, Point} from "josh_js_util"
 
-import {
-    BoundsDef,
-    DrawableClass,
-    Handle,
-    NameDef,
-    ObjectDef,
-    ObjectManager,
-    ScaledSurface
-} from "./om"
+import {DefList, PropsBase, PropValues} from "./base"
+import {BaseShape, BoundsDef, NameDef} from "./defs"
+import {DrawableShape, Handle, ScaledSurface} from "./drawing"
 
-export const SimpleImageDef: ObjectDef = {
-    name: 'simple-image',
-    props: {
-        name: NameDef,
-        bounds: BoundsDef,
-        image: {
-            name:'image',
-            base:'string',
-            custom:'image-asset',
-            canProxy:true,
-            defaultValue:null,
-            readonly:false,
-            hidden:false,
-        },
-    }
+
+type SimpleImageType = {
+    name: string
+    bounds: Bounds,
+    image: string,
+}
+const SimpleImageDef: DefList<SimpleImageType> = {
+    name: NameDef,
+    bounds: BoundsDef,
+    image: {
+        base: 'string',
+        custom: 'image-asset',
+        canProxy: true,
+        default: ()=> "",
+        readonly: false,
+        hidden: false,
+    },
 }
 
 class ImageResizeHandle implements Handle {
@@ -56,17 +52,17 @@ class ImageResizeHandle implements Handle {
 }
 
 
-export class SimpleImageClass extends DrawableClass<typeof SimpleImageDef> {
-    constructor(om: ObjectManager, opts: Record<keyof typeof SimpleImageDef.props, any>) {
-        super(om, SimpleImageDef, opts)
+export class SimpleImageClass extends BaseShape<SimpleImageType> implements DrawableShape {
+    constructor(opts?: PropValues<SimpleImageType>){
+        super(SimpleImageDef, opts)
     }
 
     contains(pt: Point): boolean {
-        return this.props.bounds.contains(pt)
+        return this.getPropValue('bounds').contains(pt)
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.outlineRect(this.props.bounds)
+        ctx.outlineRect(this.getPropValue('bounds'))
     }
 
     drawSelf(ctx: ScaledSurface): void {

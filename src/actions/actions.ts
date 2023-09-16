@@ -8,13 +8,20 @@ import {exportPDF} from "../exporters/pdf"
 import {exportPNG} from "../exporters/png"
 import {exportSVG} from "../exporters/svg"
 import {SupportedIcons} from "../icons"
-import {ColorAssetDef, GradientAssetDef, ImageAssetDef, NumberAssetDef} from "../models/assets"
-import {CircleDef} from "../models/circle"
-import {NGonDef} from "../models/ngon"
-import {DrawableClass, ObjectDef, ObjectProxy, OO, PageDef} from "../models/om"
-import {PathShapeDef} from "../models/pathshape"
-import {RectDef} from "../models/rect"
-import {SimpleTextDef} from "../models/simpletext"
+import {
+    ColorAssetClass,
+    GradientAssetClass,
+    ImageAssetClass,
+    NumberAssetClass
+} from "../models/assets"
+import {CircleClass} from "../models/circle"
+import {BaseShape} from "../models/defs"
+import {DrawableShape} from "../models/drawing"
+import {NGonClass} from "../models/ngon"
+import {PageClass} from "../models/page"
+import {PathShapeClass} from "../models/pathshape"
+import {RectClass} from "../models/rect"
+import {SimpleTextClass} from "../models/simpletext"
 import {GlobalState} from "../models/state"
 
 export type Shortcut = {
@@ -142,8 +149,9 @@ export const AddNewPageAction:SimpleMenuAction = {
     tags:['add','page'],
     description:'adds a new page to the document',
     perform: async (state:GlobalState) => {
-        const page = state.om.make(PageDef,{})
-        state.getCurrentDocument().appendListProp('pages',page)
+        const page = new PageClass()
+        state.getCurrentDocument().getPropValue('pages').push(page)
+        state.getCurrentDocument()._fire('pages',state.getCurrentDocument().getPropValue('pages'))
     }
 }
 export const AddNewRectAction:SimpleMenuAction = {
@@ -154,10 +162,10 @@ export const AddNewRectAction:SimpleMenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const rect = state.om.make(RectDef, {
+        const rect = new RectClass({
             bounds: new Bounds(1, 3, 1, 1)
         })
-        page.appendListProp('children', rect)
+        page.addChild(rect)
     }
 }
 export const AddNewCircleAction:SimpleMenuAction = {
@@ -168,11 +176,11 @@ export const AddNewCircleAction:SimpleMenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const circle = state.om.make(CircleDef, {
+        const circle = new CircleClass({
             center: new Point(2, 2),
             radius: 1,
         })
-        page.appendListProp('children', circle)
+        page.addChild(circle)
     }
 }
 export const AddNewPathShapeAction:SimpleMenuAction = {
@@ -183,8 +191,8 @@ export const AddNewPathShapeAction:SimpleMenuAction = {
     perform: async (state:GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const shape = state.om.make(PathShapeDef, {})
-        page.appendListProp('children', shape)
+        const shape = new PathShapeClass({})
+        page.addChild(shape)
     }
 }
 export const AddNewNGonAction:SimpleMenuAction = {
@@ -195,13 +203,12 @@ export const AddNewNGonAction:SimpleMenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const shape = state.om.make(NGonDef, {
+        const shape = new NGonClass({
             center: new Point(1, 1),
         })
-        page.appendListProp('children', shape)
+        page.addChild(shape)
     }
 }
-
 export const AddNewSimpletextAction:SimpleMenuAction = {
     type:'simple',
     title: 'new simple text',
@@ -210,10 +217,10 @@ export const AddNewSimpletextAction:SimpleMenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const shape = state.om.make(SimpleTextDef, {
+        const shape = new SimpleTextClass({
             center:new Point(0,1)
         })
-        page.appendListProp('children', shape)
+        page.addChild(shape)
     }
 }
 
@@ -222,8 +229,9 @@ export const AddNewNumberAssetAction:SimpleMenuAction = {
     title:'add number asset',
     icon: SupportedIcons.Number,
     perform: async (state)=> {
-        const asset = state.om.make(NumberAssetDef,{})
-        state.getCurrentDocument().appendListProp('assets',asset)
+        const asset = new NumberAssetClass()
+        state.getCurrentDocument().getPropValue('assets').push(asset)
+        state.getCurrentDocument()._fireAll()
     }
 }
 export const AddNewColorAssetAction:SimpleMenuAction = {
@@ -231,8 +239,9 @@ export const AddNewColorAssetAction:SimpleMenuAction = {
     title:'add color asset',
     icon:SupportedIcons.Color,
     perform: async (state)=> {
-        const asset = state.om.make(ColorAssetDef,{})
-        state.getCurrentDocument().appendListProp('assets',asset)
+        const asset = new ColorAssetClass()
+        state.getCurrentDocument().getPropValue('assets').push(asset)
+        state.getCurrentDocument()._fireAll()
     }
 
 }
@@ -241,8 +250,9 @@ export const AddNewGradientAssetAction:SimpleMenuAction = {
     title:'add gradient asset',
     icon:SupportedIcons.Gradient,
     perform: async (state)=> {
-        const asset = state.om.make(GradientAssetDef,{})
-        state.getCurrentDocument().appendListProp('assets',asset)
+        const asset = new GradientAssetClass()
+        state.getCurrentDocument().getPropValue('assets').push(asset)
+        state.getCurrentDocument()._fireAll()
     }
 }
 export const AddNewImageAssetAction:SimpleMenuAction = {
@@ -250,8 +260,9 @@ export const AddNewImageAssetAction:SimpleMenuAction = {
     title:'add image asset',
     icon:SupportedIcons.Image,
     perform: async (state)=> {
-        const asset = state.om.make(ImageAssetDef,{})
-        state.getCurrentDocument().appendListProp('assets',asset)
+        const asset = new ImageAssetClass()
+        state.getCurrentDocument().getPropValue('assets').push(asset)
+        state.getCurrentDocument()._fireAll()
     }
 }
 
@@ -261,11 +272,11 @@ export const DeleteSelection:SimpleMenuAction = {
     icon:SupportedIcons.Delete,
     tags:['delete','shape'],
     perform: async (state: GlobalState) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         for(const obj of objs) {
             if (obj && obj.parent) {
-                const parent = obj.parent as unknown as ObjectProxy<ObjectDef>
-                await parent.removeListPropByValue('children', obj)
+                const parent = obj.parent
+                await parent.removeChild(obj)
             }
         }
         state.clearSelectedObjects()
@@ -277,19 +288,12 @@ export const DeleteSelection:SimpleMenuAction = {
     }
 }
 
-function calcObjectBounds(obj: ObjectProxy<ObjectDef>) {
-    if (obj instanceof DrawableClass) {
-        return obj.getAlignmentBounds()
-    }
-    throw new Error("object has no bounds")
+function calcObjectBounds(obj: DrawableShape) {
+    return obj.getAlignmentBounds()
 }
 
-async function moveObjBy(obj: ObjectProxy<ObjectDef>, diff: Point) {
-    if (obj instanceof DrawableClass) {
-        await obj.translateBy(diff)
-        return
-    }
-    throw new Error("object has no bounds to move ")
+async function moveObjBy(obj: DrawableShape, diff: Point) {
+    await obj.translateBy(diff)
 }
 
 export const BottomAlignShapes: SimpleMenuAction = {
@@ -297,7 +301,7 @@ export const BottomAlignShapes: SimpleMenuAction = {
     title: 'align bottom',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -310,7 +314,7 @@ export const LeftAlignShapes: SimpleMenuAction = {
     title: 'align left',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -323,7 +327,7 @@ export const RightAlignShapes: SimpleMenuAction = {
     title: 'align right',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -337,7 +341,7 @@ export const TopAlignShapes: SimpleMenuAction = {
     title: 'Align Top',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -350,7 +354,7 @@ export const HCenterAlignShapes: SimpleMenuAction = {
     title: 'align hcenter',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -363,7 +367,7 @@ export const VCenterAlignShapes: SimpleMenuAction = {
     title: 'align vcenter',
     tags:['align','shape'],
     perform: async (state) => {
-        const objs = state.getSelectedObjects()
+        const objs = state.getSelectedShapes()
         if (objs.length < 2) return
         const fbds = calcObjectBounds(objs[0])
         for (const obj of objs) {
@@ -382,12 +386,12 @@ export const RaiseShapeAction:SimpleMenuAction = {
         shift:false
     },
     perform: async (state) => {
-        if(state.getSelectedObjects().length !== 1) return
-        const shape = state.getSelectedObjects()[0]
+        if(state.getSelectedShapes().length !== 1) return
+        const shape = state.getSelectedShapes()[0]
         const page = state.getSelectedPage()
         if(!page) return
         if(shape.parent !== page) return
-        const list = page.getPropValue('children')
+        const list = page._children
         const index = list.indexOf(shape)
         if(index >= list.length-1) return
         await page.removeListPropAt('children',index)
@@ -405,11 +409,11 @@ export const LowerShapeAction:SimpleMenuAction = {
     },
     perform: async (state) => {
         if(state.getSelectedObjects().length !== 1) return
-        const shape = state.getSelectedObjects()[0]
+        const shape = state.getSelectedShapes()[0]
         const page = state.getSelectedPage()
         if(!page) return
         if(shape.parent !== page) return
-        const list = page.getPropValue('children')
+        const list = page._children
         const index = list.indexOf(shape)
         if(index < 1) return
         await page.removeListPropAt('children',index)
@@ -479,7 +483,7 @@ export const SelectAllInPage:SimpleMenuAction = {
     perform: async (state) => {
         const page = state.getSelectedPage()
         if(!page) return
-        const children = page.getListProp('children') as OO[]
+        const children = page._children
         state.setSelectedObjects(children)
     }
 

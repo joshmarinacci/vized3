@@ -41,12 +41,10 @@ import {
     MainLayout,
     ToggleIconButton,
     ToolbarActionButton,
-    useObjectManagerChange,
     useObservableChange
 } from "./common"
-import {PageView,} from "./editing/PageView"
+import {PageView} from "./editing/PageView"
 import {SupportedIcons} from "./icons"
-import {HistoryChanged} from "./models/om"
 import {GlobalState} from "./models/state"
 import {PopupContainer, PopupContext, PopupContextImpl} from "./propsheet/popup"
 import {PropSheet} from "./propsheet/PropSheet"
@@ -89,7 +87,7 @@ AR.register([
 function Main() {
     const [leftVisible, setLeftVisible] = useState(true)
     const [rightVisible, setRightVisible] = useState(true)
-    useObjectManagerChange(state.om, HistoryChanged)
+    // useObjectManagerChange(state.om, HistoryChanged)
     useObservableChange(state,'selection')
 
     const keyref = useRef(null)
@@ -140,8 +138,8 @@ function Main() {
                 AddNewSimpletextAction,
                 AddNewSimpleimageAction,
             ]}/>
-            <ToolbarActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
-            <ToolbarActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
+            {/*<ToolbarActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>*/}
+            {/*<ToolbarActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>*/}
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>

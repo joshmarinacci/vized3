@@ -2,9 +2,10 @@ import {Bounds, Point} from "josh_js_util"
 import {describe, expect,it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions/actions.test"
-import {NGonClass, NGonDef} from "../models/ngon"
-import {DocDef, PageDef} from "../models/om"
-import {RectClass, RectDef} from "../models/rect"
+import {DocClass} from "../models/doc"
+import {NGonClass}  from "../models/ngon"
+import {PageClass} from "../models/page"
+import {RectClass}  from "../models/rect"
 import {GlobalState} from "../models/state"
 import {toSVG} from "./svg"
 
@@ -18,13 +19,13 @@ describe('svg', () => {
     })
     it('should save a rect to svg', async () => {
         const state = new GlobalState()
-        const doc = state.om.make(DocDef, {})
+        const doc = new DocClass()
         state.swapDoc(doc)
-        const page = state.om.make(PageDef, {})
-        doc.appendListProp('pages', page)
-        const rect = state.om.make(RectDef, {
+        const page = new PageClass()
+        doc.getPropValue('pages').push(page)
+        const rect = new RectClass({
             bounds:new Bounds(1,2,3,4)}) as RectClass
-        page.appendListProp('children', rect)
+        page._children.push(rect)
         expect(rect.getPropValue('bounds').x).toBe(1)
 
         const svg = await toSVG(state)
@@ -33,16 +34,16 @@ describe('svg', () => {
     })
     it('should save an  n-gon to svg', async () => {
         const state = new GlobalState()
-        const doc = state.om.make(DocDef, {})
+        const doc = new DocClass()
         state.swapDoc(doc)
-        const page = state.om.make(PageDef, {})
-        doc.appendListProp('pages', page)
-        const ngon = state.om.make(NGonDef, {
+        const page = new PageClass()
+        doc.pages.push(page)
+        const ngon = new NGonClass({
             radius: 5,
             center: new Point(50,50),
             sides: 6,
         })as NGonClass
-        page.appendListProp('children', ngon)
+        page._children.push(ngon)
         expect(ngon.getPropValue('radius')).toBe(5)
 
         const svg = await toSVG(state)

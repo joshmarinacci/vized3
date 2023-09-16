@@ -1,34 +1,31 @@
 import {Bounds, Point, toRadians} from "josh_js_util"
 
-import {
-    CenterPositionDef,
-    DrawableClass,
-    FillDef,
-    Handle,
-    NameDef,
-    ObjectDef,
-    ObjectManager,
-    ScaledSurface,
-    StrokeFillDef,
-    StrokeWidthDef
-} from "./om"
+import {DefList, PropValues} from "./base"
+import {BaseShape, CenterPositionDef, FillDef, NameDef, StrokeFillDef, StrokeWidthDef} from "./defs"
+import {Handle, ScaledSurface} from "./drawing"
 
-export const CircleDef: ObjectDef = {
-    name: 'circle',
-    props: {
-        name: NameDef,
-        center: CenterPositionDef,
-        radius: {
-            name: 'radius',
-            base: "number",
-            readonly: false,
-            defaultValue: 20,
-            canProxy:true,
-        },
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-    }
+
+type CircleType = {
+    name:string,
+    center:Point,
+    radius:number,
+    fill:string,
+    strokeFill:string,
+    strokeWidth:number,
+}
+
+const CircleDef:DefList<CircleType> = {
+    name: NameDef,
+    center: CenterPositionDef,
+    radius: {
+        base:"number",
+        default: () => 20,
+        readonly: false,
+        canProxy: true,
+    },
+    fill: FillDef,
+    strokeFill: StrokeFillDef,
+    strokeWidth: StrokeWidthDef,
 }
 
 class CircleResizeHandle implements Handle {
@@ -60,26 +57,28 @@ class CircleResizeHandle implements Handle {
     }
 }
 
-export class CircleClass extends DrawableClass<typeof CircleDef> {
-    constructor(om: ObjectManager, opts: Record<keyof typeof CircleDef.props, any>) {
-        super(om, CircleDef, opts)
+export class CircleClass extends BaseShape<CircleType> {
+    constructor(opts?:PropValues<CircleType>) {
+        super(CircleDef, opts)
     }
 
     drawSelf(ctx: ScaledSurface): void {
-        ctx.fillArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.getPropValue('fill'))
-        ctx.strokeArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
+        const center = this.getPropValue('center')
+        const radius = this.getPropValue('radius')
+        ctx.fillArc(center,radius,0,toRadians(360),this.getPropValue('fill'))
+        ctx.strokeArc(center,radius,0,toRadians(360),this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
     }
 
     contains(pt: Point): boolean {
-        return pt.subtract(this.props.center).magnitude() < this.getPropValue('radius')
+        return pt.subtract(this.getPropValue('center')).magnitude() < this.getPropValue('radius')
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.outlineArc(this.props.center,this.getPropValue('radius'),0,toRadians(360),this.getPropValue('fill'))
+        ctx.outlineArc(this.getPropValue('center'),this.getPropValue('radius'),0,toRadians(360))
     }
 
     getHandle() {
-        if(this.isPropProxySource('radius')) return null
+        // if(this.isPropProxySource('radius')) return null
         return new CircleResizeHandle(this)
     }
 

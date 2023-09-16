@@ -9,7 +9,10 @@ import {
     translate,
 } from "pdf-lib"
 
-import {PageClass} from "../models/om"
+import {CircleClass} from "../models/circle"
+import {PageClass} from "../models/page"
+import {PathShapeClass} from "../models/pathshape"
+import {RectClass} from "../models/rect"
 import {GlobalState} from "../models/state"
 import {lookup_pdf_dpi, Unit} from "../models/unit"
 
@@ -30,8 +33,8 @@ function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
         scale(1,-1),
         translate(0,-pdfPage.getHeight())
     )
-    page1.getListProp('children').forEach(ch => {
-        if(ch.def.name === 'rect') {
+    page1._children.forEach(ch => {
+        if(ch instanceof RectClass) {
             const bounds = ch.getPropValue('bounds')
             const fill = ch.getPropValue('fill')
             const draw_bounds = bounds.scale(dpi)
@@ -43,7 +46,7 @@ function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
                 color: hex_to_pdfrgbf(fill),
             })
         }
-        if(ch.def.name === 'circle') {
+        if(ch instanceof CircleClass) {
             const center = ch.getPropValue('center') as Point
             const radius = ch.getPropValue('radius') as number
             const fill = ch.getPropValue('fill') as string
@@ -54,9 +57,9 @@ function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
                 color: hex_to_pdfrgbf(fill)
             })
         }
-        if(ch.def.name === 'path-shape') {
+        if(ch instanceof PathShapeClass) {
             const pos = ch.getPropValue('center')
-            const points = ch.getListProp('points')
+            const points = ch.getPropValue('points')
             const fill = ch.getPropValue('fill') as string
             for(let i=0; i<points.length; i++) {
                 const start = points[i]
@@ -77,7 +80,7 @@ export async function exportPDF(state: GlobalState) {
     console.log("exporting", state.getCurrentDocument())
     const doc = state.getCurrentDocument()
     const pdfDoc = await PDFDocument.create()
-    doc.getListProp('pages').forEach(page => render_pdf_page(pdfDoc,page as PageClass, doc.getPropValue('unit') as Unit))
+    doc.getPropValue('pages').forEach(page => render_pdf_page(pdfDoc,page as PageClass, doc.getPropValue('unit') as Unit))
     const blob = new Blob([await pdfDoc.save()], { type: 'application/pdf' })
     forceDownloadBlob('test.pdf',blob)
 }

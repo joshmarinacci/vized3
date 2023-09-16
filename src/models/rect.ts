@@ -1,40 +1,34 @@
 import {Bounds, Point} from "josh_js_util"
 
-import {
-    BoundsDef,
-    DrawableClass,
-    FillDef,
-    Handle,
-    NameDef,
-    ObjectDef,
-    ObjectManager,
-    ScaledSurface,
-    StrokeFillDef,
-    StrokeWidthDef
-} from "./om"
+import {DefList, PropValues} from "./base"
+import {BaseShape, BoundsDef, FillDef, NameDef, StrokeFillDef, StrokeWidthDef} from "./defs"
+import {Handle, ScaledSurface} from "./drawing"
 
-export const RectDef: ObjectDef = {
-    name: 'rect',
-    props: {
-        name: NameDef,
-        bounds: BoundsDef,
-        fill: FillDef,
-        strokeFill: StrokeFillDef,
-        strokeWidth: StrokeWidthDef,
-        roundedCornersEnabled: {
-            name: 'roundedCornersEnabled',
-            base: 'boolean',
-            readonly: false,
-            defaultValue: false,
-        },
-        roundedCornersRadius: {
-            name: 'roundedCornersRadius',
-            base: 'number',
-            readonly: false,
-            defaultValue: 10,
-        }
-    }
+export type RectType = {
+    name:string,
+    bounds:Bounds,
+    fill:string,
+    strokeFill:string,
+    strokeWidth:number,
+    roundedCornersEnabled:boolean,
+    roundedCornersRadius:number,
 }
+const RectDef:DefList<RectType> = {
+    name: NameDef,
+    bounds: BoundsDef,
+    fill: FillDef,
+    roundedCornersEnabled: {
+        base:'boolean',
+        default: () => false,
+    },
+    roundedCornersRadius: {
+        base:'number',
+        default: () => 1,
+    },
+    strokeFill: StrokeFillDef,
+    strokeWidth: StrokeWidthDef,
+}
+
 
 class RectResizeHandle implements Handle {
     private obj: RectClass
@@ -60,27 +54,27 @@ class RectResizeHandle implements Handle {
     }
 }
 
-export class RectClass extends DrawableClass<typeof RectDef> {
-    constructor(om: ObjectManager, opts: Record<keyof typeof RectDef.props, any>) {
-        super(om, RectDef, opts)
+export class RectClass extends BaseShape<RectType> {
+    constructor(opts: PropValues<RectType>) {
+        super(RectDef,opts)
     }
 
     drawSelf(ctx: ScaledSurface): void {
-        if (this.props.roundedCornersEnabled) {
-            ctx.fillRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.getPropValue('fill'))
-            ctx.strokeRoundRect(this.props.bounds,this.props.roundedCornersRadius, this.props.strokeFill, this.props.strokeWidth)
+        if (this.getPropValue('roundedCornersEnabled')) {
+            ctx.fillRoundRect(this.getPropValue('bounds'),this.getPropValue('roundedCornersRadius'), this.getPropValue('fill'))
+            ctx.strokeRoundRect(this.getPropValue('bounds'),this.getPropValue('roundedCornersRadius'), this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
         } else {
-            ctx.fillRect(this.props.bounds, this.getPropValue('fill'))
-            ctx.strokeRect(this.props.bounds, this.props.strokeFill, this.props.strokeWidth)
+            ctx.fillRect(this.getPropValue('bounds'), this.getPropValue('fill'))
+            ctx.strokeRect(this.getPropValue('bounds'), this.getPropValue('strokeFill'), this.getPropValue('strokeWidth'))
         }
     }
 
     contains(pt: Point): boolean {
-        return this.props.bounds.contains(pt)
+        return this.getPropValue('bounds').contains(pt)
     }
 
     drawSelected(ctx: ScaledSurface): void {
-        ctx.outlineRect(this.props.bounds)
+        ctx.outlineRect(this.getPropValue('bounds'))
     }
 
     getHandle(): Handle {
