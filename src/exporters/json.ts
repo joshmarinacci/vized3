@@ -2,14 +2,8 @@ import {Bounds, Insets, Point, Size} from "josh_js_util"
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util"
 
 import {LinearColorGradient} from "../models/assets"
-import {
-    DocClass, DocDef,
-    EnumSchema,
-    ObjectDef,
-    ObjectManager,
-    OO,
-    PropSchema
-} from "../models/om"
+import {PropDef, PropsBase} from "../models/base"
+import {DocClass} from "../models/doc"
 import {GlobalState} from "../models/state"
 import {stateToCanvas} from "./png"
 import {readMetadata, writeMetadata} from "./vendor"
@@ -53,30 +47,30 @@ export type JSONDocIndex = {
     docs:JSONDocReference[]
 }
 
-function propertyToJSON(prop: PropSchema, obj: OO):JSONProp {
-    if(obj.isPropProxySource(prop.name)) {
-        const ref:JSONPropReference = {
-            type:'reference',
-            reference: obj.getPropProxySource(prop.name).getUUID()
-        }
-        return ref
-    }
+function propertyToJSON<Type,Key extends keyof Type>(name:Key, prop: PropDef<Type[Key]>, obj: PropsBase<Type>):JSONProp {
+    // if(obj.isPropProxySource(prop.name)) {
+    //     const ref:JSONPropReference = {
+    //         type:'reference',
+    //         reference: obj.getPropProxySource(prop.name).getUUID()
+    //     }
+    //     return ref
+    // }
     if(prop.custom === 'css-gradient') {
-        const v2:LinearColorGradient = obj.getPropValue(prop.name)
+        const v2:LinearColorGradient = obj.getPropValue(name)
         return ({type:'value', value:v2.toJSON()})
     }
     if(prop.custom === 'points') {
-        const v2:Point[] = obj.getPropValue(prop.name)
+        const v2:Point[] = obj.getPropValue(name)
         return ({type:'value', value:v2.map(pt => pt.toJSON())})
     }
     if(prop.base === 'string') {
         return {
             type:"value",
-            value: obj.getPropValue(prop.name)
+            value: obj.getPropValue(name)
         }
     }
     if(prop.base === 'list') {
-        const list = obj.getListProp(prop.name)
+        const list = obj.getListProp(name)
         const arr:JSONObject[] = list.map(val => toJSONObj(val))
         return {
             type:"value",
@@ -84,42 +78,42 @@ function propertyToJSON(prop: PropSchema, obj: OO):JSONProp {
         }
     }
     if(prop.base === 'object') {
-        const val = obj.getPropValue(prop.name)
+        const val = obj.getPropValue(name)
         if (val instanceof Bounds) return ({ type: 'value', value: val.toJSON() })
         if (val instanceof Point)  return ({ type: 'value', value: val.toJSON()})
         if (val instanceof Size)   return ({ type: 'value', value: val.toJSON()})
         if (val instanceof Insets) return ({ type: 'value', value: val.toJSON()})
-        throw new Error(`unhandled toJSON object type ${prop.name}`)
+        throw new Error(`unhandled toJSON object type ${name}`)
     }
     if(prop.base === 'number') {
         return ({
             type:"value",
-            value: obj.getPropValue(prop.name)
+            value: obj.getPropValue(name)
         })
     }
     if(prop.base === 'boolean') {
         return ({
             type:"value",
-            value: obj.getPropValue(prop.name)
+            value: obj.getPropValue(name)
         })
     }
     if(prop.base === 'enum') {
         return ({
             type:"value",
-            value: obj.getPropValue(prop.name)
+            value: obj.getPropValue(name)
         })
     }
     throw new Error(`unhandled toJSON type ${prop.toString()}`)
 }
 
-export function toJSONObj(obj: OO): JSONObject {
+export function toJSONObj(obj: PropsBase<any>): JSONObject {
     const json: JSONObject = {
         name: obj.def.name,
         props: {},
         uuid: obj.getUUID()
     }
-    obj.getPropSchemas().forEach(prop => {
-        json.props[prop.name] = propertyToJSON(prop,obj)
+    obj.getAllPropDefs().forEach(([name, prop]) => {
+        json.props[name] = propertyToJSON(name,prop,obj)
     })
     return json
 }
@@ -137,7 +131,7 @@ export function saveJSON(state: GlobalState):JSONDoc {
 
 
 
-function propertyFromJSON(om: ObjectManager, prop: PropSchema, obj: JSONObject) {
+function propertyFromJSON(om: ObjectManager, prop: PropDef, obj: JSONObject) {
     const vv: JSONProp = obj.props[prop.name] as JSONProp
     if (vv.type === 'reference') {
     }
@@ -172,7 +166,7 @@ function propertyFromJSON(om: ObjectManager, prop: PropSchema, obj: JSONObject) 
     throw new Error(`cannot restore property ${vv.toString()}`)
 }
 
-function propertyFromJSONV1(om: ObjectManager, prop: PropSchema, obj: JSONObjectV1) {
+function propertyFromJSONV1(om: ObjectManager, prop: PropDef, obj: JSONObjectV1) {
     const v = obj.props[prop.name] as unknown
     if(prop.base === 'enum') {
         const schema = prop as EnumSchema
@@ -231,8 +225,8 @@ export function fromJSONObj(om: ObjectManager, obj: JSONObject):OO {
     return finalObject
 }
 
-export function fromJSONV1<T>(om: ObjectManager, obj: JSONObjectV1):T {
-    const def: ObjectDef = om.lookupDef(obj.name) as ObjectDef
+export function fromJSONV1<T>(obj: JSONObjectV1):T {
+    // const def: ObjectDef = om.lookupDef(obj.name) as ObjectDef
     const props: Record<string, object> = {}
     for (const key of Object.keys(def.props)) {
         const propSchema = def.props[key]
@@ -245,29 +239,31 @@ export function fromJSONV1<T>(om: ObjectManager, obj: JSONObjectV1):T {
     return om.make(def, props) as T
 }
 
-export function fromJSONDoc(om:ObjectManager, json_obj: JSONDoc): DocClass {
+export function fromJSONDoc(json_obj: JSONDoc): DocClass {
     // const def = om.lookupDef(json_obj.root.name) as ObjectDef
     const root = json_obj.root
     const props: Record<string, object> = {}
     console.log("loading assets first")
-    const assetsdef = DocDef.props['assets']
-    props[assetsdef.name] = []
-    const assets = (root.props['assets'] as JSONPropValue).value as JSONObject[]
-    console.log(assets)
-    props[assetsdef.name] = assets.map(asset => {
-        return fromJSONObj(om,asset)
-    })
-    console.log('final assets',assets)
-    const def = DocDef
+    // const assetsdef = DocDef.props['assets']
+    // props[assetsdef.name] = []
+    // const assets = (root.props['assets'] as JSONPropValue).value as JSONObject[]
+    // console.log(assets)
+    // props[assetsdef.name] = assets.map(asset => {
+    //     return fromJSONObj(om,asset)
+    // })
+    // console.log('final assets',assets)
+    // const def = DocDef
     for (const key of Object.keys(def.props)) {
         const propSchema = def.props[key]
         if(propSchema.name === 'assets') continue
         props[key] = propertyFromJSON(om, propSchema,root)
     }
-    return om.make(def, props, json_obj.root.uuid) as DocClass
+    const doc = new DocClass(props)
+    doc._id = json_obj.root.uuid
+    return doc
 }
-export function fromJSONDocV1(om:ObjectManager, json_obj:JSONDocV1):DocClass {
-    return fromJSONV1(om, json_obj.root) as DocClass
+export function fromJSONDocV1(json_obj:JSONDocV1):DocClass {
+    return fromJSONV1(json_obj.root) as DocClass
 }
 
 

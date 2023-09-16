@@ -25,11 +25,14 @@ import {
     ValueThumbnail
 } from "../common"
 import {SupportedIcons} from "../icons"
-import {ImageAssetClass, ImageAssetDef} from "../models/assets"
-import {OO, PageClass} from "../models/om"
+import {AssetClass, BaseAssetType, ImageAssetClass} from "../models/assets"
+import {useWatchAllProps, useWatchProp} from "../models/base"
+import {BaseShape, BaseShapeType} from "../models/defs"
+import {DocClass} from "../models/doc"
+import {PageClass} from "../models/page"
 import {GlobalState} from "../models/state"
 
-function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
+function TreeShapeItem<Type extends BaseShapeType>(props: { shape: BaseShape<Type>, state:GlobalState}) {
     const {shape, state} = props
     const classes = toClass({
         'tree-item':true,
@@ -51,7 +54,7 @@ function TreeShapeItem(props: { shape: OO, state:GlobalState}) {
                 }}
     >
         <Icon icon={SupportedIcons.Shape}/>
-        <b>{shape.hasPropNamed('name')?shape.getPropValue("name"):"no name"}</b>
+        <b>{shape.getPropValue('name')}</b>
     </div>
 }
 
@@ -61,6 +64,7 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
         'selectable':true,
         selected:page === state.getSelectedPage(),
     })
+    useWatchAllProps(page)
     const select_page = () => {
         state.setSelectedPage(page)
         state.setSelectedObjects([page])
@@ -85,15 +89,15 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
         <Icon icon={SupportedIcons.Page}/>
         <b className={classes} onClick={select_page}>{page.getPropValue('name')}</b>
         {
-            page.getListProp('children').map((shape:OO,i:number) =>
+            page.getShapeChildren().map((shape,i:number) =>
                 <TreeShapeItem key={i} shape={shape} state={state}/>)
         }
     </div>
 }
 
-function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
+function TreeAssetItem<Type extends BaseAssetType>(props: { asset: AssetClass<Type>, state:GlobalState}) {
     const {asset, state} = props
-    const schema = asset.getPropSchemaNamed('value')
+    const schema = asset.getPropDef('value')
     const pm = useContext(PopupContext)
     const actions = [
         DeleteSelection
@@ -128,11 +132,11 @@ function TreeAssetItem(props: { asset: OO, state:GlobalState}) {
     >
         <Icon icon={icon}/>
         <label>{asset.getPropValue('name')}</label>
-        <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
+        <ValueThumbnail target={asset} name={'value'} prop={asset.getPropDef('value')}/>
     </div>
 }
 
-function TreeDocItem(props: {item:OO, text:string, state:GlobalState, actions:MenuAction[], icon:SupportedIcons}) {
+function TreeDocItem(props: {item:DocClass, text:string, state:GlobalState, actions:MenuAction[], icon:SupportedIcons}) {
     const {item, text, state, actions}= props
     const pm = useContext(PopupContext)
     return <div
@@ -155,6 +159,7 @@ export function TreeView(props: { state:GlobalState}) {
     const {state} = props
     useObservableChange(state,'selection')
     const doc = state.getCurrentDocument()
+    useWatchProp(doc,'pages')
     const add_assets:MenuAction[] = [
         AddNewNumberAssetAction,
         AddNewColorAssetAction,
@@ -167,10 +172,11 @@ export function TreeView(props: { state:GlobalState}) {
     const dm = useContext(DialogContext)
     const open_image_dialog = () => {
         dm.show(<ChooseImageDialog state={state} onComplete={async (img, fileName) => {
-            const asset = state.om.make(ImageAssetDef, {}) as ImageAssetClass
-            await asset.setPropValue('value', img)
-            await asset.setPropValue('name',fileName)
-            state.getCurrentDocument().appendListProp('assets', asset)
+            const asset = new ImageAssetClass()
+            asset.setPropValue('value', img)
+            asset.setPropValue('name',fileName)
+            state.getCurrentDocument().getPropValue('assets').push(asset)
+            state.getCurrentDocument()._fireAll()
         }}/>)
     }
 
@@ -188,7 +194,7 @@ export function TreeView(props: { state:GlobalState}) {
             Pages
             <DropdownMenuButton icon={SupportedIcons.Add} items={add_page} state={state}/>
         </header>
-        {doc.getListProp('pages').map((pg,i) => {
+        {doc.getPropValue('pages').map((pg,i) => {
             return <TreePageItem key={i} page={pg} state={props.state}/>
         })}
         <header>
@@ -196,7 +202,7 @@ export function TreeView(props: { state:GlobalState}) {
             <DropdownMenuButton icon={SupportedIcons.Add} items={add_assets} state={state}/>
             <button onClick={open_image_dialog}>+I</button>
         </header>
-        {doc.getListProp('assets').map((asset,i) => {
+        {doc.getPropValue('assets').map((asset,i) => {
             return <TreeAssetItem key={i} asset={asset} state={props.state}/>
         })}
     </div>

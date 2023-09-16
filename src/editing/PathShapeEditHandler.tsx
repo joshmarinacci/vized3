@@ -1,18 +1,19 @@
-import {Handle, ScaledSurface} from "../models/om";
-import {Bounds, Point} from "josh_js_util";
-import {PathShapeClass} from "../models/pathshape";
-import {ObservableBase} from "../models/model";
-import {MouseHandlerProtocol} from "./editing";
-import {GlobalState} from "../models/state";
-import React from "react";
-import {distance_to_pixels, Unit} from "../models/unit";
+import {Bounds, Point} from "josh_js_util"
+import React from "react"
+
+import {Handle, ScaledSurface} from "../models/drawing"
+import {ObservableBase} from "../models/model"
+import {PathShapeClass} from "../models/pathshape"
+import {GlobalState} from "../models/state"
+import {distance_to_pixels, Unit} from "../models/unit"
+import {MouseHandlerProtocol} from "./editing"
 
 class EditHandle implements Handle {
-    private pt: Point;
-    private shape: PathShapeClass;
-    private rad: number;
-    index: number;
-    hover: boolean;
+    private pt: Point
+    private shape: PathShapeClass
+    private rad: number
+    index: number
+    hover: boolean
 
     constructor(shape: PathShapeClass, index: number) {
         this.shape = shape
@@ -20,14 +21,14 @@ class EditHandle implements Handle {
         if(this.shape.getPropValue('points').length < 1) {
             this.pt = new Point(-99,-99)
         } else {
-            this.pt = (this.shape.getListPropAt('points', index) as Point).add(shape.getPosition())
+            this.pt = (this.shape.getPropValue('points')[index]).add(shape.getPosition())
         }
         this.rad = 10
         this.hover = false
     }
 
     contains(pt: Point): boolean {
-        let b = new Bounds(this.pt.x - this.rad, this.pt.y - this.rad, this.rad * 2, this.rad * 2)
+        const b = new Bounds(this.pt.x - this.rad, this.pt.y - this.rad, this.rad * 2, this.rad * 2)
         return b.contains(pt)
     }
 
@@ -37,7 +38,7 @@ class EditHandle implements Handle {
 
     async setPosition(pos: Point): Promise<void> {
         this.pt = pos
-        await this.shape.setListPropAt('points', this.index, pos.subtract(this.shape.getPosition()))
+        this.shape.getPropValue('points')[this.index] = pos.subtract(this.shape.getPosition())
     }
 
     draw(ctx: CanvasRenderingContext2D) {
@@ -55,7 +56,7 @@ export enum EditState {
 }
 
 function draw_point(ctx: CanvasRenderingContext2D, color: string, mp: Point) {
-    let rad = 5
+    const rad = 5
     ctx.fillStyle = color
     ctx.fillRect(mp.x - rad, mp.y - rad, rad*2, rad*2)
 }
@@ -69,16 +70,16 @@ function draw_line(ctx: CanvasRenderingContext2D, color: string, line: LineSegme
 }
 
 export class PathShapeEditHandler extends ObservableBase implements MouseHandlerProtocol {
-    private shape: PathShapeClass;
-    private handles: EditHandle[];
-    private target_handle: EditHandle | null;
-    private pressed: boolean;
-    private hover_handle: EditHandle | undefined;
-    private hover_line: LineSegment | undefined;
+    private shape: PathShapeClass
+    private handles: EditHandle[]
+    private target_handle: EditHandle | null
+    private pressed: boolean
+    private hover_handle: EditHandle | undefined
+    private hover_line: LineSegment | undefined
     private drag_line: LineSegment | undefined
-    private state: EditState;
-    private hover_closed: boolean;
-    private hover_point: Point;
+    private state: EditState
+    private hover_closed: boolean
+    private hover_point: Point
 
     constructor(shape: PathShapeClass, state:EditState) {
         super()
@@ -99,20 +100,20 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         ctx.overlayFillText(`mouse: ${this.hover_point.x.toFixed(0)} , ${this.hover_point.y.toFixed(0)}`, new Point(50, 100))
 
         // // draw the handles for each point in the shape
-        for (let hand of this.handles) ctx.overlayHandle(hand,'green')
+        for (const hand of this.handles) ctx.overlayHandle(hand,'green')
         if(this.state === EditState.Existing) {
-            for (let line of this.findLines()) ctx.overlayPoint(line.midpoint(),'green')
+            for (const line of this.findLines()) ctx.overlayPoint(line.midpoint(),'green')
         }
         if(this.hover_handle) ctx.overlayHandle(this.hover_handle,'yellow')
         if(this.hover_line) ctx.overlayPoint(this.hover_line.midpoint(), 'orange')
         if(this.drag_line) ctx.overlayLine(this.drag_line.start, this.drag_line.end,'blue')
-        if(this.hover_closed) ctx.overlayPoint(this.shape.getListPropAt('points',0), 'blue')
+        if(this.hover_closed) ctx.overlayPoint(this.shape.getPropValue('points')[0], 'blue')
     }
 
     async mouseDown(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
         if(this.state === EditState.New) {
             this.pressed = true
-            this.shape.appendListProp('points',pt)
+            this.shape.getPropValue('points').push(pt)
             this.state = EditState.DraggingLine
             this.drag_line = new LineSegment(pt, pt, 0)
             this.repaint()
@@ -120,17 +121,18 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         }
         if(this.state === EditState.ReadyToAddLine) {
             this.pressed = true
-            let last_pt = this.shape.getListPropAt('points',this.shape.getPropValue('points').length-1)
+            const last_pt = this.shape.getPropValue('points')[this.shape.getPropValue('points').length-1]
             this.state = EditState.DraggingLine
             this.drag_line = new LineSegment(last_pt, pt, 0)
             this.repaint()
             return
         }
-        let hand = this.findHandleAt(state,pt)
+        const hand = this.findHandleAt(state,pt)
         if (hand) {
             this.pressed = true
             if(this.state === EditState.Delete) {
-                await this.shape.removeListPropAt('points',hand.index)
+                const points = this.shape.getPropValue('points')
+                points.splice(hand.index,1)
                 this.rebuild_handles()
                 this.state = EditState.Existing
                 this.repaint()
@@ -149,14 +151,14 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     async mouseMove(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
         this.hover_point = pt
         if (!this.pressed) {
-            let hand = this.findHandleAt(state,pt)
+            const hand = this.findHandleAt(state,pt)
             if(hand !== this.hover_handle) {
                 if(this.hover_handle) this.hover_handle.hover = false
                 this.hover_handle = hand
                 if(this.hover_handle) this.hover_handle.hover = true
                 this.repaint()
             }
-            let line = this.findLineAt(state,pt)
+            const line = this.findLineAt(state,pt)
             if (line !== this.hover_line) {
                 this.hover_line = line
                 this.repaint()
@@ -166,7 +168,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             // @ts-ignore
             this.drag_line.end = pt
             //if pt is near the start point of the shape, show a hover handle at the start point
-            let first_pt:Point = this.shape.getListPropAt('points',0)
+            const first_pt:Point = this.shape.getPropValue('points')[0]
             if(this.calc_distance(state,first_pt,pt) < 10) {
                 this.hover_closed = true
             } else {
@@ -181,8 +183,8 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
 
     async mouseUp(pt: Point, e: React.MouseEvent<HTMLCanvasElement>, state: GlobalState): Promise<void> {
         if(this.pressed && this.state === EditState.DraggingLine) {
-            let first_pt:Point = this.shape.getListPropAt('points',0)
-            let dist = this.calc_distance(state, first_pt,pt)
+            const first_pt:Point = this.shape.getPropValue('points')[0]
+            const dist = this.calc_distance(state, first_pt,pt)
             if(dist < 10) {
                 await this.shape.setPropValue('filled',true)
                 await this.shape.setPropValue('closed',true)
@@ -200,10 +202,10 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     }
 
     private findLines() {
-        let offset = this.shape.props.center
-        let points = this.shape.props.points as Point[]
+        const offset = this.shape.getPropValue('center')
+        const points = this.shape.getPropValue('points')
         if(points.length < 2) return []
-        let lines:LineSegment[] = []
+        const lines:LineSegment[] = []
         for(let i=0; i<points.length-1; i++) {
             lines.push(new LineSegment(points.at(i) as Point, points.at(i+1) as Point, i))
         }
@@ -212,13 +214,14 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
     }
 
     private async insertPoint(hover_line: LineSegment) {
-        await this.shape.insertListPropAt('points', hover_line.index+1, hover_line.midpoint().subtract(this.shape.props.center))
+        const points = this.shape.getPropValue('points')
+        points.splice(hover_line.index+1,0, hover_line.midpoint().subtract(this.shape.getPropValue('center')))
         this.rebuild_handles()
         this.repaint()
     }
 
     private rebuild_handles() {
-        this.handles = (this.shape.props.points as Point[]).map((pt, i) => new EditHandle(this.shape, i))
+        this.handles = (this.shape.getPropValue('points') as Point[]).map((pt, i) => new EditHandle(this.shape, i))
     }
 
     private repaint() {
@@ -230,7 +233,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
         this.repaint()
     }
 
-    getPaletteCommands(): any {
+    getPaletteCommands() {
         const finishNewPath = () => {
             this.fire('done',{})
         }
@@ -247,8 +250,8 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
 
     private findHandleAt(state:GlobalState,pt: Point) {
         return this.handles.find(h => {
-            let dist = h.getPosition().distance(pt)
-            let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+            const dist = h.getPosition().distance(pt)
+            const unit = state.getCurrentDocument().getPropValue('unit') as Unit
             const v = distance_to_pixels(dist,unit)
             return v < 10
         })
@@ -256,16 +259,16 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
 
     private findLineAt(state:GlobalState, pt: Point) {
         return this.findLines().find(l => {
-            let dist = l.midpoint().distance(pt)
-            let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+            const dist = l.midpoint().distance(pt)
+            const unit = state.getCurrentDocument().getPropValue('unit') as Unit
             const v = distance_to_pixels(dist,unit)
             return v < 10
         })
     }
 
     private calc_distance(state:GlobalState, first_pt: Point, pt: Point) {
-        let dist = first_pt.distance(pt)
-        let unit = state.getCurrentDocument().getPropValue('unit') as Unit
+        const dist = first_pt.distance(pt)
+        const unit = state.getCurrentDocument().getPropValue('unit') as Unit
         const v = distance_to_pixels(dist,unit)
         return v
     }
@@ -274,7 +277,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
 class LineSegment {
     start:Point
     end:Point
-    index: number;
+    index: number
     constructor(start:Point, end:Point, index:number) {
         this.start = start
         this.end = end
