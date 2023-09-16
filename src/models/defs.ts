@@ -91,14 +91,14 @@ export const SizeDef:PropDef<Size> = {
 export const FillDef:PropDef<string> = {
     base: 'string',
     readonly: false,
-    // custom:'css-color',
+    custom:'css-color',
     default:()=> '#cccccc',
     // canProxy:true
 }
 export const StrokeFillDef:PropDef<string> = {
     base: 'string',
     readonly: false,
-    // custom:'css-color',
+    custom:'css-color',
     default: () => 'black'
 }
 export const StrokeWidthDef:PropDef<number> = {
