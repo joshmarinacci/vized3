@@ -97,7 +97,11 @@ export class PropsBase<Type> {
         this.proxies.set(name,source)
     }
     removePropProxySource<K extends keyof Type>(name: K) {
-        this.proxies.delete(name)
+        if(this.proxies.has(name)) {
+            const value = this.proxies.get(name)?.getPropValue('value')
+            this.setPropValue(name,value)
+            this.proxies.delete(name)
+        }
     }
 
     // EVENT stuff

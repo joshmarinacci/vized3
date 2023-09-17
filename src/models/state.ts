@@ -48,12 +48,12 @@ export class GlobalState extends ObservableBase {
 
         this._doc.getPropValue('assets').push(new NumberAssetClass({name:'zero'}))
         this._doc.getPropValue('assets').push(new ColorAssetClass({name:'black'}))
-        const dummy_img = make_filled_image(10,10,'green')
-        const asset_img = new ImageAssetClass({value:dummy_img, name:'checkerboard'})
-        this._doc.getPropValue('assets').push(asset_img)
-        const image = new SimpleImageClass({ name:'image'})
-        image.setPropProxySource('image',asset_img)
-        page.addChild(image)
+        // const dummy_img = make_filled_image(10,10,'green')
+        // const asset_img = new ImageAssetClass({value:dummy_img, name:'checkerboard'})
+        // this._doc.getPropValue('assets').push(asset_img)
+        // const image = new SimpleImageClass({ name:'image'})
+        // image.setPropProxySource('image',asset_img)
+        // page.addChild(image)
 
         this._doc.getPropValue('assets').push(new GradientAssetClass({name:'gradient'}))
         this.selected_objects = []

@@ -8,7 +8,7 @@ import {
     ImageAssetClass, ImageAssetDef,
     LinearColorGradient, NumberAssetClass, NumberAssetDef
 } from "../models/assets"
-import {DefList, PropDef, PropsBase} from "../models/base"
+import {DefList, PropDef, PropsBase, UUID} from "../models/base"
 import {CircleClass, CircleDef} from "../models/circle"
 import {DocClass, DocDefs, DocType} from "../models/doc"
 import {NGonClass, NGonDef} from "../models/ngon"
@@ -81,14 +81,16 @@ register(NumberAssetClass, NumberAssetDef)
 register(ColorAssetClass, ColorAssetDef)
 register(ImageAssetClass, ImageAssetDef)
 
+const ObjectRegistry:Map<UUID,PropsBase<any>> = new Map()
+
 export function propertyToJSON<Type,Key extends keyof Type>(name:Key, prop: PropDef<Type[Key]>, obj: PropsBase<Type>):JSONProp {
-    // if(obj.isPropProxySource(prop.name)) {
-    //     const ref:JSONPropReference = {
-    //         type:'reference',
-    //         reference: obj.getPropProxySource(prop.name).getUUID()
-    //     }
-    //     return ref
-    // }
+    if(obj.isPropProxySource(name)) {
+        const ref:JSONPropReference = {
+            type:'reference',
+            reference: obj.getPropProxySource(name).getUUID()
+        }
+        return ref
+    }
     if(prop.toJSON) return prop.toJSON(obj.getPropValue(name))
     if(prop.custom === 'css-gradient') {
         const v2 = obj.getPropValue(name) as LinearColorGradient
@@ -142,7 +144,7 @@ export function propertyFromJSON<Type, Key extends keyof Type>(
     name:Key,
     prop: PropDef<Type[Key]>,
     obj: JSONObject) {
-    console.log("restoring",name,prop,obj)
+    // console.log("restoring",name,prop,obj)
     const vv: JSONProp = obj.props[name] as JSONProp
     // if (vv.type === 'reference') {
     // }
@@ -156,7 +158,6 @@ export function propertyFromJSON<Type, Key extends keyof Type>(
     if (prop.base === 'number') return v.value as number
     if (prop.base === 'boolean')  return v.value as boolean
     if (prop.base === 'list') {
-        console.log("using default list")
         const arr = []
         const vals = v.value as JSONObject[]
         for (const val of vals) {
@@ -173,61 +174,53 @@ export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
     const Constructor = CLASS_REGISTRY.get(obj.name)
     if(!Constructor) throw new Error(`cannot restore ${obj.name} because it is not registered `)
     const props: Record<string, object> = {}
-    // const refs = []
+    const refs = new Map<keyof Type,PropDef<Type[keyof Type]>>()
     const DEFS = DEFS_REGISTRY.get(obj.name)
     if(!DEFS) throw new Error(`cannot restore ${obj.name} because it is missing from the defs registry`)
     for (const key of Object.keys(obj.props)) {
-        props[key] = propertyFromJSON(key,DEFS[key],obj)
-        // const propSchema = def.props[key]
-        // const val = obj.props[propSchema.name]
-        // if(val.type === 'reference') {
-        //     console.log("skipping reference")
-        //     refs.push(propSchema)
-        // } else {
-        //     props[key] = propertyFromJSON(om, propSchema, obj)
-        // }
+        const propSchema = DEFS[key]
+        const val = obj.props[key]
+        if(val.type === 'reference') {
+            console.log("skipping reference")
+            refs.set(key,propSchema)
+        } else {
+            props[key] = propertyFromJSON(key,propSchema, obj)
+        }
     }
     const finalObject = new Constructor(props) as PropsBase<Type>
     finalObject._id = obj.uuid
-    // const finalObject = om.make(def, props, obj.uuid)
-    // refs.forEach(ref => {
-    //     console.log("must restore ref",ref)
-    //     const vv = obj.props[ref.name] as JSONPropReference
-    //     console.log("looking up the proxy source",vv.reference)
-    //     console.log("proxy loaded?",om.hasObject(vv.reference))
-    //     if(!om.hasObject(vv.reference)) {
-    //         throw new Error("cannot restore JSON because reference not loaded yet")
-    //     }
-    //     const source = om.getObject(vv.reference) as OO
-    //     console.log("the source is",source)
-    //     finalObject.setPropProxySource(ref.name,source)
-    // })
+    ObjectRegistry.set(finalObject.getUUID(),finalObject)
+    Array.from(refs.entries()).forEach(([name,d]) => {
+        console.log("must restore ref",name,d)
+        const vv = obj.props[name] as JSONPropReference
+        console.log("looking up the proxy source",vv.reference)
+        console.log("proxy loaded?",ObjectRegistry.has(vv.reference))
+        if(!ObjectRegistry.has(vv.reference)) {
+            throw new Error("cannot restore JSON because reference not loaded yet")
+        }
+        const source = ObjectRegistry.get(vv.reference)
+        console.log("the source is",source)
+        finalObject.setPropProxySource(name,source)
+    })
     // console.log("final object is",finalObject)
     return finalObject
 }
 
 export function fromJSONDoc(json_obj: JSONDoc): DocClass {
-    return fromJSONObj<DocType>(json_obj.root)
-    // const root = json_obj.root
-//     const props: Record<string, object> = {}
-//     console.log("loading assets first")
-//     // const assetsdef = DocDef.props['assets']
-//     // props[assetsdef.name] = []
-//     // const assets = (root.props['assets'] as JSONPropValue).value as JSONObject[]
-//     // console.log(assets)
-//     // props[assetsdef.name] = assets.map(asset => {
-//     //     return fromJSONObj(om,asset)
-//     // })
-//     // console.log('final assets',assets)
-//     // const def = DocDef
-//     for (const key of Object.keys(def.props)) {
-//         const propSchema = def.props[key]
-//         if(propSchema.name === 'assets') continue
-//         props[key] = propertyFromJSON(om, propSchema,root)
-//     }
-//     const doc = new DocClass(props)
-//     doc._id = json_obj.root.uuid
-//     return doc
+    const root = json_obj.root
+    const assets = (root.props['assets'] as JSONPropValue).value as JSONObject[]
+    const loaded_assets = assets.map(asset => fromJSONObj(asset))
+    // now load the rest
+    const props: Record<string, object> = {}
+    for (const key of Object.keys(DocDefs)) {
+        if(key === 'assets') continue
+        const propSchema = DocDefs[key]
+        props[key] = propertyFromJSON(key,propSchema, root)
+    }
+    const doc = new DocClass(props)
+    doc._id = json_obj.root.uuid
+    doc.setPropValue('assets',loaded_assets)
+    return doc
 }
 
 export async function savePNGJSON(state: GlobalState) {

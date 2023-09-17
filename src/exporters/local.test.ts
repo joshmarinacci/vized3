@@ -87,7 +87,7 @@ describe('json', () => {
             // console.log("new doc is",new_doc)
             expect(new_doc.getUUID()).toEqual(uuid)
             const page = new_doc.getPropValue('pages')[0]
-            expect(page.getPropValue('children').length).toBe(5)
+            expect(page.getPropValue('children').length).toBe(4)
         }
 
     })

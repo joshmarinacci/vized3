@@ -106,7 +106,7 @@ describe('model tests', () => {
         const new_root = fromJSONObj(json_obj)
         // will restore inner objects using the impl class names
         // correct def
-        assert(new_root.def.name === 'page')
+        expect(new_root instanceof PageClass).toBeTruthy()
         // has actual RealPage methods
         assert(new_root instanceof PageClass)
         assert((new_root as PageClass).hasChildren !== null)
@@ -114,7 +114,7 @@ describe('model tests', () => {
         const new_rects = new_root.getPropValue('children')
         assert(new_rects.length === 1)
         const new_rect = new_root.getPropValue('children')[0]
-        assert(new_rect.def.name === 'rect')
+        expect(new_rect instanceof RectClass).toBeTruthy()
         assert(new_rect.getPropValue("fill") === 'green')
         assert(new_rect.getPropValue("bounds") instanceof Bounds)
         assert(new_rect.getPropValue("bounds").w === 3)

@@ -57,6 +57,8 @@ describe('json', () => {
         expect(doc2.getPropValue('pages').length).toBe(1)
         const page = doc2.getPropValue('pages')[0]
         expect(page.getPropValue('name')).toBe('rad page')
+        const circ1 = page.getPropValue('children')[0] as CircleClass
+        expect(circ1.getPropValue('center').x).toBe(100)
     })
 
     it('should save a JSON property',async() => {
@@ -77,8 +79,8 @@ describe('json', () => {
         const circle = circs[0]
         const numAsset = new NumberAssetClass({value: 66})
         state.getCurrentDocument().getPropValue('assets').push(numAsset)
-        // circle.setPropProxySource('radius',numAsset)
-        // expect(circle.isPropProxySource('radius')).toBeTruthy()
+        circle.setPropProxySource('radius',numAsset)
+        expect(circle.isPropProxySource('radius')).toBeTruthy()
         //now radius should equal 66
         expect(numAsset.getPropValue('value')).toEqual(66)
 
@@ -91,7 +93,7 @@ describe('json', () => {
         // check that radius is 66 and still a proxy
         // expect(shape1.props.radius).toEqual(66)
         {
-            const doc = await fromJSONDoc(json_doc)
+            const doc = fromJSONDoc(json_doc)
             const page = doc.getPropValue('pages')[0]
             const circ2 = page.getPropValue('children')[0] as CircleClass
             expect(circ2.getPropValue('center').x).toEqual(100)

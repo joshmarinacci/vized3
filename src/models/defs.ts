@@ -11,21 +11,21 @@ export const CenterPositionDef:PropDef<Point> = {
     readonly: false,
     default: () => new Point(0, 0),
     toJSON: (v) => ({type:'value',value:v.toJSON()}),
-    fromJSON: (json ) => Point.fromJSON(json),
+    fromJSON: (json ) => Point.fromJSON(json.value),
 }
 export const BoundsDef:PropDef<Bounds> = {
     base: 'Bounds',
     readonly: false,
     default: ()=> new Bounds(0, 0, 1, 1),
     toJSON: (v) => ({type:'value',value:v.toJSON()}),
-    fromJSON: (json ) => Bounds.fromJSON(json),
+    fromJSON: (json ) => Bounds.fromJSON(json.value),
 }
 export const SizeDef:PropDef<Size> = {
     base:'Size',
     readonly:false,
     default: () => new Size(8.5,11),
     toJSON: (v) => ({type:'value',value:v.toJSON()}),
-    fromJSON:(json) => Size.fromJSON(json)
+    fromJSON:(json) => Size.fromJSON(json.value)
 }
 export const FillDef:PropDef<string> = {
     base: 'string',
