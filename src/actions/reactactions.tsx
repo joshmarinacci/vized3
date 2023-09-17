@@ -5,8 +5,8 @@ import React, {JSX, useContext} from "react"
 import {IconButton, ReactMenuAction} from "../common"
 import {loadPNGJSON} from "../exporters/json"
 import {SupportedIcons} from "../icons"
-import {ImageAssetClass, ImageAssetDef} from "../models/assets"
-import {SimpleImageClass, SimpleImageDef} from "../models/simpleimage"
+import {ImageAssetClass} from "../models/assets"
+import {SimpleImageClass} from "../models/simpleimage"
 import {GlobalState} from "../models/state"
 import {ChooseImageDialog} from "./ChooseImageDialog"
 import {ListFilesDialog} from "./ListFilesDialog"
@@ -94,17 +94,17 @@ function ImportImageButton(props: { state: GlobalState }) {
     const {state} = props
     const dm = useContext(DialogContext)
     const showNewDialog = () => dm.show(<ChooseImageDialog state={props.state} onComplete={async (htmlImage, fileName)=>{
-        const asset = state.om.make(ImageAssetDef, {}) as ImageAssetClass
-        await asset.setPropValue('value', htmlImage)
-        await asset.setPropValue('name',fileName)
-        state.getCurrentDocument().appendListProp('assets', asset)
+        const asset = new ImageAssetClass()
+        asset.setPropValue('value', htmlImage)
+        asset.setPropValue('name', fileName)
+        state.getCurrentDocument().getPropValue('assets').push(asset)
         const ratio = htmlImage.height / htmlImage.width
 
-        const image = state.om.make(SimpleImageDef, { name:'image'}) as SimpleImageClass
-        image.setPropProxySource('image',asset)
+        const image = new SimpleImageClass({name:'image'})
+        // image.setPropProxySource('image',asset)
         await image.setPropValue('bounds', new Bounds(0, 0, 1, 1 * ratio))
         const page = state.getSelectedPage()
-        if(page) page.appendListProp('children',image)
+        if(page) page._children.push(image)
     }}/>)
     return <IconButton icon={SupportedIcons.Image} onClick={showNewDialog}>import image</IconButton>
 }

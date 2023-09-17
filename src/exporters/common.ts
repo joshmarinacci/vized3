@@ -77,7 +77,7 @@ export function traverse(doc: DocClass, cb: (item: any) => void) {
     cb(doc)
     doc.getPropValue('pages').forEach(page => {
         cb(page)
-        page._children.forEach((shape) => {
+        page.getPropValue('children').forEach((shape) => {
             cb(shape)
         })
     })

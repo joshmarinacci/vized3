@@ -12,7 +12,7 @@ type SimpleTextType = {
     fill:string,
 }
 
-const SimpleTextDef:DefList<SimpleTextType> = {
+export const SimpleTextDef:DefList<SimpleTextType> = {
     name:NameDef,
     center: CenterPositionDef,
     text: {

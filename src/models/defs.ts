@@ -1,92 +1,31 @@
-import {symlink} from "fs"
 import {Bounds, Point, Size} from "josh_js_util"
 
+import {JSONPropValue} from "../exporters/json"
 import {DefList, PropDef, PropsBase, PropValues} from "./base"
 import {DrawableShape, Handle, ScaledSurface} from "./drawing"
-import {Unit} from "./unit"
-import Type = module
 import {PageClass} from "./page"
+import {Unit} from "./unit"
 
 export const CenterPositionDef:PropDef<Point> = {
     base: 'Point',
     readonly: false,
-    // subProps: {
-    //     x: {
-    //         name: 'x',
-    //         base: "number",
-    //         readonly: false,
-    //         defaultValue: 0,
-    //     },
-    //     y: {
-    //         name: 'y',
-    //         base: 'number',
-    //         readonly: false,
-    //         defaultValue: 0,
-    //     },
-    // },
-    default: () => new Point(0, 0)
+    default: () => new Point(0, 0),
+    toJSON: (v) => ({type:'value',value:v.toJSON()}),
+    fromJSON: (json ) => Point.fromJSON(json),
 }
 export const BoundsDef:PropDef<Bounds> = {
     base: 'Bounds',
     readonly: false,
-    // setter: (obj, name, value) => {
-    //     const old_bounds = obj as Bounds
-    //     const new_bounds = old_bounds.copy()
-    //     new_bounds[name] = value
-    //     return new_bounds
-    // },
-    // subProps: {
-    //     x: {
-    //         name: 'x',
-    //         base: 'number',
-    //         readonly: false,
-    //         defaultValue: 0
-    //     },
-    //     y: {
-    //         name: 'y',
-    //         base: 'number',
-    //         readonly: false,
-    //         defaultValue: 0,
-    //     },
-    //     w: {
-    //         name: 'w',
-    //         base: 'number',
-    //         readonly: false,
-    //         defaultValue: 1,
-    //     },
-    //     h: {
-    //         name: 'h',
-    //         base: "number",
-    //         readonly: false,
-    //         defaultValue: 1,
-    //     },
-    // },
     default: ()=> new Bounds(0, 0, 1, 1),
+    toJSON: (v) => ({type:'value',value:v.toJSON()}),
+    fromJSON: (json ) => Bounds.fromJSON(json),
 }
 export const SizeDef:PropDef<Size> = {
     base:'Size',
     readonly:false,
-    // subProps: {
-    //     w: {
-    //         name:'w',
-    //         base:'number',
-    //         readonly:false,
-    //         defaultValue: 8.5,
-    //     },
-    //     h: {
-    //         name:'h',
-    //         base:"number",
-    //         readonly:false,
-    //         defaultValue: 11,
-    //     }
-    // },
-    // setter: (obj, name, value) => {
-    //     const s_old =obj as Size
-    //     const snew = new Size(s_old.w,s_old.h)
-    //     snew[name] = value
-    //     return snew
-    // },
-    default: () => new Size(8.5,11)
+    default: () => new Size(8.5,11),
+    toJSON: (v) => ({type:'value',value:v.toJSON()}),
+    fromJSON:(json) => Size.fromJSON(json)
 }
 export const FillDef:PropDef<string> = {
     base: 'string',
@@ -111,6 +50,13 @@ export const NameDef:PropDef<string> = {
     base:'string',
     readonly:false,
     default:()=> 'unnamed',
+    toJSON: (v) => {
+        const ret:JSONPropValue = {
+            type:'value',
+            value: v
+        }
+        return ret
+    }
 }
 export const UnitDef:PropDef<Unit> = {
     base:'string',

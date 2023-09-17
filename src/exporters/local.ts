@@ -1,6 +1,6 @@
 import {make_logger, Size} from "josh_js_util"
 
-import {DocClass} from "../models/om"
+import {DocClass} from "../models/doc"
 import {GlobalState} from "../models/state"
 import {fromJSONDoc, JSONDoc, JSONDocIndex, saveJSON} from "./json"
 import {stateToCanvas} from "./png"
@@ -30,7 +30,7 @@ function scaleCropCanvasTo(original_canvas: HTMLCanvasElement, size: Size) {
 }
 
 export async function saveLocalStorage(state: GlobalState, withThumbnail:boolean) {
-    const log = make_logger('local')
+    // const log = make_logger('local')
     const json_obj =  saveJSON(state)
     // console.log("generated json",json_obj)
     const doc = state.getCurrentDocument()
@@ -77,7 +77,7 @@ export async function loadLocalDoc(state:GlobalState, uuid:string):Promise<DocCl
     const json = state.localStorage.getItem(uuid)
     if(json) {
         const obj:JSONDoc = JSON.parse(json)
-        return fromJSONDoc(state.om,obj)
+        return fromJSONDoc(obj)
     } else {
         throw new Error(`no such document with uuid: ${uuid}`)
     }

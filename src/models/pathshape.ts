@@ -5,7 +5,7 @@ import {BaseShape, CenterPositionDef, FillDef, NameDef, StrokeFillDef, StrokeWid
 import {DrawableShape, Handle, ScaledSurface} from "./drawing"
 
 
-type PathShapeType = {
+export type PathShapeType = {
     name: string,
     center: Point,
     filled: boolean,
@@ -15,6 +15,7 @@ type PathShapeType = {
     points: Point[],
     closed: false,
 }
+type FlatPoint = { x: number, y: number}
 export const PathShapeDef: DefList<PathShapeType> = {
     name: NameDef,
     center: CenterPositionDef,
@@ -35,7 +36,9 @@ export const PathShapeDef: DefList<PathShapeType> = {
             new Point(3, 2),
             new Point(1, 4),
         ],
-        hidden: true
+        hidden: true,
+        fromJSON:(json) => (json.value as FlatPoint[])
+            .map(pt => Point.fromJSON(pt))
     },
     closed: {
         base: 'boolean',

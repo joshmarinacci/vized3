@@ -5,23 +5,18 @@ import {describe, expect,it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions/actions.test"
 import {
-    GradientAssetClass,
-    GradientAssetDef,
-    ImageAssetClass,
-    ImageAssetDef,
-    NumberAssetDef
+    GradientAssetClass, GradientAssetType,
+    ImageAssetClass, NumberAssetClass,
 } from "../models/assets"
 import {CircleClass} from "../models/circle"
-import { OO, PageClass} from "../models/om"
-import {PathShapeDef} from "../models/pathshape"
-import {GlobalState} from "../models/state"
+import {DocClass, DocType} from "../models/doc"
+import {PathShapeClass, PathShapeType} from "../models/pathshape"
 import {
     fromJSONDoc,
-    fromJSONDocV1, fromJSONObj,
-    JSONDocV1,
+    fromJSONObj,
     JSONObject,
-    JSONPropValue,
-    saveJSON, toJSONObj
+    JSONPropValue, propertyToJSON,
+    saveJSON, toJSONDoc, toJSONObj
 } from "./json"
 
 describe('json', () => {
@@ -32,6 +27,7 @@ describe('json', () => {
         console.log(JSON.stringify(doc,null, '   '))
         expect(doc.version).toBe(2)
         expect(doc.root).toBeTruthy()
+        expect(doc.root.uuid).toBe(state.getCurrentDocument().getUUID())
         expect(doc.root.props.pages.type).toEqual('value')
         const pages = doc.root.props.pages as JSONPropValue
         expect((pages.value as []).length).toBe(1)
@@ -46,23 +42,43 @@ describe('json', () => {
         expect(center.x).toEqual(circs[0].getPropValue('center').x)
     })
 
-    it('should restore from v1 JSON', async () => {
-        const raw = await fs.promises.readFile('./src/exporters/jsonout.json')
-        const json = JSON.parse(raw.toString())
-        expect(json.version).toBe(1)
-        const state = new GlobalState()
-        const obj = fromJSONDocV1(state.om, json as JSONDocV1)
-        expect(obj.getListProp('pages').length).toBe(1)
-        expect(obj.getListPropAt('pages',0).getListProp('children').length).toBe(3)
+    it('should restore a small doc', async () => {
+        const {state, circs} = await createThreeCirclesDoc()
+        const doc = state.getCurrentDocument()
+        doc.getPropValue('pages')[0].setPropValue('name','rad page')
+        const doc_json = toJSONDoc(doc)
+        console.log(JSON.stringify(doc_json,null, '   '))
+        expect(doc_json.version).toBe(2)
+        expect(doc_json.root.uuid).toBe(doc.getUUID())
+
+        const doc2 = fromJSONDoc(doc_json)
+        expect(doc2.getUUID()).toBe(doc_json.root.uuid)
+        expect(doc2.getPropValue('name')).toBe(doc.getPropValue('name'))
+        expect(doc2.getPropValue('pages').length).toBe(1)
+        const page = doc2.getPropValue('pages')[0]
+        expect(page.getPropValue('name')).toBe('rad page')
     })
 
-    it('should save to json with assets', async () => {
+    it('should save a JSON property',async() => {
+        const doc = new DocClass({name:'cool doc'})
+        expect(doc.getPropValue('name')).toBe('cool doc')
+        const ret = propertyToJSON<DocType, 'name'>('name',doc.getPropDef('name'),doc)
+        expect(ret.type).toBe('value')
+        expect((ret as JSONPropValue).value).toBe('cool doc')
+        const json = toJSONObj<DocType>(doc)
+        console.log("json is",json)
+        const doc2 = fromJSONObj<DocType>(json)
+        console.log('doc2 is',doc2)
+        expect(doc2.getPropValue('name')).toBe('cool doc')
+    })
+
+    it('should save to json with a proxy', async () => {
         const {state, circs} = await createThreeCirclesDoc()
         const circle = circs[0]
-        const numAsset = state.om.make(NumberAssetDef, {value: 66})
-        state.getCurrentDocument().appendListProp('assets',numAsset)
-        circle.setPropProxySource('radius',numAsset)
-        expect(circle.isPropProxySource('radius')).toBeTruthy()
+        const numAsset = new NumberAssetClass({value: 66})
+        state.getCurrentDocument().getPropValue('assets').push(numAsset)
+        // circle.setPropProxySource('radius',numAsset)
+        // expect(circle.isPropProxySource('radius')).toBeTruthy()
         //now radius should equal 66
         expect(numAsset.getPropValue('value')).toEqual(66)
 
@@ -75,39 +91,32 @@ describe('json', () => {
         // check that radius is 66 and still a proxy
         // expect(shape1.props.radius).toEqual(66)
         {
-            const obj = await fromJSONDoc(state.om, json_doc)
-            const page = obj.getListPropAt('pages', 0) as PageClass
-            const circ2 = page.getListPropAt('children', 0) as CircleClass
+            const doc = await fromJSONDoc(json_doc)
+            const page = doc.getPropValue('pages')[0]
+            const circ2 = page.getPropValue('children')[0] as CircleClass
             expect(circ2.getPropValue('center').x).toEqual(100)
-            expect(circ2.isPropProxySource('radius')).toBeTruthy()
+            // expect(circ2.isPropProxySource('radius')).toBeTruthy()
             expect(circ2.getPropValue('radius')).toEqual(66)
         }
-
-
 
     })
 
     it('should save a number asset', async () => {
-        const {state} = await createThreeCirclesDoc()
-        const om = state.om
-        const num_asset = om.make(NumberAssetDef, {value:66})
+        const num_asset = new NumberAssetClass({value:66})
         const num_json = toJSONObj(num_asset)
         console.log("num json is",num_json)
-        expect(num_json.name).toEqual('number-asset')
+        expect(num_json.name).toEqual(NumberAssetClass.name)
         expect(num_json.props['name']).toBeTruthy()
         expect(num_json.props['name'].type).toEqual('value')
         expect(num_json.props['name'].value).toEqual('unnamed')
         expect(num_json.props['value'].type).toEqual('value')
         expect(num_json.props['value'].value).toEqual(66)
     })
-
     it('should save a gradient asset', async () => {
-        const {state} = await createThreeCirclesDoc()
-        const om = state.om
-        const grad_asset = om.make(GradientAssetDef, {}) as GradientAssetClass
+        const grad_asset = new GradientAssetClass({})
         const grad_json = toJSONObj(grad_asset)
         console.log("grad json is",grad_json)
-        expect(grad_json.name).toEqual('gradient-asset')
+        expect(grad_json.name).toEqual(GradientAssetClass.name)
         expect(grad_json.props['name']).toBeTruthy()
         expect(grad_json.props['name'].type).toEqual('value')
         expect(grad_json.props['name'].value).toEqual('unnamed')
@@ -116,27 +125,23 @@ describe('json', () => {
         expect(grad.type).toEqual('linear-color-gradient')
     })
     it('should restore a gradient asset', async () => {
-        const {state} = await createThreeCirclesDoc()
-        const om = state.om
-        const grad_asset = om.make(GradientAssetDef, {})
+        const grad_asset = new GradientAssetClass()
         const grad_json = toJSONObj(grad_asset)
-        const grad = fromJSONObj(om,grad_json) as OO
+        const grad = fromJSONObj<GradientAssetType>(grad_json)
         console.log("restored grad is",grad)
-        expect(grad.def).toBe(GradientAssetDef)
+        expect(grad.constructor.name).toBe(GradientAssetClass.name)
     })
 
     it('should save and restore a path', async () => {
-        const {state} = await createThreeCirclesDoc()
-        const om = state.om
-        const path_obj = om.make(PathShapeDef, { points:[new Point(5,6)]})
+        const path_obj = new PathShapeClass({ points:[new Point(5,6)]})
         console.log("original path is",path_obj.getPropValue('points'))
         const path_json = toJSONObj(path_obj)
         console.log("path json is", path_json)
 
-        const new_path = fromJSONObj(om,path_json)
+        const new_path = fromJSONObj<PathShapeType>(path_json)
         console.log("new path is",new_path)
 
-        expect(new_path.def).toBe(PathShapeDef)
+        expect(new_path.constructor.name).toBe(PathShapeClass.name)
         const points = new_path.getPropValue('points') as Point[]
         console.log("oints are",points)
         expect(points.length).toBe(1)
@@ -148,17 +153,15 @@ describe('json', () => {
         const stream = fs.createReadStream('./src/exporters/checkerboard.png')
         const raw_img:Bitmap = await pureimage.decodePNGFromStream(stream)
         console.log("img is",raw_img)
-        const {state} = await createThreeCirclesDoc()
-        const om = state.om
-        const img_asset = om.make(ImageAssetDef, {}) as ImageAssetClass
-        await img_asset.setPropValue('value',{
+        const img_asset = new ImageAssetClass()
+        img_asset.setPropValue('value',{
             width:raw_img.width,
             height:raw_img.height,
             data:raw_img.data
         })
         const img_json = toJSONObj(img_asset)
         console.log("img json is",img_json.props.value)
-        expect(img_json.name).toEqual('image-asset')
+        expect(img_json.name).toEqual(ImageAssetClass.name)
         expect(img_json.props['name']).toBeTruthy()
         expect(img_json.props['name'].type).toEqual('value')
         expect(img_json.props['name'].value).toEqual('unnamed')

@@ -193,7 +193,7 @@ export function ValueThumbnail<Type>(props: {
         return <div>{value}</div>
     }
     if (schema.base === 'number') {
-        return <div>{value}</div>
+        return <div>{value+""}</div>
     }
     return <div>some kind of value</div>
 }

@@ -3,132 +3,108 @@ import {Bounds} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions/actions.test"
-import {fromJSONDoc, fromJSONObj, saveJSON, toJSONObj} from "../exporters/json"
-import {ColorAssetDef, GradientAssetDef, NumberAssetDef} from "./assets"
-import {CircleClass, CircleDef} from "./circle"
 import {
-    FamilyPropChanged,
-    ObjectManager,
-    OO,
-    PageClass,
-    PageDef,
-    PropChanged,
-    PropSchema
-} from "./om.js"
-import {RectClass, RectDef} from "./rect"
+    fromJSONDoc,
+    fromJSONObj,
+    JSONObject,
+    JSONPropValue,
+    saveJSON,
+    toJSONObj
+} from "../exporters/json"
+import {ColorAssetClass, GradientAssetClass, NumberAssetClass} from "./assets"
+import {CircleClass,} from "./circle"
+import {PageClass} from "./page"
+import {RectClass}  from "./rect"
 
 
 describe('model tests', () => {
     it('should make a graph', async () => {
-        const om = new ObjectManager()
-        assert(om !== null, 'om is not null')
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        let rect:RectClass = await new RectClass(om,{})//om.make(RectDef, { })
+        let rect:RectClass = new RectClass({})//om.make(RectDef, { })
         assert(rect !== null)
-        rect = new RectClass(om, {bounds: new Bounds(1, 2, 3, 4), fill: 'red'})
+        rect = new RectClass({bounds: new Bounds(1, 2, 3, 4), fill: 'red'})
         assert(rect.getPropValue('bounds') !== null)
         assert(rect.getPropValue('bounds').x === 1)
         assert(rect.getPropValue('bounds').y === 2)
         assert(rect.getPropValue('fill') === 'red')
-        await rect.setPropValue('fill','blue')
+        rect.setPropValue('fill','blue')
         assert(rect.getPropValue('fill') === 'blue')
     })
 
     it('should make an object with array children', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const page = new PageClass(om, {})
+        const page = new PageClass()
         assert(page.getPropValue('children').length === 0)
-        const rect = await om.make(RectDef, {})
-        await page.appendListProp('children',rect)
+        const rect = new RectClass({})
+        page.getPropValue('children').push(rect)
         assert(page.getPropValue('children').length === 1)
-        const rect2 = page.getListPropAt('children',0)
+        const rect2 = page.getPropValue('children')[0]
         assert(rect === rect2)
     })
     it('should watch for changes on a single object', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const rect = new RectClass(om,{})
+        const rect = new RectClass({})
         // add listener
         let changed = false
-        rect.addEventListener(PropChanged, (evt) => {
+        rect.onAny((evt) => {
             changed = true
         })
-        await rect.setPropValue('fill', 'blue')
+        rect.setPropValue('fill', 'blue')
         assert(changed)
         assert(rect.getPropValue('fill') === 'blue')
     })
     it('should watch for changes on a family tree object', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const page = new PageClass(om, {})
-        const rect = new RectClass(om, {})
-        await page.appendListProp('children',rect)
+        const page = new PageClass({})
+        const rect = new RectClass({})
+        page.getPropValue('children').push(rect)
         let changed = false
-        page.addEventListener(FamilyPropChanged, (evt) => {
+        page.onAny( (evt) => {
             changed = true
         })
-        await rect.setPropValue('fill', 'blue')
-        assert(changed)
-        assert(page.getListPropAt('children',0).getPropValue('fill') === 'blue')
+        rect.setPropValue('fill', 'blue')
+        expect(changed).toBeTruthy()
+        expect(page.getPropValue('children')[0].getPropValue('fill')).toEqual('blue')
     })
     it('should list the properties and schemas of an object', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const page = await om.make(PageDef, {})
-        const rect = await om.make(RectDef, {})
-        page.getPropSchemas().forEach((s:PropSchema) => {
-            if(s.name === 'children') {
-                assert(s.base === 'list')
+        const page = new PageClass()
+        const rect = new RectClass()
+        page.getAllPropDefs().forEach(([k,p]) => {
+            if(k === 'children') {
+                assert(p.base === 'list')
             }
         })
-        rect.getPropSchemas().forEach((s:PropSchema) => {
-            if(s.name === 'bounds') {
-                assert(s.base === 'object')
+        rect.getAllPropDefs().forEach(([k,p]) => {
+            if(k === 'bounds') {
+                assert(p.base === 'Bounds')
             }
-            if(s.name === 'fill') {
-                assert(s.base === 'string')
+            if(k === 'fill') {
+                assert(p.base === 'string')
             }
         })
     })
     it('should export to json', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const pageProxy = om.make(PageDef, {})
-        const rectProxy = om.make(RectDef, {bounds:new Bounds(1,2,3,4), fill: 'green'})
-        pageProxy.appendListProp('children',rectProxy)
+        const pageProxy = new PageClass()
+        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
+        pageProxy.getPropValue('children').push(rectProxy)
         const json_obj = toJSONObj(pageProxy)
         expect(typeof json_obj).toEqual('object')
-        // assert(json_obj.version === 1)
-        expect(json_obj.name).toEqual('page')
-        // assert(Array.isArray(json_obj.props.children))
-        // assert(json_obj.props.children.length === 1)
-        // const json_rect:JSONObject = json_obj.props.children[0]
-        //
-        // expect(json_rect.name).toBe('rect')
-        // assert(typeof json_rect.props.fill == 'string')
-        // expect(json_rect.props.fill).toBe('green')
-        // assert(typeof json_rect.props.bounds === 'object')
-        // assert(json_obj.root.props.children[0].props.bounds.x === 1)
-        // assert(json_obj.root.props.children[0].props.bounds.y === 2)
-        // assert(json_obj.root.props.children[0].props.bounds.w === 3)
-        // assert(json_obj.root.props.children[0].props.bounds.h === 4)
+        expect(json_obj.name).toEqual(PageClass.name)
+        expect(Array.isArray((json_obj.props.children as JSONPropValue).value)).toBeTruthy()
+        expect(json_obj.props.children.value.length).toEqual(1)
+        const json_rect:JSONObject = json_obj.props.children.value[0]
+
+        expect(json_rect.name).toBe(RectClass.name)
+        expect(json_rect.props.fill.value).toBe('green')
+        expect(json_rect.props.bounds.type).toBe('value')
+        const bounds = (json_rect.props.bounds as JSONPropValue).value
+        assert(bounds.x === 1)
+        assert(bounds.y === 2)
+        assert(bounds.w === 3)
+        assert(bounds.h === 4)
     })
     it('should import from json', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
-        const pageProxy = om.make(PageDef, {})
-        const rectProxy = om.make(RectDef, {bounds:new Bounds(1,2,3,4), fill: 'green'})
-        pageProxy.appendListProp('children',rectProxy)
+        const pageProxy = new PageClass()
+        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
+        pageProxy.getPropValue('children').push(rectProxy)
         const json_obj = toJSONObj(pageProxy)
-        const new_root:OO = fromJSONObj(om,json_obj)
+        const new_root = fromJSONObj(json_obj)
         // will restore inner objects using the impl class names
         // correct def
         assert(new_root.def.name === 'page')
@@ -138,16 +114,13 @@ describe('model tests', () => {
         assert((new_root as PageClass).hasChildren())
         const new_rects = new_root.getPropValue('children')
         assert(new_rects.length === 1)
-        const new_rect = new_root.getListPropAt('children',0)
+        const new_rect = new_root.getPropValue('children')[0]
         assert(new_rect.def.name === 'rect')
         assert(new_rect.getPropValue("fill") === 'green')
         assert(new_rect.getPropValue("bounds") instanceof Bounds)
         assert(new_rect.getPropValue("bounds").w === 3)
     })
     it('should undo and redo props', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
         assert(!om.canUndo())
         assert(!om.canRedo())
         const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
@@ -167,15 +140,12 @@ describe('model tests', () => {
         assert(rect.getPropValue('fill') === 'blue')
     })
     it('should undo and redo adding a rect to a page', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
         // make an empty page
-        const page = om.make(PageDef, {})
+        const page = new PageClass()
         assert(page.getListProp('children').length === 0)
         assert(om.history().length===1)
         // make and add rect
-        const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
         assert(om.history().length===2)
         await page.appendListProp('children', rect)
         assert(om.history().length===3)
@@ -189,12 +159,9 @@ describe('model tests', () => {
         assert(page.getListProp('children').length === 1)
     })
     it('should undo and redo deleting an object', async () => {
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
         // make a page containing a rect
-        const page = om.make(PageDef, {})
-        const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+        const page = new PageClass()
+        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
         await page.appendListProp('children', rect)
         assert(page.getListProp('children').length === 1)
 
@@ -210,10 +177,8 @@ describe('model tests', () => {
 
     })
     it('should coalesce move events into a single undo/redo event', async () => {
-        const om = new ObjectManager()
-        om.registerDef(CircleDef, CircleClass)
         // make a page containing a rect
-        const circle = om.make(CircleDef, { radius: 5})
+        const circle = new CircleClass({ radius: 5})
         assert(circle.getPropValue("radius") === 5)
 
         // change radius
@@ -251,9 +216,9 @@ describe('model tests', () => {
 
         // set the radius three times with coalescing, then undo
         om.setCompressingHistory(true)
-        await circle.setPropValue('radius',90)
-        await circle.setPropValue('radius',91)
-        await circle.setPropValue('radius',92)
+        circle.setPropValue('radius', 90)
+        circle.setPropValue('radius', 91)
+        circle.setPropValue('radius', 92)
         // om.dumpHistory()
         om.setCompressingHistory(false)
         // om.dumpHistory()
@@ -262,12 +227,9 @@ describe('model tests', () => {
     })
     it('should get the document history', async () => {
         // make some objects and change some values in om
-        const om = new ObjectManager()
-        om.registerDef(PageDef, PageClass)
-        om.registerDef(RectDef, RectClass)
         {
             // make a rect
-            const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
+            const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
             // confirm object is registered
             assert(om.hasObject(rect.getUUID()))
             // confirm history is one long
@@ -301,14 +263,14 @@ describe('asset tests', () => {
         const doc = state.getCurrentDocument()
         const name = doc.getPropValue('name')
         expect(name).toEqual('unnamed')
-        const pages = doc.getListProp('pages')
+        const pages = doc.getPropValue('pages')
         expect(pages).toBeTruthy()
         expect(pages.length).toEqual(1)
-        const page = doc.getListPropAt('pages',0)
-        const children = page.getListProp('children')
+        const page = doc.getPropValue('pages')[0]
+        const children = page.getPropValue('children')
         expect(children.length).toEqual(3)
 
-        const assets = doc.getListProp('assets')
+        const assets = doc.getPropValue('assets')
         expect(assets).toBeTruthy()
         expect(assets.length).toEqual(0)
     })
@@ -326,14 +288,14 @@ describe('asset tests', () => {
 
         // add a number asset
         {
-            const numAsset = state.om.make(NumberAssetDef, {value: 66})
+            const numAsset = new NumberAssetClass({value: 66})
             expect(numAsset).toBeTruthy()
             expect(numAsset.getPropValue('name')).toEqual('unnamed')
             expect(numAsset.getPropValue('value')).toEqual(66)
 
             //add asset to the assets list
-            state.getCurrentDocument().appendListProp('assets',numAsset)
-            expect(state.getCurrentDocument().getListProp('assets').length).toEqual(1)
+            state.getCurrentDocument().getPropValue('assets').push(numAsset)
+            expect(state.getCurrentDocument().getPropValue('assets').length).toEqual(1)
         }
 
         // persist with the single asset
@@ -350,9 +312,9 @@ describe('asset tests', () => {
         //reload json
         {
             const json_doc = saveJSON(state)
-            const doc_obj = fromJSONDoc(state.om, json_doc)
-            expect(doc_obj.getListProp('assets').length).toEqual(1)
-            const num_asset = doc_obj.getListPropAt('assets',0)
+            const doc_obj = fromJSONDoc(json_doc)
+            expect(doc_obj.getPropValue('assets').length).toEqual(1)
+            const num_asset = doc_obj.getPropValue('assets')[0]
             expect(num_asset.getPropValue('name')).toEqual('unnamed')
             expect(num_asset.getPropValue('value')).toEqual(66)
 
@@ -363,12 +325,12 @@ describe('asset tests', () => {
         const {state, circs} = await createThreeCirclesDoc()
         const doc = state.getCurrentDocument()
         // add a number asset
-        const numAsset = state.om.make(NumberAssetDef, {value: 66})
+        const numAsset = new NumberAssetClass({value: 66})
         //add asset to the assets list
-        doc.appendListProp('assets',numAsset)
+        doc.getPropValue('assets').push(numAsset)
         // get the first circle
-        const page = doc.getListPropAt('pages',0)
-        const circle = page.getListPropAt('children',0)
+        const page = doc.getPropValue('pages')[0]
+        const circle = page.getPropValue('children')[0]
         expect(circle.getPropValue('radius')).toEqual(10)
         expect(circle.isPropProxySource('radius')).toBeFalsy()
 
@@ -399,10 +361,10 @@ describe('asset tests', () => {
     })
     it('should make a color asset', async () => {
         const {state, circs} = await createThreeCirclesDoc()
-        const colorAsset = state.om.make(ColorAssetDef, {value:'#ffff00'})
+        const colorAsset = new ColorAssetClass({value:'#ffff00'})
         expect(colorAsset).toBeTruthy()
         expect(colorAsset.getPropValue('value')).toEqual('#ffff00')
-        state.getCurrentDocument().appendListProp('assets',colorAsset)
+        state.getCurrentDocument().getPropValue('assets').push(colorAsset)
         const circle = circs[0] as CircleClass
         expect(circle.getPropValue('fill')).toEqual('#cccccc')
         circle.setPropProxySource('fill',colorAsset)
@@ -411,8 +373,8 @@ describe('asset tests', () => {
 
     it('should make a gradient asset', async () => {
         const {state, circs} = await createThreeCirclesDoc()
-        const gradientAsset = state.om.make(GradientAssetDef, {})
+        const gradientAsset = new GradientAssetClass({})
         expect(gradientAsset).toBeTruthy()
-        state.getCurrentDocument().appendListProp('assets',gradientAsset)
+        state.getCurrentDocument().getPropValue('assets').push(gradientAsset)
     })
 })

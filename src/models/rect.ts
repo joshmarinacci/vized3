@@ -13,7 +13,7 @@ export type RectType = {
     roundedCornersEnabled:boolean,
     roundedCornersRadius:number,
 }
-const RectDef:DefList<RectType> = {
+export const RectDef:DefList<RectType> = {
     name: NameDef,
     bounds: BoundsDef,
     fill: FillDef,
@@ -55,7 +55,7 @@ class RectResizeHandle implements Handle {
 }
 
 export class RectClass extends BaseShape<RectType> {
-    constructor(opts: PropValues<RectType>) {
+    constructor(opts?: PropValues<RectType>) {
         super(RectDef,opts)
     }
 

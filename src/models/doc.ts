@@ -10,7 +10,7 @@ export type DocType = {
     pages:PageClass[],
     assets:AssetClass<any>[],
 }
-const DocDefs:DefList<DocType> = {
+export const DocDefs:DefList<DocType> = {
     name: NameDef,
     unit: UnitDef,
     pages: {

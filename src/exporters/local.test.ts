@@ -1,6 +1,5 @@
 import {describe, expect, it} from "vitest"
 
-import {PageClass} from "../models/om"
 import {GlobalState} from "../models/state"
 import {saveJSON} from "./json"
 import {deleteLocalDoc, listLocalDocs, loadLocalDoc, saveLocalStorage} from "./local"
@@ -87,8 +86,8 @@ describe('json', () => {
             const new_doc = await loadLocalDoc(state, uuid)
             // console.log("new doc is",new_doc)
             expect(new_doc.getUUID()).toEqual(uuid)
-            const page = new_doc.getListPropAt('pages',0) as PageClass
-            expect(page.getListProp('children').length).toBe(5)
+            const page = new_doc.getPropValue('pages')[0]
+            expect(page.getPropValue('children').length).toBe(5)
         }
 
     })

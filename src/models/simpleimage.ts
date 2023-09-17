@@ -10,7 +10,7 @@ type SimpleImageType = {
     bounds: Bounds,
     image: string,
 }
-const SimpleImageDef: DefList<SimpleImageType> = {
+export const SimpleImageDef: DefList<SimpleImageType> = {
     name: NameDef,
     bounds: BoundsDef,
     image: {

@@ -1,10 +1,13 @@
 import {genId} from "josh_js_util"
 import {useEffect, useState} from "react"
 
+import {JSONPropValue} from "../exporters/json"
+
 export type UUID = string
 export type PropGetter<T> = () => T;
 export type PropSetter<T> = (v:T) => void;
-export type ToJSONner<T> = (v: T) => unknown;
+export type ToJSONner<T> = (v: T) => JSONPropValue;
+export type FromJSONer<T> = (o:JSONPropValue) => T;
 export type ToFormatString<T> = (v: T) => string;
 export type PropDef<T> = {
     base: 'number' | 'string' | 'boolean' | 'list' | 'Point' | 'Size' | 'Bounds',
@@ -13,6 +16,7 @@ export type PropDef<T> = {
     custom?:'css-color'|'css-gradient' | 'points' | 'image-asset',
     // subProps?:Record<string,PropDef>
     toJSON?: ToJSONner<T>,
+    fromJSON?: FromJSONer<T>
     format?: ToFormatString<T>
     setter?:PropSetter<T>
     getter?:PropGetter<T>

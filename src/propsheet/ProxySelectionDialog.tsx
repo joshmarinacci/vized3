@@ -4,7 +4,6 @@ import {DialogContext, Spacer} from "josh_react_util"
 import React, {useContext, useState} from "react"
 
 import {ValueThumbnail} from "../common"
-import {OO, PropSchema} from "../models/om"
 import {GlobalState} from "../models/state"
 function ProxyAssetView(props: { asset: OO, source:OO, onChange:(value:OO)=>void }) {
     const {source, asset} = props
@@ -18,11 +17,11 @@ function ProxyAssetView(props: { asset: OO, source:OO, onChange:(value:OO)=>void
         <ValueThumbnail target={asset} prop={asset.getPropSchemaNamed('value')}/>
     </li>
 }
-export function ProxySelectionDialog(props: { state: GlobalState, prop:PropSchema, target:OO }) {
+export function ProxySelectionDialog(props: { state: GlobalState, prop:PropDef, target:OO }) {
     const {prop, state, target} = props
     const dm = useContext(DialogContext)
     const [source, setSource] = useState(target)
-    const assets = (state.getCurrentDocument().getListProp('assets') as OO[])
+    const assets = (state.getCurrentDocument().getPropValue('assets'))
         .filter(a => {
             if (prop.custom === 'css-color') {
                 if(a.getPropSchemaNamed('value').custom === 'css-color') return true

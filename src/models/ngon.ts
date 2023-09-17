@@ -15,7 +15,7 @@ type NGonType = {
     strokeFill:string,
     strokeWidth:number,
 }
-const NGonDef:DefList<NGonType> = {
+export const NGonDef:DefList<NGonType> = {
     name: NameDef,
     center: CenterPositionDef,
     radius: {

@@ -10,12 +10,12 @@ export type BaseAssetType = {
 export abstract class AssetClass<Type extends BaseAssetType> extends PropsBase<Type>{
 }
 
-type NumberAssetType = {
+export type NumberAssetType = {
     name: string,
     value: number,
 }
 
-const NumberAssetDef: DefList<NumberAssetType> = {
+export const NumberAssetDef: DefList<NumberAssetType> = {
     name: NameDef,
     value: {
         default: () => 0,
@@ -32,11 +32,11 @@ export class NumberAssetClass extends AssetClass<NumberAssetType> {
 }
 
 
-type ColorAssetType = {
+export type ColorAssetType = {
     name: string,
     value: string,
 }
-const ColorAssetDef: DefList<ColorAssetType> = {
+export const ColorAssetDef: DefList<ColorAssetType> = {
     name: NameDef,
     value: {
         base: "string",
@@ -95,11 +95,11 @@ export class LinearColorGradient {
     }
 }
 
-type GradientAssetType = {
+export type GradientAssetType = {
     name: string,
     value: object,
 }
-const GradientAssetDef: DefList<GradientAssetType> = {
+export const GradientAssetDef: DefList<GradientAssetType> = {
     name: NameDef,
     value: {
         base: 'object',
@@ -107,6 +107,9 @@ const GradientAssetDef: DefList<GradientAssetType> = {
         custom: 'css-gradient',
         default: () => new LinearColorGradient(),
         hidden: false,
+        fromJSON:(json) => {
+            return LinearColorGradient.fromJSON(json.value)
+        }
     }
 }
 
@@ -117,19 +120,25 @@ export class GradientAssetClass extends AssetClass<GradientAssetType> {
 }
 
 
-type ImageAssetType = {
+export type ImageAssetType = {
     name: string,
     value: object,
 }
 
-const ImageAssetDef: DefList<ImageAssetType> = {
+export const ImageAssetDef: DefList<ImageAssetType> = {
     name: NameDef,
     value: {
         base: 'object',
         default: () => ({width: 1, height: 1, data: [255, 255, 255]}),
         readonly: true,
         custom: 'image-asset',
-        hidden: false
+        hidden: false,
+        toJSON: (v) => {
+            return {
+                type:'value',
+                value:'some stuff'
+            }
+        }
     }
 }
 

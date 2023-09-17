@@ -5,7 +5,7 @@ import {BaseShape, CenterPositionDef, FillDef, NameDef, StrokeFillDef, StrokeWid
 import {Handle, ScaledSurface} from "./drawing"
 
 
-type CircleType = {
+export type CircleType = {
     name:string,
     center:Point,
     radius:number,
@@ -14,7 +14,7 @@ type CircleType = {
     strokeWidth:number,
 }
 
-const CircleDef:DefList<CircleType> = {
+export const CircleDef:DefList<CircleType> = {
     name: NameDef,
     center: CenterPositionDef,
     radius: {
