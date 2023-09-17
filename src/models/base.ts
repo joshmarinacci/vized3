@@ -265,6 +265,20 @@ export class ObjectManager {
     history() {
         return this.historyBuffer
     }
+
+    make<T>(DocClass: Constructor<T>):T {
+        if(!this.CLASS_REGISTRY.has(DocClass.name)) throw new Error(`cannot create object of type ${DocClass.name}`)
+        const ClassCons = this.CLASS_REGISTRY.get(DocClass.name)
+        const obj = new ClassCons()
+        this.registerLiveObject(obj)
+        return obj
+    }
+
+    appendListProp<Type>(obj: PropsBase<Type>, name: keyof Type, child: Type[keyof Type]) {
+        const array = obj.getPropValue(name)
+        array.push(child)
+        obj.setPropValue(name,array)
+    }
 }
 
 export const OM = new ObjectManager()

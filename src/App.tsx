@@ -138,8 +138,8 @@ function Main() {
                 AddNewSimpletextAction,
                 AddNewSimpleimageAction,
             ]}/>
-            {/*<ToolbarActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>*/}
-            {/*<ToolbarActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>*/}
+            <ToolbarActionButton action={UndoAction} state={state} disabled={!state.om.canUndo()}/>
+            <ToolbarActionButton action={RedoAction} state={state} disabled={!state.om.canRedo()}/>
             <Spacer/>
             <ActionSearchBox state={state}/>
             <Spacer/>

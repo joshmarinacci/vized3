@@ -8,7 +8,7 @@ import {
     ImageAssetClass, ImageAssetDef,
     NumberAssetClass, NumberAssetDef
 } from "./assets"
-import {OM, PropsBase} from "./base"
+import {ObjectManager, OM, PropsBase} from "./base"
 import {CircleClass, CircleDef} from "./circle"
 import {BaseShape} from "./defs"
 import {DocClass, DocDefs} from "./doc"
@@ -42,6 +42,7 @@ export class GlobalState extends ObservableBase {
     private selected_page: PageClass | null
     localStorage: Storage
     private _doc: DocClass
+    public om: ObjectManager
 
     constructor(opts?:StateOpts) {
         super()
@@ -54,9 +55,10 @@ export class GlobalState extends ObservableBase {
                 this.localStorage = null
             }
         }
-        this._doc = new DocClass()
-        const page = new PageClass()
-        this._doc.getPropValue('pages').push(page)
+        this.om = OM
+        this._doc = this.om.make(DocClass)
+        const page = this.om.make(PageClass)
+        this.om.appendListProp(this._doc,'pages',page)
         const rect = new RectClass({ bounds: new Bounds(1,1,2,3),  name:'rect',  fill:'#ff0000'})
         page.addChild(rect)
         const circle = new CircleClass({ center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'})
