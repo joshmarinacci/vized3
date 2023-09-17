@@ -7,7 +7,7 @@ export type BaseAssetType = {
     name:string,
     value: unknown,
 }
-export abstract class AssetClass<Type extends BaseAssetType> extends PropsBase<Type>{
+export abstract class AssetBase<Type extends BaseAssetType> extends PropsBase<Type>{
 }
 
 export type NumberAssetType = {
@@ -25,7 +25,7 @@ export const NumberAssetDef: DefList<NumberAssetType> = {
     }
 }
 
-export class NumberAssetClass extends AssetClass<NumberAssetType> {
+export class NumberAssetClass extends AssetBase<NumberAssetType> {
     constructor(opts?: PropValues<NumberAssetType>) {
         super(NumberAssetDef, opts)
     }
@@ -47,7 +47,7 @@ export const ColorAssetDef: DefList<ColorAssetType> = {
     }
 }
 
-export class ColorAssetClass extends AssetClass<ColorAssetType> {
+export class ColorAssetClass extends AssetBase<ColorAssetType> {
     constructor(opts?: PropValues<ColorAssetType>) {
         super(ColorAssetDef, opts)
     }
@@ -113,7 +113,7 @@ export const GradientAssetDef: DefList<GradientAssetType> = {
     }
 }
 
-export class GradientAssetClass extends AssetClass<GradientAssetType> {
+export class GradientAssetClass extends AssetBase<GradientAssetType> {
     constructor(opts?: PropValues<GradientAssetType>) {
         super(GradientAssetDef, opts)
     }
@@ -142,7 +142,7 @@ export const ImageAssetDef: DefList<ImageAssetType> = {
     }
 }
 
-export class ImageAssetClass extends AssetClass<ImageAssetType> {
+export class ImageAssetClass extends AssetBase<ImageAssetType> {
     constructor(opts?: PropValues<ImageAssetType>) {
         super(ImageAssetDef, opts)
     }

@@ -32,7 +32,7 @@ export const FillDef:PropDef<string> = {
     readonly: false,
     custom:'css-color',
     default:()=> '#cccccc',
-    // canProxy:true
+    canProxy:true
 }
 export const StrokeFillDef:PropDef<string> = {
     base: 'string',

@@ -2,25 +2,27 @@ import "./PropSheet.css"
 
 import {Bounds, Point, Size} from "josh_js_util"
 import {DialogContext} from "josh_react_util"
-import {ChangeEvent, useContext, useEffect, useState} from "react"
+import React, {ChangeEvent, useContext, useEffect, useState} from "react"
 
-import {useObservableChange, ValueThumbnail} from "../common"
+import {ToggleIconButton, useObservableChange, ValueThumbnail} from "../common"
+import {SupportedIcons} from "../icons"
 import {PropDef, PropsBase, useWatchAllProps, useWatchProp} from "../models/base"
 import {GlobalState} from "../models/state"
 import {FillInput} from "./FillPropEditor"
+import {ProxySelectionDialog} from "./ProxySelectionDialog"
 
 
 function NumberEditor<Type>(props: {
     name: keyof Type,
-    schema: PropDef<number>,
+    def: PropDef<number>,
     target: PropsBase<Type>
 }) {
-    const {name, schema, target} = props
+    const {name, def, target} = props
     const [value, setValue] = useState(target.getPropValue(name) as number)
     useWatchProp(target, name, () => setValue(target.getPropValue(name) as number))
     useEffect(() => setValue(target.getPropValue(name) as number), [target])
     const update = (e: ChangeEvent<HTMLInputElement>) => target.setPropValue(name, parseFloat(e.target.value) as Type[keyof Type])
-    const displayUnit = schema.displayUnit ? schema.displayUnit : ''
+    const displayUnit = def.displayUnit ? def.displayUnit : ''
     return <><input type={"number"} value={value} step={0.1}
                     onChange={update}/><i>{displayUnit}</i></>
 }
@@ -28,10 +30,10 @@ function NumberEditor<Type>(props: {
 
 function StringEditor<Type>(props: {
     name: keyof Type,
-    schema: PropDef<string>,
+    def: PropDef<string>,
     target: PropsBase<Type>
 }) {
-    const {name, schema, target} = props
+    const {name, def, target} = props
     const [value, setValue] = useState(target.getPropValue(name) as string)
     useWatchProp(target, name, () => setValue(target.getPropValue(name) as string))
     useEffect(() => setValue(target.getPropValue(name) as string), [target])
@@ -41,10 +43,10 @@ function StringEditor<Type>(props: {
 
 function BooleanEditor<Type>(props: {
     name: keyof Type,
-    schema: PropDef<boolean>,
+    def: PropDef<boolean>,
     target: PropsBase<Type>
 }) {
-    const {name, schema, target} = props
+    const {name, def, target} = props
     const value = target.getPropValue(name) as boolean
     const update = async (e: ChangeEvent<HTMLInputElement>) => {
         target.setPropValue(name, e.target.checked)
@@ -68,13 +70,13 @@ function BooleanEditor<Type>(props: {
 //     </>
 // }
 
-// function ProxyValueThumbnail(props: { prop: PropDef, target: OO }) {
-//     const {prop, target} = props
-//     return <div className={'proxy-value-thumbnail'}>
-//         <ValueThumbnail target={target} prop={prop}/>
-//         <b>{target.getPropProxySource(prop.name).getPropValue('name')}</b>
-//     </div>
-// }
+function ProxyValueThumbnail<Type>(props: { name: keyof Type, prop: PropDef<Type[keyof Type]>, target: PropsBase<Type> }) {
+    const {name, prop, target} = props
+    return <div className={'proxy-value-thumbnail'}>
+        <ValueThumbnail name={name} target={target} prop={prop}/>
+        <b>{target.getPropProxySource(name).getPropValue('name')}</b>
+    </div>
+}
 function SizeEditor<Type, Key extends keyof Type>(props: {
     target: PropsBase<Type>
     name: Key,
@@ -187,14 +189,13 @@ function BoundsEditor<Type, Key extends keyof Type>(props: {
 
 function PropEditor<Type, K extends keyof Type>(props: {
     name: K,
-    def: PropDef<any>,
+    def: PropDef<Type[K]>,
     target: PropsBase<Type>,
     state: GlobalState
 }) {
     const {name, def, target, state} = props
     const dm = useContext(DialogContext)
-    // const isProxied = target.isPropProxySource(prop.name)
-    const isProxied = false
+    const isProxied = target.isPropProxySource(name)
 
     if (def.hidden) return <></>
     if (def.readonly) return <>
@@ -205,38 +206,37 @@ function PropEditor<Type, K extends keyof Type>(props: {
     //     <label>{prop.name}</label>
     //     <EnumPropEditor schema={prop as EnumSchema} target={target}/>
     // </>
-    // if(prop.base === 'object' && prop.subProps) return <SubPropEditor schema={prop} target={target}/>
 
     const the_label = <label>{name.toString()}</label>
-    // const proxy_button = <ToggleIconButton
-    //         regularIcon={SupportedIcons.Star}
-    //         selectedIcon={SupportedIcons.Star}
-    //         selected={target.isPropProxySource(prop.name)}
-    //         onClick={() => {
-    //             dm.show(<ProxySelectionDialog state={state} prop={prop} target={target}/>)
-    //         }}
-    //     />
-    // const proxied_value = <ProxyValueThumbnail target={target} prop={prop}/>
+    const proxy_button = <ToggleIconButton
+            regularIcon={SupportedIcons.Star}
+            selectedIcon={SupportedIcons.Star}
+            selected={target.isPropProxySource(name)}
+            onClick={() => {
+                dm.show(<ProxySelectionDialog name={name} state={state} prop={def} target={target}/>)
+            }}
+        />
+    const proxied_value = <ProxyValueThumbnail name={name} target={target} prop={def}/>
     let regular_input = <label>unknown input</label>
     if (def.base === 'number') regular_input =
-        <NumberEditor name={name} schema={def as PropDef<number>} target={target}/>
+        <NumberEditor name={name} def={def} target={target}/>
     if (def.base === 'string') regular_input =
-        <StringEditor name={name} schema={def as PropDef<string>} target={target}/>
+        <StringEditor name={name} def={def} target={target}/>
     if (def.base === 'boolean') regular_input =
-        <BooleanEditor name={name} schema={def as PropDef<boolean>} target={target}/>
+        <BooleanEditor name={name} def={def} target={target}/>
     if (def.base === 'Size') regular_input =
-        <SizeEditor name={name} def={def as PropDef<Size>} target={target}/>
+        <SizeEditor name={name} def={def} target={target}/>
     if (def.base === 'Point') regular_input =
-        <PointEditor name={name} def={def as PropDef<Point>} target={target}/>
+        <PointEditor name={name} def={def} target={target}/>
     if (def.base === 'Bounds') regular_input =
-        <BoundsEditor name={name} def={def as PropDef<Bounds>} target={target}/>
+        <BoundsEditor name={name} def={def} target={target}/>
     if (def.custom === 'css-color') regular_input =
-        <FillInput name={name} schema={def} target={target}/>
-    // if(def.custom === 'image-asset') regular_input = <label>an image</label>
+        <FillInput name={name} def={def} target={target}/>
+    if(def.custom === 'image-asset') regular_input = <label>an image</label>
     return <>
         {the_label}
-        {/*{prop.canProxy && proxy_button}*/}
-        {/*{isProxied && proxied_value}*/}
+        {def.canProxy && proxy_button}
+        {isProxied && proxied_value}
         {!isProxied && regular_input}
     </>
 }
@@ -249,7 +249,6 @@ export function PropSheet(props: { state: GlobalState }) {
 }
 
 export function InnerPropSheet(props: { state: GlobalState, selected: PropsBase<any> }) {
-    // useObjectProxyChange(props.selected,PropChanged)
     useWatchAllProps(props.selected)
     useObservableChange(props.state, 'selection')
     const schemas = props.selected.getAllPropDefs()

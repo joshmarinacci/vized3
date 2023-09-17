@@ -82,15 +82,15 @@ function TabbedColorPicker(props: { value: string, onSelect: (value: string) => 
 
 export function FillInput<Type>(props: {
     name: keyof Type,
-    schema: PropDef<Type[keyof Type]>,
+    def: PropDef<Type[keyof Type]>,
     target: PropsBase<Type>
 }) {
-    const {name, schema, target} = props
+    const {name, def, target} = props
     const value = target.getPropValue(name)
     const pm = useContext(PopupContext)
     const setColor = async (hex: string) => target.setPropValue(name, hex)
     const choose = (e: MouseEvent) => {
         pm.show_at(<TabbedColorPicker value={value} onSelect={setColor}/>, e.target, 'right')
     }
-    return <FillSwatchButton name={name} schema={schema} target={target} onClick={choose}/>
+    return <FillSwatchButton name={name} schema={def} target={target} onClick={choose}/>
 }

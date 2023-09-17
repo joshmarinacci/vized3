@@ -29,7 +29,6 @@ describe('model tests', () => {
         rect.setPropValue('fill','blue')
         assert(rect.getPropValue('fill') === 'blue')
     })
-
     it('should make an object with array children', async () => {
         const page = new PageClass()
         assert(page.getPropValue('children').length === 0)

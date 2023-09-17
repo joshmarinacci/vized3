@@ -1,4 +1,4 @@
-import {AssetClass} from "./assets"
+import {AssetBase} from "./assets"
 import {DefList, PropsBase, PropValues} from "./base"
 import {NameDef, UnitDef} from "./defs"
 import {PageClass} from "./page"
@@ -8,7 +8,7 @@ export type DocType = {
     name:string,
     unit:Unit,
     pages:PageClass[],
-    assets:AssetClass<any>[],
+    assets:AssetBase<any>[],
 }
 export const DocDefs:DefList<DocType> = {
     name: NameDef,

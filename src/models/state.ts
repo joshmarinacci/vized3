@@ -10,6 +10,7 @@ import {ObservableBase} from "./model"
 import {PageClass} from "./page"
 import {PathShapeClass} from "./pathshape"
 import {RectClass} from "./rect"
+import {SimpleImageClass} from "./simpleimage"
 import {SimpleTextClass} from "./simpletext"
 
 export type StateOpts = {
@@ -36,14 +37,11 @@ export class GlobalState extends ObservableBase {
         this._doc = new DocClass()
         const page = new PageClass()
         this._doc.getPropValue('pages').push(page)
-        const rect = new RectClass({
-            bounds: new Bounds(1,1,2,3),
-            name:'rect',
-            fill:'#ff0000'})
+        const rect = new RectClass({ bounds: new Bounds(1,1,2,3),  name:'rect',  fill:'#ff0000'})
         page.addChild(rect)
         const circle = new CircleClass({ center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'})
         page.addChild(circle)
-        this.setSelectedObjects<any>([rect, circle])
+        this.setSelectedObjects([rect, circle])
         const text = new SimpleTextClass({ center: new Point(1,5), name:'text', fill:'#000000'})
         page.addChild(text)
         page.addChild(new PathShapeClass({ center: new Point(1,3), name:'path', fill:'#0000ff'}))
@@ -53,11 +51,11 @@ export class GlobalState extends ObservableBase {
         const dummy_img = make_filled_image(10,10,'green')
         const asset_img = new ImageAssetClass({value:dummy_img, name:'checkerboard'})
         this._doc.getPropValue('assets').push(asset_img)
-        const image = new SimpleTextClass({ name:'image'})
-        // image.setPropProxySource('image',asset_img)
+        const image = new SimpleImageClass({ name:'image'})
+        image.setPropProxySource('image',asset_img)
         page.addChild(image)
 
-        this._doc.getPropValue('assets').push(new GradientAssetClass())
+        this._doc.getPropValue('assets').push(new GradientAssetClass({name:'gradient'}))
         this.selected_objects = []
         this.selected_page = page
     }
@@ -72,7 +70,6 @@ export class GlobalState extends ObservableBase {
     getSelectedShapes() {
         return this.selected_objects.filter(s => s instanceof BaseShape).map(s => s as BaseShape<any>)
     }
-
     addSelectedObjects(objs: PropsBase<any>[]) {
         this.selected_objects  = this.selected_objects.concat(...objs)
         this.fire('selection', {})
@@ -94,7 +91,6 @@ export class GlobalState extends ObservableBase {
     isSelectedObject(obj:PropsBase<any>) :boolean {
         return this.selected_objects.includes(obj)
     }
-
     setSelectedPage(page: PageClass | null) {
         const old = this.selected_page
         this.selected_page = page
@@ -102,7 +98,6 @@ export class GlobalState extends ObservableBase {
             this.fire('selection', {})
         }
     }
-
     getSelectedPage() {
         return this.selected_page
     }

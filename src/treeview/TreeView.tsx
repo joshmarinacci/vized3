@@ -25,7 +25,7 @@ import {
     ValueThumbnail
 } from "../common"
 import {SupportedIcons} from "../icons"
-import {AssetClass, BaseAssetType, ImageAssetClass} from "../models/assets"
+import {AssetBase, BaseAssetType, ImageAssetClass} from "../models/assets"
 import {useWatchAllProps, useWatchProp} from "../models/base"
 import {BaseShape, BaseShapeType} from "../models/defs"
 import {DocClass} from "../models/doc"
@@ -54,7 +54,7 @@ function TreeShapeItem<Type extends BaseShapeType>(props: { shape: BaseShape<Typ
                 }}
     >
         <Icon icon={SupportedIcons.Shape}/>
-        <b>{shape.getPropValue('name')}</b>
+        <b>sss{shape.getPropValue('name')}</b>
     </div>
 }
 
@@ -95,7 +95,7 @@ function TreePageItem(props: { page: PageClass, state:GlobalState}) {
     </div>
 }
 
-function TreeAssetItem<Type extends BaseAssetType>(props: { asset: AssetClass<Type>, state:GlobalState}) {
+function TreeAssetItem<Type extends BaseAssetType>(props: { asset: AssetBase<Type>, state:GlobalState}) {
     const {asset, state} = props
     const schema = asset.getPropDef('value')
     const pm = useContext(PopupContext)

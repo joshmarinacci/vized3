@@ -35,12 +35,14 @@ export class PropsBase<Type> {
     private all_listeners: WrapperAnyCallback<Type>[]
     private values: Map<keyof Type, Type[keyof Type]>
     private defs: Map<keyof Type, PropDef<Type[keyof Type]>>
+    private proxies: Map<keyof Type, PropsBase<any>>
     _id: string
 
     constructor(defs: DefList<Type>, options?: PropValues<Type>) {
         this._id = genId("Wrapper")
         this.values = new Map()
         this.defs = new Map()
+        this.proxies = new Map()
         this.listeners = new Map()
         this.all_listeners = []
         for (const [k, d] of Object.entries(defs)) {
@@ -60,56 +62,73 @@ export class PropsBase<Type> {
         }
     }
 
+    // DEFS
     getAllPropDefs() {
         return Array.from(this.defs.entries())
     }
-
     getPropDef<Key extends keyof Type>(name: Key): PropDef<Type[Key]> {
         if (!this.defs.has(name)) throw new Error("")
         return this.defs.get(name) as unknown as PropDef<Type[Key]>
     }
-
     setPropDef<Key extends keyof Type>(name: Key, def: PropDef<Type[Key]>) {
         this.defs.set(name, def as unknown as PropDef<Type[keyof Type]>)
     }
 
+    // VALUES
     getPropValue<K extends keyof Type>(name: K): Type[K] {
+        if(this.proxies.has(name)) {
+            return this.proxies.get(name).getPropValue('value')
+        }
         return this.values.get(name) as Type[K]
     }
-
     setPropValue<K extends keyof Type>(name: K, value: Type[K]) {
         this.values.set(name, value)
         this._fire(name, value)
     }
 
+    // Proxy stuff
+    getPropProxySource<K extends keyof Type>(name: K) {
+        return this.proxies.get(name)
+    }
+    isPropProxySource<K extends keyof Type>(name: K) {
+        return this.proxies.has(name)
+    }
+    setPropProxySource<K extends keyof Type>(name: K, source: PropsBase<any>) {
+        this.proxies.set(name,source)
+    }
+    removePropProxySource<K extends keyof Type>(name: K) {
+        this.proxies.delete(name)
+    }
+
+    // EVENT stuff
+    _fireAll() {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.all_listeners.forEach(cb => cb(this))
+    }
     _fire<K extends keyof Type>(name: K, value: Type[K]) {
         this._get_listeners(name).forEach(cb => cb(value))
         this._fireAll()
     }
-
-    on<K extends keyof Type>(name: K, cb: WrapperCallback<Type[K]>) {
-        this._get_listeners(name).push(cb)
-    }
-
-    onAny(hand: WrapperAnyCallback<Type>) {
-        this.all_listeners.push(hand)
-    }
-
-    off<K extends keyof Type>(name: K, cb: WrapperCallback<Type[K]>) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.listeners.set(name, this._get_listeners(name).filter(c => c !== cb))
-    }
-
-    offAny(hand: WrapperAnyCallback<Type>) {
-        this.all_listeners = this.all_listeners.filter(cb => cb !== hand)
-    }
-
     private _get_listeners<K extends keyof Type>(name: K) {
         if (!this.listeners.has(name)) {
             this.listeners.set(name, [])
         }
         return this.listeners.get(name) as WrapperCallback<Type[K]>[]
+    }
+    on<K extends keyof Type>(name: K, cb: WrapperCallback<Type[K]>) {
+        this._get_listeners(name).push(cb)
+    }
+    onAny(hand: WrapperAnyCallback<Type>) {
+        this.all_listeners.push(hand)
+    }
+    off<K extends keyof Type>(name: K, cb: WrapperCallback<Type[K]>) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        this.listeners.set(name, this._get_listeners(name).filter(c => c !== cb))
+    }
+    offAny(hand: WrapperAnyCallback<Type>) {
+        this.all_listeners = this.all_listeners.filter(cb => cb !== hand)
     }
 
     toJSON() {
@@ -124,11 +143,7 @@ export class PropsBase<Type> {
         return obj
     }
 
-    _fireAll() {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.all_listeners.forEach(cb => cb(this))
-    }
+
 }
 
 export type AllPropsWatcher<T> = (v: T) => void
