@@ -1,5 +1,6 @@
+import assert from "assert"
 import * as fs from "fs"
-import {Point} from "josh_js_util"
+import {Bounds, Point} from "josh_js_util"
 import pureimage, {Bitmap} from "pureimage"
 import {describe, expect,it} from "vitest"
 
@@ -10,7 +11,9 @@ import {
 } from "../models/assets"
 import {CircleClass} from "../models/circle"
 import {DocClass, DocType} from "../models/doc"
+import {PageClass} from "../models/page"
 import {PathShapeClass, PathShapeType} from "../models/pathshape"
+import {RectClass} from "../models/rect"
 import {
     fromJSONDoc,
     fromJSONObj,
@@ -178,4 +181,47 @@ describe('json', () => {
     //     let doc = await savePNGJSONToArray(state, canvas)
     //     console.log("blob is",doc)
     // })
+
+    it('should export to json', async () => {
+        const pageProxy = new PageClass()
+        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
+        pageProxy.getPropValue('children').push(rectProxy)
+        const json_obj = toJSONObj(pageProxy)
+        expect(typeof json_obj).toEqual('object')
+        expect(json_obj.name).toEqual(PageClass.name)
+        expect(Array.isArray((json_obj.props.children as JSONPropValue).value)).toBeTruthy()
+        expect(json_obj.props.children.value.length).toEqual(1)
+        const json_rect:JSONObject = json_obj.props.children.value[0]
+
+        expect(json_rect.name).toBe(RectClass.name)
+        expect(json_rect.props.fill.value).toBe('green')
+        expect(json_rect.props.bounds.type).toBe('value')
+        const bounds = (json_rect.props.bounds as JSONPropValue).value
+        assert(bounds.x === 1)
+        assert(bounds.y === 2)
+        assert(bounds.w === 3)
+        assert(bounds.h === 4)
+    })
+    it('should import from json', async () => {
+        const pageProxy = new PageClass()
+        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
+        pageProxy.getPropValue('children').push(rectProxy)
+        const json_obj = toJSONObj(pageProxy)
+        const new_root = fromJSONObj(json_obj)
+        // will restore inner objects using the impl class names
+        // correct def
+        expect(new_root instanceof PageClass).toBeTruthy()
+        // has actual RealPage methods
+        assert(new_root instanceof PageClass)
+        assert((new_root as PageClass).hasChildren !== null)
+        assert((new_root as PageClass).hasChildren())
+        const new_rects = new_root.getPropValue('children')
+        assert(new_rects.length === 1)
+        const new_rect = new_root.getPropValue('children')[0]
+        expect(new_rect instanceof RectClass).toBeTruthy()
+        assert(new_rect.getPropValue("fill") === 'green')
+        assert(new_rect.getPropValue("bounds") instanceof Bounds)
+        assert(new_rect.getPropValue("bounds").w === 3)
+    })
+
 })

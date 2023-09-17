@@ -2,6 +2,7 @@ import {genId} from "josh_js_util"
 import {useEffect, useState} from "react"
 
 import {JSONPropValue} from "../exporters/json"
+import {HistoryBuffer, HistoryEvent} from "./history"
 
 export type UUID = string
 export type PropGetter<T> = () => T;
@@ -26,9 +27,42 @@ export type PropDef<T> = {
 }
 
 export type WrapperCallback<Value> = (v:Value) => void
-export type WrapperAnyCallback<Type> = (t:Type) => void
+export type WrapperAnyCallback<Type> = (evtd:PropChangeEvent<Type>) => void
 export type DefList<Type> = Record<keyof Type, PropDef<Type[keyof Type]>>
 export type PropValues<Type> = Partial<Record<keyof Type, Type[keyof Type]>>
+
+export class PropChangeEvent<Type> implements HistoryEvent{
+    object: PropsBase<Type>
+    name: keyof Type
+    oldValue: Type[keyof Type]
+    newValue: Type[keyof Type]
+    constructor(object:PropsBase<Type>, name:keyof Type, oldValue:Type[keyof Type], newValue:Type[keyof Type]) {
+        this.object = object
+        this.name = name
+        this.oldValue = oldValue
+        this.newValue = newValue
+    }
+
+    async undo() {
+        console.log("undoing",this.object.constructor.name,this.name,this.oldValue)
+        this.object.setPropValue(this.name, this.oldValue)
+    }
+    async redo() {
+        this.object.setPropValue(this.name, this.newValue)
+    }
+}
+export class CreateObjectEvent<Type> implements HistoryEvent{
+    private object: PropsBase<Type>
+    constructor(finalObject: PropsBase<Type>) {
+        this.object = finalObject
+    }
+    async undo() {
+        console.log("undoing create object")
+    }
+    async redo() {
+        console.log("redoing create object")
+    }
+}
 
 export class PropsBase<Type> {
     private listeners: Map<keyof Type, WrapperCallback<Type[keyof Type]>[]>
@@ -82,8 +116,9 @@ export class PropsBase<Type> {
         return this.values.get(name) as Type[K]
     }
     setPropValue<K extends keyof Type>(name: K, value: Type[K]) {
+        const old = this.values.get(name)
         this.values.set(name, value)
-        this._fire(name, value)
+        this._fire(name, old, value)
     }
 
     // Proxy stuff
@@ -105,14 +140,12 @@ export class PropsBase<Type> {
     }
 
     // EVENT stuff
-    _fireAll() {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        this.all_listeners.forEach(cb => cb(this))
+    _fireAll(evt:PropChangeEvent<Type>) {
+        this.all_listeners.forEach(cb => cb(evt))
     }
-    _fire<K extends keyof Type>(name: K, value: Type[K]) {
-        this._get_listeners(name).forEach(cb => cb(value))
-        this._fireAll()
+    _fire<K extends keyof Type>(name: K, oldValue:Type[K], newValue: Type[K]) {
+        this._get_listeners(name).forEach(cb => cb(newValue))
+        this._fireAll(new PropChangeEvent<Type>(this,name,oldValue,newValue))
     }
     private _get_listeners<K extends keyof Type>(name: K) {
         if (!this.listeners.has(name)) {
@@ -134,20 +167,6 @@ export class PropsBase<Type> {
     offAny(hand: WrapperAnyCallback<Type>) {
         this.all_listeners = this.all_listeners.filter(cb => cb !== hand)
     }
-
-    toJSON() {
-        const obj = {
-            class: 'Wrapper',
-            props: {},
-            id: this._id,
-        }
-        for (const [k, d] of this.getAllPropDefs()) {
-            // obj.props[k] = d.toJSON(this.getPropValue(k))
-        }
-        return obj
-    }
-
-
 }
 
 export type AllPropsWatcher<T> = (v: T) => void
@@ -186,39 +205,65 @@ export function useWatchProp<Type, Key extends keyof Type>(
 
 
 type Constructor<Type> = new () => Type
+
 export class ObjectManager {
     private CLASS_REGISTRY: Map<string, Constructor<any>>
     private DEFS_REGISTRY: Map<string, DefList<any>>
     private objects: Map<UUID,PropsBase<any>>
+    private change_handler:AllPropsWatcher<any>
+    private historyBuffer: HistoryBuffer
 
     constructor() {
         this.CLASS_REGISTRY = new Map()
         this.DEFS_REGISTRY = new Map()
         this.objects = new Map()
+        this.historyBuffer = new HistoryBuffer()
+        this.change_handler = (evt:PropChangeEvent<any>) => {
+            this.historyBuffer.push(evt)
+        }
     }
     register<Type>(obj:Constructor<PropsBase<Type>>, defs:DefList<Type>) {
         this.CLASS_REGISTRY.set(obj.name,obj)
         this.DEFS_REGISTRY.set(obj.name, defs)
     }
-
     lookupClass(name: string) {
         return this.CLASS_REGISTRY.get(name)
     }
-
     lookupDefs(name: string) {
         return this.DEFS_REGISTRY.get(name)
     }
-
     registerObject<Type>(uuid: string, finalObject: PropsBase<Type>) {
         this.objects.set(uuid,finalObject)
     }
-
+    registerLiveObject<Type>(finalObject: PropsBase<Type>) {
+        this.objects.set(finalObject.getUUID(),finalObject)
+        finalObject.onAny(this.change_handler)
+        this.historyBuffer.push(new CreateObjectEvent(finalObject))
+    }
     hasObject(reference: string) {
         return this.objects.has(reference)
     }
-
     lookupObject(reference: string) {
         return this.objects.get(reference)
+    }
+    insertPropChangeEvent<Type>(propChangeEvent: PropChangeEvent<Type>) {
+        this.historyBuffer.push(propChangeEvent)
+    }
+
+    canUndo() {
+        return this.historyBuffer.canUndo()
+    }
+    canRedo() {
+        return this.historyBuffer.canRedo()
+    }
+    async performUndo() {
+        return this.historyBuffer.performUndo()
+    }
+    async performRedo() {
+        return this.historyBuffer.performRedo()
+    }
+    history() {
+        return this.historyBuffer
     }
 }
 

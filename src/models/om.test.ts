@@ -3,17 +3,11 @@ import {Bounds} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
 import {createThreeCirclesDoc} from "../actions/actions.test"
-import {
-    fromJSONDoc,
-    fromJSONObj,
-    JSONObject,
-    JSONPropValue,
-    saveJSON,
-    toJSONObj
-} from "../exporters/json"
+import {fromJSONDoc, saveJSON} from "../exporters/json"
 import {ColorAssetClass, GradientAssetClass, NumberAssetClass} from "./assets"
+import {ObjectManager, PropChangeEvent} from "./base"
 import {CircleClass,} from "./circle"
-import {PageClass} from "./page"
+import {PageClass, PageType} from "./page"
 import {RectClass}  from "./rect"
 
 
@@ -78,103 +72,90 @@ describe('model tests', () => {
             }
         })
     })
-    it('should export to json', async () => {
-        const pageProxy = new PageClass()
-        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
-        pageProxy.getPropValue('children').push(rectProxy)
-        const json_obj = toJSONObj(pageProxy)
-        expect(typeof json_obj).toEqual('object')
-        expect(json_obj.name).toEqual(PageClass.name)
-        expect(Array.isArray((json_obj.props.children as JSONPropValue).value)).toBeTruthy()
-        expect(json_obj.props.children.value.length).toEqual(1)
-        const json_rect:JSONObject = json_obj.props.children.value[0]
+    it('should undo and redo props', async () => {
+        const om = new ObjectManager()
+        expect(om.canUndo()).toBeFalsy()
+        expect(om.canRedo()).toBeFalsy()
+        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
+        om.registerLiveObject(rect)
+        rect.setPropValue('fill','blue')
+        expect(om.canUndo()).toBeTruthy()
+        expect(om.canUndo()).toBeTruthy()
+        expect(om.canRedo()).toBeFalsy()
+        expect(rect.getPropValue('fill')).toBe('blue')
+        await om.performUndo()
+        expect(rect.getPropValue('fill')).toBe('red')
+        await om.performUndo()
+        expect(om.canUndo()).toBeFalsy()
+        expect(om.canRedo()).toBeTruthy()
+        await om.performRedo()
+        await om.performRedo()
+        expect(om.canUndo()).toBeTruthy()
+        expect(om.canRedo()).toBeFalsy()
+        expect(rect.getPropValue('fill')).toBe('blue')
+    })
+    it('should undo and redo adding a rect to a page', async () => {
+        const om = new ObjectManager()
+        // make an empty page
+        const page = new PageClass()
+        om.registerLiveObject(page)
+        expect(page.getPropValue('children').length).toBe(0)
+        expect(om.history().length).toBe(1)
+        // make and add rect
+        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
+        om.registerLiveObject(rect)
+        expect(om.history().length).toBe(2)
 
-        expect(json_rect.name).toBe(RectClass.name)
-        expect(json_rect.props.fill.value).toBe('green')
-        expect(json_rect.props.bounds.type).toBe('value')
-        const bounds = (json_rect.props.bounds as JSONPropValue).value
-        assert(bounds.x === 1)
-        assert(bounds.y === 2)
-        assert(bounds.w === 3)
-        assert(bounds.h === 4)
+        //insert child
+        const old_children = page.getPropValue('children').slice()
+        page.getPropValue('children').push(rect)
+        const new_children = page.getPropValue('children').slice()
+        om.insertPropChangeEvent(new PropChangeEvent(page,'children',old_children,new_children))
+        expect(om.history().length).toBe(3)
+        expect(page.getPropValue('children').length).toBe(1)
+        expect(page.getPropValue('children')[0]).toBe(rect)
+        // undo
+        await om.performUndo()
+        console.log("come undon")
+        expect(page.getPropValue('children').length).toBe(0)
+        // redo
+        await om.performRedo()
+        expect(page.getPropValue('children').length).toBe(1)
     })
-    it('should import from json', async () => {
-        const pageProxy = new PageClass()
-        const rectProxy = new RectClass({bounds:new Bounds(1,2,3,4), fill: 'green'})
-        pageProxy.getPropValue('children').push(rectProxy)
-        const json_obj = toJSONObj(pageProxy)
-        const new_root = fromJSONObj(json_obj)
-        // will restore inner objects using the impl class names
-        // correct def
-        expect(new_root instanceof PageClass).toBeTruthy()
-        // has actual RealPage methods
-        assert(new_root instanceof PageClass)
-        assert((new_root as PageClass).hasChildren !== null)
-        assert((new_root as PageClass).hasChildren())
-        const new_rects = new_root.getPropValue('children')
-        assert(new_rects.length === 1)
-        const new_rect = new_root.getPropValue('children')[0]
-        expect(new_rect instanceof RectClass).toBeTruthy()
-        assert(new_rect.getPropValue("fill") === 'green')
-        assert(new_rect.getPropValue("bounds") instanceof Bounds)
-        assert(new_rect.getPropValue("bounds").w === 3)
+    it('should undo and redo deleting an object', async () => {
+        // make a page containing a rect
+        const om = new ObjectManager()
+        const page = new PageClass()
+        om.registerLiveObject(page)
+        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
+        om.registerLiveObject(rect)
+        // add the rect
+        {
+            const before = page.getPropValue('children')
+            page.getPropValue('children').push(rect)
+            const after = page.getPropValue('children')
+            om.insertPropChangeEvent(new PropChangeEvent<PageType>(page, 'children', before, after))
+            expect(page.getPropValue('children').length).toBe(1)
+        }
+
+        //delete the rect
+        {
+            const before = page.getPropValue('children')
+            // await page.removeChild(rect)
+            const new_children = page.getPropValue('children').filter(ch => ch !== rect)
+            page.setPropValue('children',new_children)
+            const after = page.getPropValue('children')
+            om.insertPropChangeEvent(new PropChangeEvent<PageType>(page,'children',before,after))
+            expect(page.getPropValue('children').length).toBe(0)
+            //undo
+            await om.performUndo()
+            expect(page.getPropValue('children').length).toBe(1)
+            //redo
+            await om.performRedo()
+            expect(page.getPropValue('children').length).toBe(0)
+        }
+
     })
-    // it('should undo and redo props', async () => {
-    //     assert(!om.canUndo())
-    //     assert(!om.canRedo())
-    //     const rect = om.make(RectDef, { bounds: new Bounds(0,1,2,3), fill: 'red' })
-    //     await rect.setPropValue('fill','blue')
-    //     assert(om.canUndo())
-    //     assert(!om.canRedo())
-    //     assert(rect.getPropValue('fill') === 'blue')
-    //     await om.performUndo()
-    //     assert(rect.getPropValue('fill') === 'red')
-    //     await om.performUndo()
-    //     assert(!om.canUndo())
-    //     assert(om.canRedo())
-    //     await om.performRedo()
-    //     await om.performRedo()
-    //     assert(om.canUndo())
-    //     assert(!om.canRedo())
-    //     assert(rect.getPropValue('fill') === 'blue')
-    // })
-    // it('should undo and redo adding a rect to a page', async () => {
-    //     // make an empty page
-    //     const page = new PageClass()
-    //     assert(page.getListProp('children').length === 0)
-    //     assert(om.history().length===1)
-    //     // make and add rect
-    //     const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
-    //     assert(om.history().length===2)
-    //     await page.appendListProp('children', rect)
-    //     assert(om.history().length===3)
-    //     assert(page.getListProp('children').length === 1)
-    //     assert(page.getListPropAt('children',0) === rect)
-    //     // undo
-    //     await om.performUndo()
-    //     assert(page.getListProp('children').length === 0)
-    //     // redo
-    //     await om.performRedo()
-    //     assert(page.getListProp('children').length === 1)
-    // })
-    // it('should undo and redo deleting an object', async () => {
-    //     // make a page containing a rect
-    //     const page = new PageClass()
-    //     const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
-    //     await page.appendListProp('children', rect)
-    //     assert(page.getListProp('children').length === 1)
-    //
-    //     //delete the rect
-    //     await page.removeListPropByValue('children',rect)
-    //     assert(page.getListProp('children').length === 0)
-    //     //undo
-    //     await om.performUndo()
-    //     assert(page.getListProp('children').length === 1)
-    //     //redo
-    //     await om.performRedo()
-    //     assert(page.getListProp('children').length === 0)
-    //
-    // })
     // it('should coalesce move events into a single undo/redo event', async () => {
     //     // make a page containing a rect
     //     const circle = new CircleClass({ radius: 5})
