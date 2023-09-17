@@ -25,7 +25,7 @@ describe('svg', () => {
         doc.getPropValue('pages').push(page)
         const rect = new RectClass({
             bounds:new Bounds(1,2,3,4)}) as RectClass
-        page.addChild(rect)
+        state.om.appendListProp(page,'children',rect)
         expect(rect.getPropValue('bounds').x).toBe(1)
 
         const svg = await toSVG(state)
@@ -43,7 +43,7 @@ describe('svg', () => {
             center: new Point(50,50),
             sides: 6,
         })as NGonClass
-        page.addChild(ngon)
+        state.om.appendListProp(page,'children',ngon)
         expect(ngon.getPropValue('radius')).toBe(5)
 
         const svg = await toSVG(state)

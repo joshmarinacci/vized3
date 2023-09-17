@@ -2,7 +2,8 @@ import assert from "assert"
 import {Bounds} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
-import {PageClass} from "./page"
+import {ObjectManager} from "./base"
+import {PageClass, PageDefs} from "./page"
 import {RectClass}  from "./rect"
 
 describe('model tests', () => {
@@ -18,10 +19,12 @@ describe('model tests', () => {
         assert(rect.getPropValue('fill') === 'blue')
     })
     it('should make an object with array children', async () => {
-        const page = new PageClass()
+        const om = new ObjectManager()
+        om.register(PageClass, PageDefs)
+        const page = om.make(PageClass) as PageClass
         assert(page.getPropValue('children').length === 0)
         const rect = new RectClass({})
-        page.addChild(rect)
+        om.appendListProp(page,'children',rect)
         assert(page.getPropValue('children').length === 1)
         const rect2 = page.getPropValue('children')[0]
         assert(rect === rect2)
@@ -38,9 +41,10 @@ describe('model tests', () => {
         assert(rect.getPropValue('fill') === 'blue')
     })
     it('should watch for changes on a family tree object', async () => {
+        const om = new ObjectManager()
         const page = new PageClass({})
         const rect = new RectClass({})
-        page.addChild(rect)
+        om.appendListProp(page,'children',rect)
         let changed = false
         page.onAny( (evt) => {
             changed = true

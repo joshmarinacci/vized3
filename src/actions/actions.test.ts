@@ -22,15 +22,15 @@ async function createThreeRectsDoc() {
     const rect1 = new RectClass({
         bounds: new Bounds(100, 100, 10, 10 * 2), fill: 'red'
     })
-    page.addChild(rect1)
+    state.om.appendListProp(page,"children", rect1)
     const rect2 = new RectClass({
         bounds: new Bounds(200, 200, 20, 20 * 2), fill: 'green'
     })
-    page.addChild(rect2)
+    state.om.appendListProp(page,"children", rect2)
     const rect3 = new RectClass({
         bounds: new Bounds(300, 300, 30, 30 * 2), fill: 'blue'
     })
-    page.addChild(rect3)
+    state.om.appendListProp(page,"children", rect3)
 
     return {
         state:state,
@@ -47,13 +47,13 @@ export async function createThreeCirclesDoc() {
     doc.getPropValue('pages').push(page)
     const circ1 = new CircleClass({
         center: new Point(100,100), radius: 10})
-    page.addChild(circ1)
+    state.om.appendListProp(page,'children',circ1)
     const circ2 = new CircleClass({
         center: new Point(200,200), radius: 20})
-    page.addChild(circ2)
+    state.om.appendListProp(page,'children',circ2)
     const circ3 = new CircleClass({
         center: new Point(300,300), radius: 30})
-    page.addChild(circ3)
+    state.om.appendListProp(page,'children',circ3)
 
     return {
         state:state,
