@@ -1,17 +1,17 @@
 import {Bounds} from "josh_js_util"
 import {describe, expect, it} from "vitest"
 
-import {ObjectManager, PropChangeEvent} from "./base"
-import {PageClass, PageType} from "./page"
-import {RectClass} from "./rect"
+import {ObjectManager} from "./base"
+import {PageClass, PageDefs, PageType} from "./page"
+import {RectClass, RectDef, RectType} from "./rect"
 
 describe('history tests', () => {
     it('should undo and redo props', async () => {
         const om = new ObjectManager()
+        om.register(RectClass, RectDef)
         expect(om.canUndo()).toBeFalsy()
         expect(om.canRedo()).toBeFalsy()
-        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
-        om.registerLiveObject(rect)
+        const rect = om.make<RectType>(RectClass,{ bounds: new Bounds(0,1,2,3), fill: 'red' })
         rect.setPropValue('fill','blue')
         expect(om.canUndo()).toBeTruthy()
         expect(om.canUndo()).toBeTruthy()
@@ -30,27 +30,23 @@ describe('history tests', () => {
     })
     it('should undo and redo adding a rect to a page', async () => {
         const om = new ObjectManager()
+        om.register(PageClass, PageDefs)
+        om.register(RectClass, RectDef)
         // make an empty page
-        const page = new PageClass()
-        om.registerLiveObject(page)
+        const page = om.make<PageType>(PageClass)
         expect(page.getPropValue('children').length).toBe(0)
         expect(om.history().length).toBe(1)
         // make and add rect
-        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
-        om.registerLiveObject(rect)
+        const rect = om.make<RectType>(RectClass,{ bounds: new Bounds(0,1,2,3), fill: 'red' })
         expect(om.history().length).toBe(2)
 
         //insert child
-        const old_children = page.getPropValue('children').slice()
-        page.getPropValue('children').push(rect)
-        const new_children = page.getPropValue('children').slice()
-        om.insertPropChangeEvent(new PropChangeEvent(page,'children',old_children,new_children))
+        om.appendListProp(page,'children',rect)
         expect(om.history().length).toBe(3)
         expect(page.getPropValue('children').length).toBe(1)
         expect(page.getPropValue('children')[0]).toBe(rect)
         // undo
         await om.performUndo()
-        console.log("come undon")
         expect(page.getPropValue('children').length).toBe(0)
         // redo
         await om.performRedo()
@@ -59,27 +55,21 @@ describe('history tests', () => {
     it('should undo and redo deleting an object', async () => {
         // make a page containing a rect
         const om = new ObjectManager()
-        const page = new PageClass()
-        om.registerLiveObject(page)
-        const rect = new RectClass({ bounds: new Bounds(0,1,2,3), fill: 'red' })
-        om.registerLiveObject(rect)
+        om.register(PageClass, PageDefs)
+        om.register(RectClass, RectDef)
+        const page = om.make<PageType>(PageClass)
+        const rect = om.make<RectType>(RectClass,
+            { bounds: new Bounds(0,1,2,3), fill: 'red' })
         // add the rect
         {
-            const before = page.getPropValue('children')
-            page.getPropValue('children').push(rect)
-            const after = page.getPropValue('children')
-            om.insertPropChangeEvent(new PropChangeEvent<PageType>(page, 'children', before, after))
+            om.appendListProp(page,'children',rect)
             expect(page.getPropValue('children').length).toBe(1)
         }
 
         //delete the rect
         {
-            const before = page.getPropValue('children')
-            // await page.removeChild(rect)
-            const new_children = page.getPropValue('children').filter(ch => ch !== rect)
-            page.setPropValue('children',new_children)
-            const after = page.getPropValue('children')
-            om.insertPropChangeEvent(new PropChangeEvent<PageType>(page,'children',before,after))
+            om.removeListPropItemByValue(page,'children',rect)
+
             expect(page.getPropValue('children').length).toBe(0)
             //undo
             await om.performUndo()

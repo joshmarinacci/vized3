@@ -116,9 +116,9 @@ export class PropsBase<Type> {
         return this.values.get(name) as Type[K]
     }
     setPropValue<K extends keyof Type>(name: K, value: Type[K]) {
-        const old = this.values.get(name)
+        const oldValue = this.values.get(name) as Type[K]
         this.values.set(name, value)
-        this._fire(name, old, value)
+        this._fire(name, oldValue, value)
     }
 
     // Proxy stuff
@@ -266,20 +266,30 @@ export class ObjectManager {
         return this.historyBuffer
     }
 
-    make<T>(DocClass: Constructor<T>):T {
-        if(!this.CLASS_REGISTRY.has(DocClass.name)) throw new Error(`cannot create object of type ${DocClass.name}`)
+    make<T>(DocClass: Constructor<T>, opts?:PropValues<T>):PropsBase<T> {
+        if(!this.CLASS_REGISTRY.has(DocClass.name)) throw new Error(`cannot create object of type ${DocClass.name}. Missing from reigstry`)
         const ClassCons = this.CLASS_REGISTRY.get(DocClass.name)
-        const obj = new ClassCons()
+        const obj = opts?new ClassCons(opts):new ClassCons()
         this.registerLiveObject(obj)
         return obj
     }
 
     appendListProp<Type>(obj: PropsBase<Type>, name: keyof Type, child: Type[keyof Type]) {
-        const array = obj.getPropValue(name)
+        const array = (obj.getPropValue(name) as Type[keyof Type][]).slice()
         array.push(child)
         obj.setPropValue(name,array)
     }
+
+    removeListPropItemByValue<Type>(obj: PropsBase<Type>, name: keyof Type, child: Type[keyof Type]) {
+        const before = obj.getPropValue(name)
+        const new_children = obj.getPropValue(name).filter(ch => ch !== child)
+        obj.setPropValue(name,new_children)
+        const after = obj.getPropValue(name)
+        this.insertPropChangeEvent(new PropChangeEvent<Type>(obj,name,before,after))
+
+    }
 }
+
 
 export const OM = new ObjectManager()
 
