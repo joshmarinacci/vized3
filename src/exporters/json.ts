@@ -1,22 +1,9 @@
 import {Point} from "josh_js_util"
 import {canvas_to_blob, forceDownloadBlob} from "josh_web_util"
 
-import {
-    ColorAssetClass, ColorAssetDef,
-    GradientAssetClass,
-    GradientAssetDef,
-    ImageAssetClass, ImageAssetDef,
-    LinearColorGradient, NumberAssetClass, NumberAssetDef
-} from "../models/assets"
-import {DefList, PropDef, PropsBase, UUID} from "../models/base"
-import {CircleClass, CircleDef} from "../models/circle"
+import {LinearColorGradient} from "../models/assets"
+import {OM, PropDef, PropsBase} from "../models/base"
 import {DocClass, DocDefs} from "../models/doc"
-import {NGonClass, NGonDef} from "../models/ngon"
-import {PageClass, PageDefs} from "../models/page"
-import {PathShapeClass, PathShapeDef} from "../models/pathshape"
-import {RectClass, RectDef} from "../models/rect"
-import {SimpleImageClass, SimpleImageDef} from "../models/simpleimage"
-import {SimpleTextClass, SimpleTextDef} from "../models/simpletext"
 import {GlobalState} from "../models/state"
 import {stateToCanvas} from "./png"
 import {readMetadata, writeMetadata} from "./vendor"
@@ -37,10 +24,6 @@ export type JSONObject = {
     uuid: string
     props: Record<string, JSONProp>
 }
-export type JSONObjectV1 = {
-    name: string
-    props: Record<string, object>
-}
 export type JSONDoc = {
     version: number
     root: JSONObject
@@ -56,30 +39,6 @@ export type JSONDocIndex = {
     docs:JSONDocReference[]
 }
 
-type Constructor<Type> = new () => Type
-const CLASS_REGISTRY = new Map<string,Constructor<any>>()
-const DEFS_REGISTRY = new Map<string,DefList<any>>
-
-function register<Type>(obj:Constructor<PropsBase<Type>>, defs:DefList<Type>) {
-    CLASS_REGISTRY.set(obj.name,obj)
-    DEFS_REGISTRY.set(obj.name, defs)
-}
-
-register(DocClass, DocDefs)
-register(PageClass, PageDefs)
-register(RectClass, RectDef)
-register(CircleClass, CircleDef)
-register(PathShapeClass, PathShapeDef)
-register(NGonClass, NGonDef)
-register(SimpleTextClass, SimpleTextDef)
-register(SimpleImageClass, SimpleImageDef)
-
-register(GradientAssetClass, GradientAssetDef)
-register(NumberAssetClass, NumberAssetDef)
-register(ColorAssetClass, ColorAssetDef)
-register(ImageAssetClass, ImageAssetDef)
-
-const ObjectRegistry:Map<UUID,PropsBase<any>> = new Map()
 
 export function propertyToJSON<Type,Key extends keyof Type>(name:Key, prop: PropDef<Type[Key]>, obj: PropsBase<Type>):JSONProp {
     if(obj.isPropProxySource(name)) {
@@ -169,11 +128,11 @@ export function propertyFromJSON<Type, Key extends keyof Type>(
 
 
 export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
-    const Constr = CLASS_REGISTRY.get(obj.name)
+    const Constr = OM.lookupClass(obj.name)
     if(!Constr) throw new Error(`cannot restore ${obj.name} because it is not registered `)
     const props: Record<string, object> = {}
     const refs = new Map<keyof Type,PropDef<Type[keyof Type]>>()
-    const DEFS = DEFS_REGISTRY.get(obj.name)
+    const DEFS = OM.lookupDefs(obj.name)
     if(!DEFS) throw new Error(`cannot restore ${obj.name} because it is missing from the defs registry`)
     for (const key of Object.keys(obj.props)) {
         const propSchema = DEFS[key]
@@ -187,16 +146,16 @@ export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
     }
     const finalObject = new Constr(props) as PropsBase<Type>
     finalObject._id = obj.uuid
-    ObjectRegistry.set(finalObject.getUUID(),finalObject)
+    OM.registerObject(finalObject.getUUID(),finalObject)
     Array.from(refs.entries()).forEach(([name,d]) => {
         console.log("must restore ref",name,d)
         const vv = obj.props[name] as JSONPropReference
         console.log("looking up the proxy source",vv.reference)
-        console.log("proxy loaded?",ObjectRegistry.has(vv.reference))
-        if(!ObjectRegistry.has(vv.reference)) {
+        console.log("proxy loaded?",OM.hasObject(vv.reference))
+        if(!OM.hasObject(vv.reference)) {
             throw new Error("cannot restore JSON because reference not loaded yet")
         }
-        const source = ObjectRegistry.get(vv.reference) as PropsBase<any>
+        const source = OM.lookupObject(vv.reference) as PropsBase<any>
         console.log("the source is",source)
         finalObject.setPropProxySource(name,source)
     })

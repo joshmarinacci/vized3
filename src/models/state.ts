@@ -1,21 +1,41 @@
 import {Bounds, Point} from "josh_js_util"
 
 import {make_filled_image} from "../platform"
-import {ColorAssetClass, GradientAssetClass, ImageAssetClass, NumberAssetClass} from "./assets"
-import {PropsBase} from "./base"
-import {CircleClass} from "./circle"
+import {
+    ColorAssetClass, ColorAssetDef,
+    GradientAssetClass,
+    GradientAssetDef,
+    ImageAssetClass, ImageAssetDef,
+    NumberAssetClass, NumberAssetDef
+} from "./assets"
+import {OM, PropsBase} from "./base"
+import {CircleClass, CircleDef} from "./circle"
 import {BaseShape} from "./defs"
-import {DocClass} from "./doc"
+import {DocClass, DocDefs} from "./doc"
 import {ObservableBase} from "./model"
-import {PageClass} from "./page"
-import {PathShapeClass} from "./pathshape"
-import {RectClass} from "./rect"
-import {SimpleImageClass} from "./simpleimage"
-import {SimpleTextClass} from "./simpletext"
+import {NGonClass, NGonDef} from "./ngon"
+import {PageClass, PageDefs} from "./page"
+import {PathShapeClass, PathShapeDef} from "./pathshape"
+import {RectClass, RectDef} from "./rect"
+import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
+import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
 export type StateOpts = {
     localStorage:Storage
 }
+OM.register(DocClass, DocDefs)
+OM.register(PageClass, PageDefs)
+OM.register(RectClass, RectDef)
+OM.register(CircleClass, CircleDef)
+OM.register(PathShapeClass, PathShapeDef)
+OM.register(NGonClass, NGonDef)
+OM.register(SimpleTextClass, SimpleTextDef)
+OM.register(SimpleImageClass, SimpleImageDef)
+
+OM.register(GradientAssetClass, GradientAssetDef)
+OM.register(NumberAssetClass, NumberAssetDef)
+OM.register(ColorAssetClass, ColorAssetDef)
+OM.register(ImageAssetClass, ImageAssetDef)
 
 export class GlobalState extends ObservableBase {
     private selected_objects: PropsBase<any>[]

@@ -183,3 +183,44 @@ export function useWatchProp<Type, Key extends keyof Type>(
         return () => target.off(name,hand)
     }, [target])
 }
+
+
+type Constructor<Type> = new () => Type
+export class ObjectManager {
+    private CLASS_REGISTRY: Map<string, Constructor<any>>
+    private DEFS_REGISTRY: Map<string, DefList<any>>
+    private objects: Map<UUID,PropsBase<any>>
+
+    constructor() {
+        this.CLASS_REGISTRY = new Map()
+        this.DEFS_REGISTRY = new Map()
+        this.objects = new Map()
+    }
+    register<Type>(obj:Constructor<PropsBase<Type>>, defs:DefList<Type>) {
+        this.CLASS_REGISTRY.set(obj.name,obj)
+        this.DEFS_REGISTRY.set(obj.name, defs)
+    }
+
+    lookupClass(name: string) {
+        return this.CLASS_REGISTRY.get(name)
+    }
+
+    lookupDefs(name: string) {
+        return this.DEFS_REGISTRY.get(name)
+    }
+
+    registerObject<Type>(uuid: string, finalObject: PropsBase<Type>) {
+        this.objects.set(uuid,finalObject)
+    }
+
+    hasObject(reference: string) {
+        return this.objects.has(reference)
+    }
+
+    lookupObject(reference: string) {
+        return this.objects.get(reference)
+    }
+}
+
+export const OM = new ObjectManager()
+
