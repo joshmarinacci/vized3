@@ -23,7 +23,7 @@ describe('json', () => {
     it('should save to json', async () => {
         const {state, circs} = await createThreeCirclesDoc()
         expect(state).toBeTruthy()
-        const doc = await saveJSON(state)
+        const doc = saveJSON(state)
         console.log(JSON.stringify(doc,null, '   '))
         expect(doc.version).toBe(2)
         expect(doc.root).toBeTruthy()
@@ -43,7 +43,7 @@ describe('json', () => {
     })
 
     it('should restore a small doc', async () => {
-        const {state, circs} = await createThreeCirclesDoc()
+        const {state} = await createThreeCirclesDoc()
         const doc = state.getCurrentDocument()
         doc.getPropValue('pages')[0].setPropValue('name','rad page')
         const doc_json = toJSONDoc(doc)
@@ -123,7 +123,7 @@ describe('json', () => {
         expect(grad_json.props['name'].type).toEqual('value')
         expect(grad_json.props['name'].value).toEqual('unnamed')
         expect(grad_json.props['value'].type).toEqual('value')
-        const grad = grad_json.props['value'].value as unknown
+        const grad = grad_json.props['value'].value
         expect(grad.type).toEqual('linear-color-gradient')
     })
     it('should restore a gradient asset', async () => {

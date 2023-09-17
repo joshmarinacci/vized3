@@ -104,7 +104,7 @@ function ImportImageButton(props: { state: GlobalState }) {
         // image.setPropProxySource('image',asset)
         await image.setPropValue('bounds', new Bounds(0, 0, 1, 1 * ratio))
         const page = state.getSelectedPage()
-        if(page) page._children.push(image)
+        if(page) page.addChild(image)
     }}/>)
     return <IconButton icon={SupportedIcons.Image} onClick={showNewDialog}>import image</IconButton>
 }

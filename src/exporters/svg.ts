@@ -19,8 +19,8 @@ function splat_SVG(name: string, opts: Record<string,any>):string {
 }
 type SVGSerializer<T> = (item:T, state:GlobalState) => string;
 
-const SERIALIZERS:Map<any,SVGSerializer<any>> = new Map()
-
+type Cons<T> = new () => T
+const SERIALIZERS:Map<Cons,SVGSerializer<any>> = new Map()
 
 const CircleToSVG:SVGSerializer<CircleClass> = (item:CircleClass, state) => {
     const doc = state.getCurrentDocument()

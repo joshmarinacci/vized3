@@ -33,7 +33,7 @@ function render_pdf_page(doc: PDFDocument, page1: PageClass, unit:Unit) {
         scale(1,-1),
         translate(0,-pdfPage.getHeight())
     )
-    page1._children.forEach(ch => {
+    page1.getPropValue('children').forEach(ch => {
         if(ch instanceof RectClass) {
             const bounds = ch.getPropValue('bounds')
             const fill = ch.getPropValue('fill')

@@ -10,7 +10,7 @@ import {
 } from "../models/assets"
 import {DefList, PropDef, PropsBase, UUID} from "../models/base"
 import {CircleClass, CircleDef} from "../models/circle"
-import {DocClass, DocDefs, DocType} from "../models/doc"
+import {DocClass, DocDefs} from "../models/doc"
 import {NGonClass, NGonDef} from "../models/ngon"
 import {PageClass, PageDefs} from "../models/page"
 import {PathShapeClass, PathShapeDef} from "../models/pathshape"
@@ -45,10 +45,6 @@ export type JSONDoc = {
     version: number
     root: JSONObject
 }
-export type JSONDocV1 = {
-    version: 1,
-    root: JSONObjectV1
-}
 export type JSONDocReference = {
     uuid:string,
     name:string,
@@ -60,8 +56,10 @@ export type JSONDocIndex = {
     docs:JSONDocReference[]
 }
 
-const CLASS_REGISTRY = new Map<string,object>()
+type Constructor<Type> = new () => Type
+const CLASS_REGISTRY = new Map<string,Constructor<any>>()
 const DEFS_REGISTRY = new Map<string,DefList<any>>
+
 function register<Type>(obj:Constructor<PropsBase<Type>>, defs:DefList<Type>) {
     CLASS_REGISTRY.set(obj.name,obj)
     DEFS_REGISTRY.set(obj.name, defs)
@@ -97,14 +95,14 @@ export function propertyToJSON<Type,Key extends keyof Type>(name:Key, prop: Prop
         return ({type:'value', value:v2.toJSON()})
     }
     if(prop.custom === 'points') {
-        const v2:Point[] = obj.getPropValue(name)
+        const v2:Point[] = obj.getPropValue(name) as Point[]
         return ({type:'value', value:v2.map(pt => pt.toJSON())})
     }
     if(prop.base === 'string') return ({ type: "value", value: obj.getPropValue(name) })
     if(prop.base === 'number') return ({  type:"value",  value: obj.getPropValue(name) })
     if(prop.base === 'boolean') return ({ type: "value", value: obj.getPropValue(name) })
     if(prop.base === 'list') {
-        const list = obj.getPropValue(name) as any[]
+        const list = obj.getPropValue(name) as []
         const arr:JSONObject[] = list.map(val => toJSONObj(val))
         return {
             type:"value",
@@ -166,13 +164,13 @@ export function propertyFromJSON<Type, Key extends keyof Type>(
         }
         return arr
     }
-    throw new Error(`cannot restore property ${name} ${vv.toString()}`)
+    throw new Error(`cannot restore property ${name.toString()} ${vv.toString()}`)
 }
 
 
 export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
-    const Constructor = CLASS_REGISTRY.get(obj.name)
-    if(!Constructor) throw new Error(`cannot restore ${obj.name} because it is not registered `)
+    const Constr = CLASS_REGISTRY.get(obj.name)
+    if(!Constr) throw new Error(`cannot restore ${obj.name} because it is not registered `)
     const props: Record<string, object> = {}
     const refs = new Map<keyof Type,PropDef<Type[keyof Type]>>()
     const DEFS = DEFS_REGISTRY.get(obj.name)
@@ -187,7 +185,7 @@ export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
             props[key] = propertyFromJSON(key,propSchema, obj)
         }
     }
-    const finalObject = new Constructor(props) as PropsBase<Type>
+    const finalObject = new Constr(props) as PropsBase<Type>
     finalObject._id = obj.uuid
     ObjectRegistry.set(finalObject.getUUID(),finalObject)
     Array.from(refs.entries()).forEach(([name,d]) => {
@@ -198,7 +196,7 @@ export function fromJSONObj<Type>(obj: JSONObject):PropsBase<Type> {
         if(!ObjectRegistry.has(vv.reference)) {
             throw new Error("cannot restore JSON because reference not loaded yet")
         }
-        const source = ObjectRegistry.get(vv.reference)
+        const source = ObjectRegistry.get(vv.reference) as PropsBase<any>
         console.log("the source is",source)
         finalObject.setPropProxySource(name,source)
     })
@@ -251,7 +249,7 @@ export async function loadPNGJSON(state:GlobalState, file:File):Promise<DocClass
             console.log("metadata is",metadata)
             if(metadata && metadata.tEXt && metadata.tEXt.SOURCE) {
                 const json = JSON.parse(metadata.tEXt.SOURCE)
-                const obj = fromJSONDoc(state.om, json as JSONDoc)
+                const obj = fromJSONDoc(json as JSONDoc)
                 res(obj)
             }
         })

@@ -25,7 +25,7 @@ export async function stateToCanvas(state:GlobalState) {
     canvas.height = size.h
     const ctx = canvas.getContext('2d') as CanvasRenderingContext2D
     const surf = new ScaledDrawingSurface(ctx,0,unit)
-    traverse(state.getCurrentDocument(), (item: any) => {
+    traverse(state.getCurrentDocument(), (item) => {
         if (item as DocClass) {
             // const doc = item.obj as DocClass
         }

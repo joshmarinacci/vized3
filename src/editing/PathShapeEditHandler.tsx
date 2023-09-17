@@ -165,7 +165,6 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
             }
         }
         if (this.pressed && this.state === EditState.DraggingLine) {
-            // @ts-ignore
             this.drag_line.end = pt
             //if pt is near the start point of the shape, show a hover handle at the start point
             const first_pt:Point = this.shape.getPropValue('points')[0]
@@ -190,8 +189,7 @@ export class PathShapeEditHandler extends ObservableBase implements MouseHandler
                 await this.shape.setPropValue('closed',true)
                 this.state = EditState.Existing
             } else {
-                // @ts-ignore
-                this.shape.appendListProp('points', this.drag_line.end)
+                this.shape.getPropValue('points').push(this.drag_line.end)
                 this.state = EditState.ReadyToAddLine
             }
             this.drag_line = undefined
