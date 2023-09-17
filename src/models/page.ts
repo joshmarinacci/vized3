@@ -29,28 +29,22 @@ export class PageClass extends PropsBase<PageType> {
     hasChildren(): boolean {
         return this.getPropValue('children').length > 0
     }
-    addChild<T>(obj:PropsBase<T>) {
-        if(obj instanceof BaseShape) {
-            obj.parent = this
-            obj.onAny(this._handler)
+    watchChild<PageType>(name: keyof PageType,child:PageType[keyof PageType]) {
+        if(child instanceof BaseShape) {
+            child.parent = null
+            child.onAny(this._handler)
         }
-        this.getPropValue('children').push(obj)
-        this._fireAll()
+    }
+    unwatchChild<PageType>(name: keyof PageType,child:PageType[keyof PageType]) {
+        if(child instanceof BaseShape) {
+            child.parent = this
+            child.offAny(this._handler)
+        }
     }
     getShapeChildren():BaseShape<any>[] {
         return this.getPropValue('children')
             .filter(ch => ch instanceof BaseShape)
             .map(ch => ch as BaseShape<any>)
-    }
-
-    async removeChild<T>(obj: PropsBase<T>) {
-        const children = this.getPropValue('children').filter(ch => ch !==obj)
-        this.setPropValue('children',children)
-        if(obj instanceof BaseShape) {
-            obj.offAny(this._handler)
-            obj.parent = null
-        }
-        this._fireAll()
     }
 }
 

@@ -277,12 +277,18 @@ export class ObjectManager {
     appendListProp<Type>(obj: PropsBase<Type>, name: keyof Type, child: Type[keyof Type]) {
         const array = (obj.getPropValue(name) as Type[keyof Type][]).slice()
         array.push(child)
+        if('watchChild' in obj) {
+            obj.watchChild(name,child)
+        }
         obj.setPropValue(name,array)
     }
 
     removeListPropItemByValue<Type>(obj: PropsBase<Type>, name: keyof Type, child: Type[keyof Type]) {
         const before = obj.getPropValue(name)
         const new_children = obj.getPropValue(name).filter(ch => ch !== child)
+        if('unwatchChild' in obj) {
+            obj.unwatchChild(name,child)
+        }
         obj.setPropValue(name,new_children)
         const after = obj.getPropValue(name)
         this.insertPropChangeEvent(new PropChangeEvent<Type>(obj,name,before,after))

@@ -2,11 +2,11 @@ import {Bounds, Point} from "josh_js_util"
 
 import {make_filled_image} from "../platform"
 import {
-    ColorAssetClass, ColorAssetDef,
+    ColorAssetClass, ColorAssetDef, ColorAssetType,
     GradientAssetClass,
     GradientAssetDef,
     ImageAssetClass, ImageAssetDef,
-    NumberAssetClass, NumberAssetDef
+    NumberAssetClass, NumberAssetDef, NumberAssetType
 } from "./assets"
 import {ObjectManager, OM, PropsBase} from "./base"
 import {CircleClass, CircleDef} from "./circle"
@@ -14,10 +14,10 @@ import {BaseShape} from "./defs"
 import {DocClass, DocDefs} from "./doc"
 import {ObservableBase} from "./model"
 import {NGonClass, NGonDef} from "./ngon"
-import {PageClass, PageDefs} from "./page"
+import {PageClass, PageDefs, PageType} from "./page"
 import {PathShapeClass, PathShapeDef} from "./pathshape"
 import {RectClass, RectDef} from "./rect"
-import {SimpleImageClass, SimpleImageDef} from "./simpleimage"
+import {SimpleImageClass, SimpleImageDef, SimpleImageType} from "./simpleimage"
 import {SimpleTextClass, SimpleTextDef} from "./simpletext"
 
 export type StateOpts = {
@@ -57,27 +57,27 @@ export class GlobalState extends ObservableBase {
         }
         this.om = OM
         this._doc = this.om.make(DocClass)
-        const page = this.om.make(PageClass)
+        const page = this.om.make<PageType>(PageClass) as PageClass
         this.om.appendListProp(this._doc,'pages',page)
-        const rect = new RectClass({ bounds: new Bounds(1,1,2,3),  name:'rect',  fill:'#ff0000'})
-        page.addChild(rect)
-        const circle = new CircleClass({ center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'})
-        page.addChild(circle)
+        const rect = this.om.make(RectClass,{ bounds: new Bounds(1,1,2,3),  name:'rect',  fill:'#ff0000'})
+        this.om.appendListProp(page,'children',rect)
+        const circle = this.om.make(CircleClass,{ center: new Point(1,3), radius: 1, name:'circle', fill:'#00ff00'})
+        this.om.appendListProp(page,'children',circle)
         this.setSelectedObjects([rect, circle])
-        const text = new SimpleTextClass({ center: new Point(1,5), name:'text', fill:'#000000'})
-        page.addChild(text)
-        page.addChild(new PathShapeClass({ center: new Point(1,3), name:'path', fill:'#0000ff'}))
+        const text = this.om.make(SimpleTextClass,{ center: new Point(1,5), name:'text', fill:'#000000'})
+        this.om.appendListProp(page,'children',text)
+        this.om.appendListProp(page,'children',this.om.make(PathShapeClass,{ center: new Point(1,3), name:'path', fill:'#0000ff'}))
 
-        this._doc.getPropValue('assets').push(new NumberAssetClass({name:'zero'}))
-        this._doc.getPropValue('assets').push(new ColorAssetClass({name:'black'}))
+        this.om.appendListProp(this._doc,'assets',this.om.make<NumberAssetType>(NumberAssetClass,{name:'zero'}))
+        this.om.appendListProp(this._doc,'assets',this.om.make<ColorAssetType>(ColorAssetClass,{name:'black'}))
         const dummy_img = make_filled_image(10,10,'green')
-        const asset_img = new ImageAssetClass({value:dummy_img, name:'checkerboard'})
+        const asset_img = this.om.make(ImageAssetClass,{value:dummy_img, name:'checkerboard'})
         this._doc.getPropValue('assets').push(asset_img)
-        const image = new SimpleImageClass({ name:'image'})
+        const image = this.om.make<SimpleImageType>(SimpleImageClass,{ name:'image'})
         image.setPropProxySource('image',asset_img)
-        page.addChild(image)
+        this.om.appendListProp(page,'children',image)
 
-        this._doc.getPropValue('assets').push(new GradientAssetClass({name:'gradient'}))
+        this.om.appendListProp(this._doc,'assets',this.om.make(GradientAssetClass,{name:'gradient'}))
         this.selected_objects = []
         this.selected_page = page
     }

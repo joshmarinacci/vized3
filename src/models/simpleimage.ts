@@ -5,7 +5,7 @@ import {BaseShape, BoundsDef, NameDef} from "./defs"
 import {DrawableShape, Handle, ScaledSurface} from "./drawing"
 
 
-type SimpleImageType = {
+export type SimpleImageType = {
     name: string
     bounds: Bounds,
     image: string,

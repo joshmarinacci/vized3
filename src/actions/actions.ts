@@ -15,12 +15,11 @@ import {
     NumberAssetClass
 } from "../models/assets"
 import {CircleClass} from "../models/circle"
-import {BaseShape} from "../models/defs"
 import {DrawableShape} from "../models/drawing"
 import {NGonClass} from "../models/ngon"
-import {PageClass} from "../models/page"
+import {PageClass, PageType} from "../models/page"
 import {PathShapeClass} from "../models/pathshape"
-import {RectClass} from "../models/rect"
+import {RectClass, RectType} from "../models/rect"
 import {SimpleTextClass} from "../models/simpletext"
 import {GlobalState} from "../models/state"
 
@@ -149,9 +148,8 @@ export const AddNewPageAction:SimpleMenuAction = {
     tags:['add','page'],
     description:'adds a new page to the document',
     perform: async (state:GlobalState) => {
-        const page = new PageClass()
-        state.getCurrentDocument().getPropValue('pages').push(page)
-        state.getCurrentDocument()._fire('pages',state.getCurrentDocument().getPropValue('pages'))
+        const page = state.om.make<PageType>(PageClass)
+        state.om.appendListProp(state.getCurrentDocument(),'pages',page)
     }
 }
 export const AddNewRectAction:SimpleMenuAction = {
@@ -162,10 +160,10 @@ export const AddNewRectAction:SimpleMenuAction = {
     perform: async (state: GlobalState) => {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
-        const rect = new RectClass({
+        const rect = state.om.make<RectType>(RectClass,{
             bounds: new Bounds(1, 3, 1, 1)
         })
-        page.addChild(rect)
+        state.om.appendListProp(page,'children',rect)
     }
 }
 export const AddNewCircleAction:SimpleMenuAction = {
@@ -180,7 +178,7 @@ export const AddNewCircleAction:SimpleMenuAction = {
             center: new Point(2, 2),
             radius: 1,
         })
-        page.addChild(circle)
+        state.om.appendListProp(page,'children',circle)
     }
 }
 export const AddNewPathShapeAction:SimpleMenuAction = {
@@ -192,7 +190,7 @@ export const AddNewPathShapeAction:SimpleMenuAction = {
         const page = state.getSelectedPage()
         if (!page) return console.warn("no page selected")
         const shape = new PathShapeClass({})
-        page.addChild(shape)
+        state.om.appendListProp(page,'children',shape)
     }
 }
 export const AddNewNGonAction:SimpleMenuAction = {
@@ -206,7 +204,7 @@ export const AddNewNGonAction:SimpleMenuAction = {
         const shape = new NGonClass({
             center: new Point(1, 1),
         })
-        page.addChild(shape)
+        state.om.appendListProp(page,'children',shape)
     }
 }
 export const AddNewSimpletextAction:SimpleMenuAction = {
@@ -220,7 +218,7 @@ export const AddNewSimpletextAction:SimpleMenuAction = {
         const shape = new SimpleTextClass({
             center:new Point(0,1)
         })
-        page.addChild(shape)
+        state.om.appendListProp(page,'children',shape)
     }
 }
 
@@ -276,7 +274,7 @@ export const DeleteSelection:SimpleMenuAction = {
         for(const obj of objs) {
             if (obj && obj.parent) {
                 const parent = obj.parent
-                await parent.removeChild(obj)
+                state.om.removeListPropItemByValue(parent,'children',obj)
             }
         }
         state.clearSelectedObjects()
